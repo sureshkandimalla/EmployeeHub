@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { AgGridReact } from "@ag-grid-community/react";
-import { Button, Alert } from "antd";
+import { Button, Alert, Card } from "antd";
 import { ReloadOutlined, ArrowLeftOutlined, CloseOutlined } from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -567,6 +567,7 @@ const GenerateInvoiceDetails = ({ url: propUrl, employeeIds: propEmployeeIds, mo
         !onBack && <p>Generating Invoice for all months through today</p>
       )}
       <div className="ag-theme-alpine employee-List-grid">
+        <Card className="employeeTableCard" style={{ height: "100%" }}>
         {loading ? (
           <div>Loading...</div> // Display loading indicator
         ) : (
@@ -687,6 +688,7 @@ const GenerateInvoiceDetails = ({ url: propUrl, employeeIds: propEmployeeIds, mo
             )}
           </>
         )}
+        </Card>
       </div>
     </>
   );
