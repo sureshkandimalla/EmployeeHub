@@ -328,6 +328,16 @@ const GenerateInvoiceDetails = ({ url: propUrl, employeeIds: propEmployeeIds, mo
 
   const getColumnsDefList = (isSortable, isEditable, hasFilter) => {
     var columns = [
+      {
+        colId: "rowNum",
+        headerName: "#",
+        valueGetter: (params) => params.node.rowIndex + 1,
+        width: 80, minWidth: 80, maxWidth: 80,
+        pinned: "left", sortable: false, filter: false, editable: false,
+        suppressSizeToFit: true,
+        cellStyle: { textAlign: "center", fontWeight: 500 },
+        headerClass: "ag-center-cols",
+      },
       { headerName: "Employee Name", field: "employeeName", sortable: true },
       {
         headerName: "Invoice Month",
