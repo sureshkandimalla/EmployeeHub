@@ -170,17 +170,17 @@ export default function VisaFormModal({
           </Col>
           <Col span={12}>
             <Form.Item name="startDate" label={VISA_FIELD_LABELS.startDate}>
-              <DatePicker style={{ width: "100%" }} />
+              <DatePicker style={{ width: "100%" }} format="MM/DD/YYYY" />
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item name="endDate" label={VISA_FIELD_LABELS.endDate}>
-              <DatePicker style={{ width: "100%" }} />
+              <DatePicker style={{ width: "100%" }} format="MM/DD/YYYY" />
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item name="approvedDate" label={VISA_FIELD_LABELS.approvedDate}>
-              <DatePicker style={{ width: "100%" }} />
+              <DatePicker style={{ width: "100%" }} format="MM/DD/YYYY" />
             </Form.Item>
           </Col>
           <Col span={12}>

@@ -9,8 +9,9 @@ import "ag-grid-community/styles/ag-theme-alpine.css";
 import axios from "axios";
 import API_ENDPOINTS from "../config";
 import LcaFormModal from "./LcaFormModal";
-import { LCA_FIELD_LABELS, LCA_STATUS_OPTIONS } from "./visaConstants";
+import { LCA_FIELD_LABELS, LCA_STATUS_OPTIONS, LCA_WAGE_LEVEL_VALUES } from "./visaConstants";
 import { formatCurrency } from "../Utils/CurrencyFormatter";
+import { formatDateMDY } from "../Utils/dateFormat";
 import { sizeColumnsForHeader } from "../Utils/agGridColumnSizing";
 import NotesActionButton from "../Notes/NotesActionButton";
 import NotesModal from "../Notes/NotesModal";
@@ -239,6 +240,10 @@ const LCADetails = () => {
       colId: "lcaWage", field: "lcaWage", headerName: LCA_FIELD_LABELS.lcaWage, filter: "agSetColumnFilter", cellClassRules,
       valueFormatter: (params) => params.value != null ? formatCurrency(params.value) : "",
     },
+    { colId: "wageLevel", field: "wageLevel", headerName: LCA_FIELD_LABELS.wageLevel, filter: "agSetColumnFilter", cellClassRules,
+      cellEditor: "agSelectCellEditor",
+      cellEditorParams: { values: LCA_WAGE_LEVEL_VALUES },
+    },
     { colId: "status", field: "status", headerName: LCA_FIELD_LABELS.status, filter: "agSetColumnFilter", cellClassRules,
       cellEditor: "agSelectCellEditor",
       cellEditorParams: { values: LCA_STATUS_OPTIONS.map((o) => o.value) },
@@ -247,12 +252,12 @@ const LCADetails = () => {
     { colId: "customer", field: "customer", headerName: LCA_FIELD_LABELS.customer, filter: "agSetColumnFilter", cellClassRules },
     { colId: "jobLocation", field: "jobLocation", headerName: LCA_FIELD_LABELS.jobLocation, filter: "agSetColumnFilter", cellClassRules },
     { colId: "jobLocation2", field: "jobLocation2", headerName: LCA_FIELD_LABELS.jobLocation2, filter: "agSetColumnFilter", cellClassRules, hide: true },
-    { colId: "employmentStartDate", field: "employmentStartDate", headerName: LCA_FIELD_LABELS.employmentStartDate, filter: "agSetColumnFilter", cellClassRules },
-    { colId: "employmentEndDate", field: "employmentEndDate", headerName: LCA_FIELD_LABELS.employmentEndDate, filter: "agSetColumnFilter", cellClassRules },
-    { colId: "lcaPostedFromDate", field: "lcaPostedFromDate", headerName: LCA_FIELD_LABELS.lcaPostedFromDate, filter: "agSetColumnFilter", cellClassRules, hide: true },
-    { colId: "lcaPostedToDate", field: "lcaPostedToDate", headerName: LCA_FIELD_LABELS.lcaPostedToDate, filter: "agSetColumnFilter", cellClassRules, hide: true },
-    { colId: "certifiedDate", field: "certifiedDate", headerName: LCA_FIELD_LABELS.certifiedDate, filter: "agSetColumnFilter", cellClassRules },
-    { colId: "lastUpdated", field: "lastUpdated", headerName: "Last Updated", filter: "agSetColumnFilter", cellClassRules, editable: false },
+    { colId: "employmentStartDate", field: "employmentStartDate", headerName: LCA_FIELD_LABELS.employmentStartDate, filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
+    { colId: "employmentEndDate", field: "employmentEndDate", headerName: LCA_FIELD_LABELS.employmentEndDate, filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
+    { colId: "lcaPostedFromDate", field: "lcaPostedFromDate", headerName: LCA_FIELD_LABELS.lcaPostedFromDate, filter: "agSetColumnFilter", cellClassRules, hide: true, valueFormatter: (params) => formatDateMDY(params.value) },
+    { colId: "lcaPostedToDate", field: "lcaPostedToDate", headerName: LCA_FIELD_LABELS.lcaPostedToDate, filter: "agSetColumnFilter", cellClassRules, hide: true, valueFormatter: (params) => formatDateMDY(params.value) },
+    { colId: "certifiedDate", field: "certifiedDate", headerName: LCA_FIELD_LABELS.certifiedDate, filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
+    { colId: "lastUpdated", field: "lastUpdated", headerName: "Last Updated", filter: "agSetColumnFilter", cellClassRules, editable: false, valueFormatter: (params) => formatDateMDY(params.value) },
     {
       colId: "action",
       headerName: "Action",

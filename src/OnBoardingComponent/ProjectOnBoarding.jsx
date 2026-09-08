@@ -440,17 +440,19 @@ const ProjectOnBoardingForm = ({ onClose }) => {
             <Col span={12} className="form-row">
               <Form.Item label="Start Date" rules={[{ required: true }]}>
                 <DatePicker
-                  onChange={(date, dateString) =>
+                  onChange={(date) => {
                     // WO Start Date tracks the project's own Start Date —
                     // keeps the two in sync since a project's first work
                     // order normally starts the same day the project does.
+                    const iso = date ? date.format("YYYY-MM-DD") : "";
                     setGeneralDetails((prevState) => ({
                       ...prevState,
-                      startDate: dateString,
-                      workOrderStartDate: dateString,
-                    }))
-                  }
+                      startDate: iso,
+                      workOrderStartDate: iso,
+                    }));
+                  }}
                   className="dobDatepicker"
+                  format="MM/DD/YYYY"
                   value={
                     generalDetails.startDate
                       ? moment(generalDetails.startDate)
@@ -463,10 +465,11 @@ const ProjectOnBoardingForm = ({ onClose }) => {
             <Col span={12} className="form-row">
               <Form.Item label="End Date">
                 <DatePicker
-                  onChange={(date, dateString) =>
-                    handleGeneralData(dateString, "endDate")
+                  onChange={(date) =>
+                    handleGeneralData(date ? date.format("YYYY-MM-DD") : "", "endDate")
                   }
                   className="dobDatepicker"
+                  format="MM/DD/YYYY"
                   value={
                     generalDetails.endDate
                       ? moment(generalDetails.endDate)
@@ -485,10 +488,11 @@ const ProjectOnBoardingForm = ({ onClose }) => {
                 tooltip="Auto-filled from the project's Start Date — this project's first work order starts the same day. Later work orders (added from the project's Work Orders tab) each have their own dates too."
               >
                 <DatePicker
-                  onChange={(date, dateString) =>
-                    handleGeneralData(dateString, "workOrderStartDate")
+                  onChange={(date) =>
+                    handleGeneralData(date ? date.format("YYYY-MM-DD") : "", "workOrderStartDate")
                   }
                   className="dobDatepicker"
+                  format="MM/DD/YYYY"
                   value={
                     generalDetails.workOrderStartDate
                       ? moment(generalDetails.workOrderStartDate)
@@ -500,10 +504,11 @@ const ProjectOnBoardingForm = ({ onClose }) => {
             <Col span={12} className="form-row">
               <Form.Item label="WO End Date">
                 <DatePicker
-                  onChange={(date, dateString) =>
-                    handleGeneralData(dateString, "workOrderEndDate")
+                  onChange={(date) =>
+                    handleGeneralData(date ? date.format("YYYY-MM-DD") : "", "workOrderEndDate")
                   }
                   className="dobDatepicker"
+                  format="MM/DD/YYYY"
                   value={
                     generalDetails.workOrderEndDate
                       ? moment(generalDetails.workOrderEndDate)

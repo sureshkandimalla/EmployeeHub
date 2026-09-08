@@ -142,7 +142,7 @@ export default function PassportFormModal({
           {/* Date of birth */}
           <Col span={12}>
             <Form.Item name="dateOfBirth" label="Date of Birth">
-              <DatePicker style={{ width: "100%" }} />
+              <DatePicker style={{ width: "100%" }} format="MM/DD/YYYY" />
             </Form.Item>
           </Col>
 
@@ -170,12 +170,12 @@ export default function PassportFormModal({
           {/* Issue / Expiry dates */}
           <Col span={12}>
             <Form.Item name="issueDate" label="Issue Date">
-              <DatePicker style={{ width: "100%" }} />
+              <DatePicker style={{ width: "100%" }} format="MM/DD/YYYY" />
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item name="expiryDate" label="Expiry Date">
-              <DatePicker style={{ width: "100%" }} />
+              <DatePicker style={{ width: "100%" }} format="MM/DD/YYYY" />
             </Form.Item>
           </Col>
 

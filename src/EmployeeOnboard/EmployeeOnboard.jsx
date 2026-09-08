@@ -162,7 +162,7 @@ const EmployeeOnboard = () => {
                     },
                   ]}
                 >
-                  <DatePicker />
+                  <DatePicker format="MM/DD/YYYY" />
                 </Form.Item>
               </Col>
               <Col span={16}>
@@ -306,7 +306,7 @@ const EmployeeOnboard = () => {
               </Col>
               <Col span={6}>
                 <Form.Item label="Employement Start Date" name="empStartDate">
-                  <DatePicker />
+                  <DatePicker format="MM/DD/YYYY" />
                 </Form.Item>
               </Col>
               <Col span={6}>

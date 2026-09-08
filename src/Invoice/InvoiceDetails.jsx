@@ -22,7 +22,7 @@ import { formatCurrency } from "../Utils/CurrencyFormatter";
 import NotesActionButton from "../Notes/NotesActionButton";
 import NotesModal from "../Notes/NotesModal";
 import { buildRowActions } from "../Notes/rowActions";
-import { formatMonthYear, formatDate } from "../Utils/dateFormat";
+import { formatMonthYear, formatDate, formatDateMDY } from "../Utils/dateFormat";
 import GridToolbar from "../Utils/GridToolbar";
 import ChartOverviewPanel from "../Utils/ChartOverviewPanel";
 import { GLOBAL_CHARTS } from "../Charts/globalChartRegistry";
@@ -92,34 +92,45 @@ const InvoiceDetails = ({ employeeId, projectId, customerId, statusFilter, isCol
     [projects],
   );
 
+  // Every employee with a project (active OR inactive), excluding
+  // Referral-company employees — an inactive project can still have
+  // un-invoiced periods sitting in its backlog (e.g. it ended before ever
+  // getting fully invoiced), so it's not skipped here. Generate Invoice
+  // (bulk path) and the page-level alert below both walk this list via
+  // activeProjectsForInvoiceByEmployee, since that's the only endpoint that
+  // surfaces a project's *entire* un-invoiced backlog (activeProjects only
+  // returns the current calendar month's row per project).
+  const employeeIdsForInvoicing = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          projects
+            .map((p) => p.employeeId)
+            .filter(Boolean)
+            .filter((empId) => !referralEmployeeIds.has(empId)),
+        ),
+      ),
+    [projects, referralEmployeeIds],
+  );
+
   // Page-level alert (only when not scoped to a single employee/project):
-  // for every employee with an active project, reuse the exact same
-  // per-employee "active projects for invoice" endpoint Generate Invoice
-  // itself relies on, and flag any (employee, project) pair with periods
-  // that still don't have an invoice — i.e. invoicing has fallen behind
-  // that project's own invoice-term cadence.
+  // for every employee with a project, reuse the exact same per-employee
+  // "active projects for invoice" endpoint Generate Invoice itself relies
+  // on, and flag any (employee, project) pair with periods that still
+  // don't have an invoice — i.e. invoicing has fallen behind that
+  // project's own invoice-term cadence, whether or not the project is
+  // still active today.
   const [invoiceAlerts, setInvoiceAlerts] = useState([]);
 
   useEffect(() => {
     if (employeeId || projectId || customerId) return;
-    if (!projects || projects.length === 0) return;
-
-    const activeEmployeeIds = Array.from(
-      new Set(
-        projects
-          .filter((p) => (p.status || "").toUpperCase() === "ACTIVE")
-          .map((p) => p.employeeId)
-          .filter(Boolean)
-          .filter((empId) => !referralEmployeeIds.has(empId)),
-      ),
-    );
-    if (activeEmployeeIds.length === 0) {
+    if (employeeIdsForInvoicing.length === 0) {
       setInvoiceAlerts([]);
       return;
     }
 
     Promise.all(
-      activeEmployeeIds.map((empId) =>
+      employeeIdsForInvoicing.map((empId) =>
         axios
           .get(API_ENDPOINTS.activeProjectsForInvoiceByEmployee(empId))
           .then((response) => response.data || [])
@@ -133,7 +144,6 @@ const InvoiceDetails = ({ employeeId, projectId, customerId, statusFilter, isCol
       const missingByProject = {};
       results.flat().forEach((row) => {
         if (row.invoiceId) return; // already invoiced
-        if ((row.status || "").toUpperCase() !== "ACTIVE") return; // project itself isn't active
         if (row.endDate && row.endDate > today) return; // period hasn't ended yet — nothing to invoice for it
         const key = `${row.employeeId}_${row.projectId}`;
         if (!missingByProject[key]) {
@@ -149,7 +159,7 @@ const InvoiceDetails = ({ employeeId, projectId, customerId, statusFilter, isCol
       Object.values(missingByProject).forEach((entry) => entry.periods.sort((a, b) => a.startDate.localeCompare(b.startDate)));
       setInvoiceAlerts(Object.values(missingByProject));
     });
-  }, [projects, employeeId, projectId, referralEmployeeIds]);
+  }, [employeeIdsForInvoicing, employeeId, projectId, customerId]);
 
   const invoiceAlertContent = (
     <div style={{ maxHeight: 320, overflowY: "auto", minWidth: 320 }}>
@@ -526,9 +536,10 @@ const InvoiceDetails = ({ employeeId, projectId, customerId, statusFilter, isCol
         // stored as) instead of a free-text cell.
         cellEditor: "agDateStringCellEditor",
         filter: "agSetColumnFilter",
+        valueFormatter: (params) => formatDateMDY(params.value),
       },
-      { headerName: "Start Date", field: "startDate", sortable: isSortable },
-      { headerName: "End Date", field: "endDate", sortable: isSortable },
+      { headerName: "Start Date", field: "startDate", sortable: isSortable, valueFormatter: (params) => formatDateMDY(params.value) },
+      { headerName: "End Date", field: "endDate", sortable: isSortable, valueFormatter: (params) => formatDateMDY(params.value) },
       //{ headerName: 'Invoice Date', field: 'invoiceDate', sortable: isSortable},
       {
         headerName: "Status",
@@ -680,14 +691,21 @@ const InvoiceDetails = ({ employeeId, projectId, customerId, statusFilter, isCol
     const month = formattedDate
       ? new Date(selectedDate).toLocaleString("default", { month: "long" }) // Use 'short' for abbreviated month
       : null;
-    const endDate = new Date().toISOString().split("T")[0];
-    const encodedEndDate = encodeURIComponent(endDate);
-    const encodedFormatSelectedDate = encodeURIComponent(formattedDate);
-    // Any additional logic can go here
+    // yyyy-MM of the picked month — used to restrict Generate Invoice to
+    // just this period instead of every not-yet-invoiced period.
+    const selectedMonth = formattedDate ? formattedDate.substring(0, 7) : null;
+    // Walk every employee's full un-invoiced backlog (active AND inactive
+    // projects alike) via activeProjectsForInvoiceByEmployee — same source
+    // the page-level Invoice Alerts bell uses. activeProjects (the old
+    // source here) only returns the current calendar month's row per
+    // active project, so it silently dropped everything older than this
+    // month, and every inactive project; that's not what "no month picked"
+    // or even a specific past month should mean.
     navigate("/generateInvoice", {
       state: {
-        url: API_ENDPOINTS.activeProjects(encodedEndDate, encodedFormatSelectedDate),
+        employeeIds: employeeIdsForInvoicing,
         month: month,
+        selectedMonth: selectedMonth,
       },
     });
   };
@@ -768,6 +786,7 @@ const InvoiceDetails = ({ employeeId, projectId, customerId, statusFilter, isCol
           style={{ width: "100%" }}
           value={promptPaidDate}
           onChange={setPromptPaidDate}
+          format="MM/DD/YYYY"
         />
       </Modal>
       <GridToolbar className="workforce-search-container" gap={32}>
@@ -829,26 +848,24 @@ const InvoiceDetails = ({ employeeId, projectId, customerId, statusFilter, isCol
         {/* Label + picker stay paired as one collapsible unit — either
             both show or both collapse together, since one without the
             other wouldn't make sense. */}
-        <span style={{ display: "flex", alignItems: "center" }}>
+        <span className="invoice-date-field" style={{ display: "flex", alignItems: "center" }}>
           <label style={{ marginBottom: 0 }}>Invoice Date:&nbsp;</label>
           <DatePicker
-            className="left-panel"
+            className="invoice-date-picker"
             selected={selectedDate}
             onChange={handleDateChange}
             dateFormat="MM/yyyy"
             placeholderText="Select the date"
             showMonthYearPicker
-            style={{ width: "150px" }} // Add a fixed width
           />
         </span>
         <Button
           type="primary"
           style={{ marginLeft: "10px" }}
           className="button-customer"
-          // Scoped to an employee (e.g. the employeeFullDetails Invoices
-          // tab), generateInvoice() doesn't need a month — it's only
-          // required for the generic/bulk (no employeeId) path below.
-          disabled={!employeeId && !selectedDate}
+          // A month is optional: with one picked, generateInvoice() scopes
+          // to just that period; with none, it shows every not-yet-invoiced
+          // period through today.
           onClick={generateInvoice}
         >
           <PlusOutlined /> Generate Invoice

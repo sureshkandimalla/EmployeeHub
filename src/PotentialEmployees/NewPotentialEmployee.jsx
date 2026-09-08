@@ -154,7 +154,8 @@ const NewPotentialEmployee = ({ onClose}) => {
     <Col span={12}>
       <Form.Item label="Date of Birth" required>
         <DatePicker
-          onChange={(date, dateString) => handleGeneralData(dateString, "dob")}
+          onChange={(date) => handleGeneralData(date ? date.format("YYYY-MM-DD") : "", "dob")}
+          format="MM/DD/YYYY"
         />
       </Form.Item>
     </Col>
@@ -248,14 +249,16 @@ const NewPotentialEmployee = ({ onClose}) => {
     <Col span={12}>
       <Form.Item label="Start Date" required>
         <DatePicker
-          onChange={(date, dateString) => handleGeneralData(dateString, "startDate")}
+          onChange={(date) => handleGeneralData(date ? date.format("YYYY-MM-DD") : "", "startDate")}
+          format="MM/DD/YYYY"
         />
       </Form.Item>
     </Col>
     <Col span={12}>
       <Form.Item label="End Date">
         <DatePicker
-          onChange={(date, dateString) => handleGeneralData(dateString, "endDate")}
+          onChange={(date) => handleGeneralData(date ? date.format("YYYY-MM-DD") : "", "endDate")}
+          format="MM/DD/YYYY"
         />
       </Form.Item>
     </Col>

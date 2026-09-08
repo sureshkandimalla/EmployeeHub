@@ -11,6 +11,7 @@ import "./ProjectGrid.css";
 import "@ag-grid-community/styles/ag-theme-alpine.css";
 import AssignmentForm from "./AssignmentForm";
 import { formatCurrency } from "../Utils/CurrencyFormatter";
+import { formatDateMDY } from "../Utils/dateFormat";
 import GridToolbar from "../Utils/GridToolbar";
 import "./AssignmentDetails.css"
 
@@ -146,6 +147,7 @@ const AssignmentDetails = ({ projectId, isCollapsed }) => {
         sortable: isSortable,
         editable: true,
         filter: "agSetColumnFilter",
+        valueFormatter: (params) => formatDateMDY(params.value),
       },
       {
         headerName: "Project End Date",
@@ -153,6 +155,7 @@ const AssignmentDetails = ({ projectId, isCollapsed }) => {
         sortable: isSortable,
         editable: true,
         filter: "agSetColumnFilter",
+        valueFormatter: (params) => formatDateMDY(params.value),
       },
     ];
     return columns;

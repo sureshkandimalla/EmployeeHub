@@ -11,7 +11,7 @@ import API_ENDPOINTS, { visaStatusList } from "../config";
 import VisaFormModal from "./VisaFormModal";
 import LcaFormModal from "./LcaFormModal";
 import PassportController from "../Passport/PassportController";
-import { parseLocalDateSafe } from "../Utils/dateFormat";
+import { parseLocalDateSafe, formatDateMDY } from "../Utils/dateFormat";
 import {
   MASTER_FIELD_LABELS,
   DETAIL_FIELD_LABELS,
@@ -111,12 +111,16 @@ export default function VisaDetailsList({ preloadedData }) {
         const raw = Array.isArray(res.data) ? res.data
           : Array.isArray(res.data?.data) ? res.data.data
           : [];
-        return raw.map((l) => ({
-          value: l.lcaId,
-          label: `${l.lcaId} — ${l.lcaNumber || ""}`,
-          lcaNumber: l.lcaNumber || "",
-          lca: l,
-        }));
+        return raw.map((l) => {
+          const emp = l.employee || l.visa?.employee;
+          const employeeName = emp ? `${emp.firstName || ""} ${emp.lastName || ""}`.trim() : "";
+          return {
+            value: l.lcaId,
+            label: `${employeeName || l.lcaId} — ${l.lcaNumber || ""}`,
+            lcaNumber: l.lcaNumber || "",
+            lca: l,
+          };
+        });
       })
       .catch((err) => {
         console.error("Failed to fetch LCAs:", err);
@@ -132,7 +136,12 @@ export default function VisaDetailsList({ preloadedData }) {
 
     // Wait for BOTH calls so lcaOptions are loaded before populateVisaForm sets lcaId
     Promise.all([lcasFetch, visaFetch]).then(([options, visaData]) => {
-      setLcaOptions(options);
+      // An LCA already attached to a Visa isn't available to pick again —
+      // except the one this Visa is currently using, so editing an
+      // existing Visa still shows its own LCA as the selected option.
+      const currentLcaId = visaData?.lca?.lcaId ?? null;
+      const availableOptions = options.filter((opt) => !opt.lca.visa || opt.value === currentLcaId);
+      setLcaOptions(availableOptions);
       setVisaModalData(visaData);
       populateVisaForm(visaData);
     });
@@ -151,14 +160,17 @@ export default function VisaDetailsList({ preloadedData }) {
       receiptNumber:   values.receiptNumber   ?? visaModalData?.receiptNumber ?? null,
       startDate:     values.startDate?.format("YYYY-MM-DD") || null,
       endDate:       values.endDate?.format("YYYY-MM-DD")   || null,
-      jobTitle:      values.jobTitle      ?? null,
-      lcaNumber:     values.lcaNumber     ?? null,
-      socCode:       values.socCode       ?? null,
-      client:        values.client        ?? null,
-      customer:        values.customer        ?? null,
-      jobLocation:   values.jobLocation   ?? null,
-      jobLocation2:  values.jobLocation2  ?? null,
-      lcaWage:       values.lcaWage       ?? null,
+      // Falls back to the linked LCA's own value whenever neither the form
+      // nor the existing visa record has it — so saving backfills the gap
+      // onto the visa record itself instead of leaving it null forever.
+      jobTitle:      values.jobTitle      ?? visaModalData?.lca?.jobTitle      ?? null,
+      lcaNumber:     values.lcaNumber     ?? visaModalData?.lca?.lcaNumber     ?? null,
+      socCode:       values.socCode       ?? visaModalData?.lca?.socCode       ?? null,
+      client:        values.client        ?? visaModalData?.lca?.client        ?? null,
+      customer:        values.customer        ?? visaModalData?.lca?.customer        ?? null,
+      jobLocation:   values.jobLocation   ?? visaModalData?.lca?.jobLocation   ?? null,
+      jobLocation2:  values.jobLocation2  ?? visaModalData?.lca?.jobLocation2  ?? null,
+      lcaWage:       values.lcaWage       ?? visaModalData?.lca?.lcaWage       ?? null,
       status:        values.status        ?? null,
       lca:           values.lcaId != null ? values.lcaId : (visaModalData?.lca?.lcaId ?? null),
       lastUpdated:   new Date().toISOString().split("T")[0],
@@ -464,12 +476,14 @@ export default function VisaDetailsList({ preloadedData }) {
     { field: "everifyStatus",       headerName: MASTER_FIELD_LABELS.everifyStatus,      filter: "agSetColumnFilter",  cellClassRules, cellStyle: statusCellStyle },
     { field: "startDate",           headerName: MASTER_FIELD_LABELS.startDate,          filter: "agSetColumnFilter", cellClassRules,
       editable: (params) => !!params.data?.visaId,
+      valueFormatter: (params) => formatDateMDY(params.value),
     },
     { field: "endDate",             headerName: MASTER_FIELD_LABELS.endDate,            filter: "agSetColumnFilter", cellClassRules,
       editable: (params) => !!params.data?.visaId,
+      valueFormatter: (params) => formatDateMDY(params.value),
     },
-    { field: "employmentStartDate", headerName: MASTER_FIELD_LABELS.employmentStartDate, filter: "agSetColumnFilter", cellClassRules },
-    { field: "employmentEndDate",   headerName: MASTER_FIELD_LABELS.employmentEndDate,   filter: "agSetColumnFilter", cellClassRules },
+    { field: "employmentStartDate", headerName: MASTER_FIELD_LABELS.employmentStartDate, filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
+    { field: "employmentEndDate",   headerName: MASTER_FIELD_LABELS.employmentEndDate,   filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
     { field: "filingType",          headerName: MASTER_FIELD_LABELS.filingType,         filter: "agSetColumnFilter",  cellClassRules,
       valueFormatter: (p) => FILING_TYPE_LABEL_MAP[p.value] ?? p.value ?? "",
       editable: (params) => !!params.data?.visaId,
@@ -485,7 +499,7 @@ export default function VisaDetailsList({ preloadedData }) {
       editable: (params) => !!params.data?.visaId,
     },
     { field: "emailId",             headerName: MASTER_FIELD_LABELS.emailId,            filter: "agSetColumnFilter",  cellClassRules: { ...cellClassRules, blueUnderline: () => true } },
-    { field: "dob",                 headerName: MASTER_FIELD_LABELS.dob,               filter: "agSetColumnFilter", cellClassRules },
+    { field: "dob",                 headerName: MASTER_FIELD_LABELS.dob,               filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
     { field: "passportNumber",      headerName: MASTER_FIELD_LABELS.passportNumber,     filter: "agSetColumnFilter",  cellClassRules,
       cellRenderer: (params) => {
         const passNum = params.value;
@@ -535,8 +549,8 @@ export default function VisaDetailsList({ preloadedData }) {
       },
     },
     { field: "location",            headerName: MASTER_FIELD_LABELS.location,           filter: "agSetColumnFilter",  cellClassRules },
-    { field: "approvedDate",        headerName: MASTER_FIELD_LABELS.approvedDate,       filter: "agSetColumnFilter", cellClassRules },
-    { field: "arrivalDate",         headerName: MASTER_FIELD_LABELS.arrivalDate,        filter: "agSetColumnFilter", cellClassRules },
+    { field: "approvedDate",        headerName: MASTER_FIELD_LABELS.approvedDate,       filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
+    { field: "arrivalDate",         headerName: MASTER_FIELD_LABELS.arrivalDate,        filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
     { field: "visaStatus",          headerName: MASTER_FIELD_LABELS.visaStatus,         filter: "agSetColumnFilter",  cellClassRules, cellStyle: statusCellStyle },
     
 
@@ -644,10 +658,11 @@ export default function VisaDetailsList({ preloadedData }) {
           cellEditor: "agSelectCellEditor",
           cellEditorParams: { values: visaStatusList.map((o) => o.value) },
         },
-        { field: "startDate",    headerName: DETAIL_FIELD_LABELS.startDate,    filter: "agSetColumnFilter", editable: true, cellClassRules },
-        { field: "endDate",      headerName: DETAIL_FIELD_LABELS.endDate,      filter: "agSetColumnFilter", editable: true, cellClassRules },
+        { field: "startDate",    headerName: DETAIL_FIELD_LABELS.startDate,    filter: "agSetColumnFilter", editable: true, cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
+        { field: "endDate",      headerName: DETAIL_FIELD_LABELS.endDate,      filter: "agSetColumnFilter", editable: true, cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
         { field: "lastUpdated",  headerName: DETAIL_FIELD_LABELS.lastUpdated,  filter: "agSetColumnFilter", editable: false, cellClassRules,
-          cellStyle: { backgroundColor: "#f5f5f5", color: "#999", fontStyle: "italic" } },
+          cellStyle: { backgroundColor: "#f5f5f5", color: "#999", fontStyle: "italic" },
+          valueFormatter: (params) => formatDateMDY(params.value) },
       ],
       domLayout: "autoHeight",
       defaultColDef: { minWidth: 100, resizable: true },

@@ -263,9 +263,10 @@ const WorkOrderForm = ({ onClose }) => {
             <Col span={8} className="form-row">
               <Form.Item label="Start Date">
                 <DatePicker
-                  onChange={(date, dateString) =>
-                    handleGeneralData(dateString, "startDate")
+                  onChange={(date) =>
+                    handleGeneralData(date ? date.format("YYYY-MM-DD") : "", "startDate")
                   }
+                  format="MM/DD/YYYY"
                   value={
                     generalDetails.startDate
                       ? moment(generalDetails.startDate)
@@ -278,9 +279,10 @@ const WorkOrderForm = ({ onClose }) => {
             <Col span={8} className="form-row">
               <Form.Item label="End Date">
                 <DatePicker
-                  onChange={(date, dateString) =>
-                    handleGeneralData(dateString, "endDate")
+                  onChange={(date) =>
+                    handleGeneralData(date ? date.format("YYYY-MM-DD") : "", "endDate")
                   }
+                  format="MM/DD/YYYY"
                   value={
                     generalDetails.endDate
                       ? moment(generalDetails.endDate)

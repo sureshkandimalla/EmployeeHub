@@ -9,6 +9,7 @@ import "ag-grid-community/styles/ag-theme-alpine.css";
 import API_ENDPOINTS from "../config";
 import { ACTION_REQUEST_CONFIG } from "../Notes/actionRequestConfig";
 import GridToolbar from "../Utils/GridToolbar";
+import { formatDateMDY } from "../Utils/dateFormat";
 
 const getLoggedInUserName = () => {
   try {
@@ -133,7 +134,7 @@ const PendingRequests = () => {
     { headerName: "Record", field: "entityLabel", filter: "agSetColumnFilter", cellClassRules },
     { headerName: "Action", field: "action", filter: "agSetColumnFilter", cellClassRules },
     { headerName: "Requested By", field: "requestedBy", filter: "agSetColumnFilter", cellClassRules },
-    { headerName: "Requested Date", field: "requestedDate", filter: "agSetColumnFilter", cellClassRules },
+    { headerName: "Requested Date", field: "requestedDate", filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
     {
       headerName: "Review",
       sortable: false,

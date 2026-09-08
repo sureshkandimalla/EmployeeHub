@@ -14,18 +14,27 @@ import { IconButton } from "@mui/material";
 import EditHoursInvoiceModal from "./EditHoursInvoiceModel";
 import "./GenerateInvoiceDetails.css";
 import { formatCurrency } from "../Utils/CurrencyFormatter";
-import { formatMonthYear } from "../Utils/dateFormat";
+import { formatMonthYear, formatDateMDY } from "../Utils/dateFormat";
 import { computeInvoicePeriod } from "../Utils/invoiceTerm";
 import API_ENDPOINTS from "../config";
 import { sizeColumnsForHeader } from "../Utils/agGridColumnSizing";
 import GridToolbar from "../Utils/GridToolbar";
 
-const GenerateInvoiceDetails = ({ url: propUrl, month: propMonth, onBack } = {}) => {
+const GenerateInvoiceDetails = ({ url: propUrl, employeeIds: propEmployeeIds, month: propMonth, selectedMonth: propSelectedMonth, onBack } = {}) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { url: stateUrl, month: stateMonth } = location.state || {};
+  const { url: stateUrl, employeeIds: stateEmployeeIds, month: stateMonth, selectedMonth: stateSelectedMonth } = location.state || {};
   const url = propUrl ?? stateUrl;
+  // Bulk path (no single employee/project scoping this component to one
+  // url): one row-set per active employee, fetched and combined the same
+  // way the Invoice Details page's own Invoice Alerts bell does, so both
+  // agree on what's actually outstanding.
+  const employeeIds = propEmployeeIds ?? stateEmployeeIds;
   const month = propMonth ?? stateMonth;
+  // yyyy-MM of the month picked on the Invoice Details page. Absent when
+  // scoped to a single employee (that path isn't month-driven), in which
+  // case every not-yet-invoiced period for that employee is still shown.
+  const selectedMonth = propSelectedMonth ?? stateSelectedMonth;
   const [searchText, setSearchText] = useState("");
   const [rowData, setRowData] = useState([]);
   // Captured from the raw (pre-filter) fetch so the "up to date" message
@@ -57,10 +66,30 @@ const GenerateInvoiceDetails = ({ url: propUrl, month: propMonth, onBack } = {})
   }, []);
 
   const fetchData = () => {
-    // const endDate =  new Date().toISOString().split('T')[0];
-    // const encodedEndDate = encodeURIComponent(endDate);
-    // const encodedFormatSelectedDate = encodeURIComponent(formattedDate);
-    console.log(url);
+    if (employeeIds && employeeIds.length > 0) {
+      Promise.all(
+        employeeIds.map((employeeId) =>
+          axios
+            .get(API_ENDPOINTS.activeProjectsForInvoiceByEmployee(employeeId))
+            .then((response) => response.data || [])
+            .catch((error) => {
+              console.error("Error fetching active projects for employee " + employeeId, error);
+              return [];
+            }),
+        ),
+      ).then((results) => {
+        const combined = results.flat();
+        setEmployeeName(combined?.[0]?.employeeName || "");
+        const flattened = getFlattenedData(combined);
+        setRowData(flattened);
+        setHasFetched(true);
+        populateHoursFromTimesheets(flattened);
+      }).finally(() => {
+        setLoading(false);
+      });
+      return;
+    }
+
     axios
       .get(url, {
         params: {
@@ -69,7 +98,6 @@ const GenerateInvoiceDetails = ({ url: propUrl, month: propMonth, onBack } = {})
         },
       })
       .then((response) => {
-        console.log(response.data);
         setLoading(false);
         setEmployeeName(response.data?.[0]?.employeeName || "");
         const flattened = getFlattenedData(response.data);
@@ -125,7 +153,14 @@ const GenerateInvoiceDetails = ({ url: propUrl, month: propMonth, onBack } = {})
           const entries = entriesByEmployee[row.employeeId] || [];
           const totalHours = entries
             .filter(
-              (e) => e.projectId === row.projectId && e.workDate >= row.startDate && e.workDate <= row.endDate,
+              (e) =>
+                e.projectId === row.projectId &&
+                e.workDate >= row.startDate &&
+                e.workDate <= row.endDate &&
+                // Only pull hours from timesheets that have actually been
+                // submitted (or approved) — a Draft entry isn't confirmed
+                // yet, so it shouldn't silently seed an invoice's hours.
+                (e.status === "Submitted" || e.status === "Approved"),
             )
             .reduce((sum, e) => sum + (e.hours || 0), 0);
           if (totalHours <= 0) return row;
@@ -173,6 +208,10 @@ const GenerateInvoiceDetails = ({ url: propUrl, month: propMonth, onBack } = {})
       .filter((dataObj) => !dataObj.invoiceId)
       // Don't offer to invoice a period that hasn't ended yet.
       .filter((dataObj) => !dataObj.endDate || dataObj.endDate <= today)
+      // Restrict to the month picked on Invoice Details — otherwise every
+      // not-yet-invoiced period (including earlier months) would show up
+      // instead of just what's due for the selected month.
+      .filter((dataObj) => !selectedMonth || (dataObj.startDate && dataObj.startDate.substring(0, 7) === selectedMonth))
       .map((dataObj) => {
         //return { ...dataObj, ...dataObj.employeeAddress[0], ...dataObj.employeeAssignments[0] }
         // Snapshot the project's own start/end date before startDate/endDate
@@ -346,6 +385,7 @@ const GenerateInvoiceDetails = ({ url: propUrl, month: propMonth, onBack } = {})
           }
           return true;
         },
+        valueFormatter: (params) => formatDateMDY(params.value),
       },
       {
         headerName: "End Date",
@@ -370,6 +410,7 @@ const GenerateInvoiceDetails = ({ url: propUrl, month: propMonth, onBack } = {})
           data.endDate = newValue;
           return true;
         },
+        valueFormatter: (params) => formatDateMDY(params.value),
       },
       { headerName: "Hours", field: "hours", sortable: true, editable: true },
       {
@@ -506,7 +547,15 @@ const GenerateInvoiceDetails = ({ url: propUrl, month: propMonth, onBack } = {})
 
   return (
     <>
-      {month ? <p> Generating Invoice for {month}</p> : ""}
+      {month ? (
+        <p> Generating Invoice for {month}</p>
+      ) : (
+        // The employeeId-embedded path (onBack present) never sets month —
+        // it's scoped by employee, not by month, so no banner there. The
+        // standalone/generic path with no month picked means "every period
+        // through today".
+        !onBack && <p>Generating Invoice for all months through today</p>
+      )}
       <div className="ag-theme-alpine employee-List-grid">
         {loading ? (
           <div>Loading...</div> // Display loading indicator

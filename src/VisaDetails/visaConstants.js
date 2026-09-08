@@ -43,6 +43,7 @@ export const LCA_FIELD_LABELS = {
   jobTitle:               "Job Title",
   socCode:                "SOC Code",
   lcaWage:                "LCA Wage",
+  wageLevel:              "Wage Level",
   status:                 "Status",
   client:                 "Client",
   customer:                 "Customer",
@@ -163,6 +164,16 @@ export const FILING_TYPE_LABEL_MAP = Object.fromEntries(
   FILING_TYPE_OPTIONS.map((o) => [o.value, o.label])
 );
 
+export const LCA_WAGE_LEVEL_OPTIONS = [
+  { value: "I" },
+  { value: "II" },
+  { value: "III" },
+  { value: "IV" },
+];
+
+/** Values used in the AG Grid agSelectCellEditor (strings only) */
+export const LCA_WAGE_LEVEL_VALUES = LCA_WAGE_LEVEL_OPTIONS.map((o) => o.value);
+
 export const LCA_STATUS_OPTIONS = [
   { value: "Active" },
   { value: "Certified" },
@@ -178,7 +189,7 @@ export const LCA_STATUS_OPTIONS = [
 // ─────────────────────────────────────────────
 
 export const LCA_EDITABLE_FIELDS = [
-  "lcaCaseNumber", "socCode", "lcaWage", "client", "customer",
+  "lcaCaseNumber", "socCode", "lcaWage", "wageLevel", "client", "customer",
   "jobLocation", "jobLocation2", "jobTitle",
 ];
 

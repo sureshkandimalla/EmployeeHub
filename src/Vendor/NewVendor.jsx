@@ -280,18 +280,20 @@ const NewVendor = () => {
             >
               <DatePicker
                 value={generalDetails.startDate ? moment(generalDetails.startDate) : null}
-                onChange={(date, dateString) =>
-                  handleGeneralData(dateString, "startDate")
+                onChange={(date) =>
+                  handleGeneralData(date ? date.format("YYYY-MM-DD") : "", "startDate")
                 }
+                format="MM/DD/YYYY"
               />
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item label="End Date" name="endDate">
               <DatePicker
-                onChange={(date, dateString) =>
-                  handleGeneralData(dateString, "endDate")
+                onChange={(date) =>
+                  handleGeneralData(date ? date.format("YYYY-MM-DD") : "", "endDate")
                 }
+                format="MM/DD/YYYY"
               />
             </Form.Item>
           </Col>

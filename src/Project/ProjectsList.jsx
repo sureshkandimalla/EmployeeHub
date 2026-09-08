@@ -28,6 +28,7 @@ import NotesActionButton from "../Notes/NotesActionButton";
 import NotesModal from "../Notes/NotesModal";
 import { buildRowActions } from "../Notes/rowActions";
 import GridToolbar from "../Utils/GridToolbar";
+import { formatDateMDY } from "../Utils/dateFormat";
 
 const ProjectList = ({ projectsList, isCollapsed, onRefresh }) => {
   console.log(projectsList);
@@ -369,6 +370,7 @@ const ProjectList = ({ projectsList, isCollapsed, onRefresh }) => {
         sortable: isSortable,
         editable: true,
         filter: "agSetColumnFilter",
+        valueFormatter: (params) => formatDateMDY(params.value),
       },
       {
         headerName: "Project End Date",
@@ -376,6 +378,7 @@ const ProjectList = ({ projectsList, isCollapsed, onRefresh }) => {
         sortable: isSortable,
         editable: true,
         filter: "agSetColumnFilter",
+        valueFormatter: (params) => formatDateMDY(params.value),
       },
       {
         headerName: "Invoice Terms",

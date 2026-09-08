@@ -11,6 +11,7 @@ import "./Vendor.css";
 import NewVendor from "./NewVendor";
 import API_ENDPOINTS, { vendorTypeList, vendorStatusList, paymentTermsList } from "../config";
 import { sizeColumnsForHeader } from "../Utils/agGridColumnSizing";
+import { formatDateMDY } from "../Utils/dateFormat";
 import NotesActionButton from "../Notes/NotesActionButton";
 import NotesModal from "../Notes/NotesModal";
 import { buildRowActions } from "../Notes/rowActions";
@@ -196,6 +197,7 @@ const VendorDetails = () => {
         },
         cellClass: isIdColumn ? "ag-center-cols" : undefined,
         cellStyle: isIdColumn ? { textAlign: "center" } : undefined,
+        valueFormatter: type === "date" ? (params) => formatDateMDY(params.value) : undefined,
         cellRenderer:
           field === "vendorCompanyName"
             ? (params) => (

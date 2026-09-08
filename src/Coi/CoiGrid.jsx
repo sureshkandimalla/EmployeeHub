@@ -11,6 +11,7 @@ import NotesActionButton from "../Notes/NotesActionButton";
 import NotesModal from "../Notes/NotesModal";
 import { buildRowActions } from "../Notes/rowActions";
 import GridToolbar from "../Utils/GridToolbar";
+import { formatDateMDY } from "../Utils/dateFormat";
 import "ag-grid-enterprise";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
@@ -182,6 +183,7 @@ const CoiGrid = ({ customerId, vendorId, isCollapsed }) => {
       editable: true,
       filter: "agSetColumnFilter",
       cellEditor: "agDateStringCellEditor",
+      valueFormatter: (params) => formatDateMDY(params.value),
     },
     {
       headerName: "End Date",
@@ -189,6 +191,7 @@ const CoiGrid = ({ customerId, vendorId, isCollapsed }) => {
       editable: true,
       filter: "agSetColumnFilter",
       cellEditor: "agDateStringCellEditor",
+      valueFormatter: (params) => formatDateMDY(params.value),
     },
     {
       headerName: "Status",

@@ -679,7 +679,7 @@ const NewInvoice = ({ onClose, employeeId, open }) => {
                     form.setFieldsValue({ endDate: parseLocalDate(endDateISO) });
                   }
                 }}
-                dateFormat="yyyy-MM-dd"
+                dateFormat="MM/dd/yyyy"
               />
             </Form.Item>
           </Col>
@@ -713,7 +713,7 @@ const NewInvoice = ({ onClose, employeeId, open }) => {
 
                   handleGeneralData(endDateISO, "endDate");
                 }}
-                dateFormat="yyyy-MM-dd"
+                dateFormat="MM/dd/yyyy"
               />
             </Form.Item>
           </Col>

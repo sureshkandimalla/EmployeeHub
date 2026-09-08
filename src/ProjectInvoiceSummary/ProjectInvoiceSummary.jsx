@@ -8,7 +8,7 @@ import "ag-grid-enterprise";
 import axios from "axios";
 import API_ENDPOINTS from "../config";
 import { formatCurrency } from "../Utils/CurrencyFormatter";
-import { formatMonthYear } from "../Utils/dateFormat";
+import { formatMonthYear, formatDateMDY } from "../Utils/dateFormat";
 import { sizeColumnsForHeader } from "../Utils/agGridColumnSizing";
 import { useFilteredTotalsRow } from "../Utils/useFilteredTotalsRow";
 import GridToolbar from "../Utils/GridToolbar";
@@ -186,7 +186,7 @@ export default function ProjectInvoiceSummary() {
       headerName: "Last Paid",
       filter: "agSetColumnFilter",
       cellClassRules,
-      valueFormatter: (params) => (params.node.rowPinned ? "" : params.value || ""),
+      valueFormatter: (params) => (params.node.rowPinned ? "" : formatDateMDY(params.value)),
     },
   ];
 
@@ -216,9 +216,9 @@ export default function ProjectInvoiceSummary() {
         { field: "total", headerName: "Invoice Amount", filter: "agSetColumnFilter", valueFormatter: (p) => formatCurrency(p.value) },
         { field: "discounts", headerName: "Discounts", filter: "agSetColumnFilter", valueFormatter: (p) => formatCurrency(p.value) },
         { field: "invoicePaidAmount", headerName: "Invoice Paid Amount", filter: "agSetColumnFilter", valueFormatter: (p) => formatCurrency(p.value) },
-        { field: "invoicePaidDate", headerName: "Invoice Paid Date", filter: "agSetColumnFilter" },
-        { field: "startDate", headerName: "Start Date", filter: "agSetColumnFilter" },
-        { field: "endDate", headerName: "End Date", filter: "agSetColumnFilter" },
+        { field: "invoicePaidDate", headerName: "Invoice Paid Date", filter: "agSetColumnFilter", valueFormatter: (params) => formatDateMDY(params.value) },
+        { field: "startDate", headerName: "Start Date", filter: "agSetColumnFilter", valueFormatter: (params) => formatDateMDY(params.value) },
+        { field: "endDate", headerName: "End Date", filter: "agSetColumnFilter", valueFormatter: (params) => formatDateMDY(params.value) },
         { field: "status", headerName: "Status", filter: "agSetColumnFilter" },
       ],
       defaultColDef: { minWidth: 100, resizable: true, sortable: true },

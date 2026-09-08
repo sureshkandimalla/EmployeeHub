@@ -8,7 +8,7 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import API_ENDPOINTS from "../config";
 import { formatCurrency } from "../Utils/CurrencyFormatter";
-import { formatMonthYear } from "../Utils/dateFormat";
+import { formatMonthYear, formatDateMDY } from "../Utils/dateFormat";
 import { sizeColumnsForHeader } from "../Utils/agGridColumnSizing";
 import { useFilteredTotalsRow } from "../Utils/useFilteredTotalsRow";
 import NotesActionButton from "../Notes/NotesActionButton";
@@ -155,10 +155,10 @@ export default function AllBills() {
         valueFormatter: (params) => formatCurrency(params.value),
         cellClassRules,
       },
-      { headerName: "Bill Date", field: "billDate", filter: "agSetColumnFilter", cellClassRules },
-      { headerName: "Start Date", field: "startDate", filter: "agSetColumnFilter", cellClassRules },
-      { headerName: "End Date", field: "endDate", filter: "agSetColumnFilter", cellClassRules },
-      { headerName: "Payment Date", field: "paymentDate", filter: "agSetColumnFilter", cellClassRules },
+      { headerName: "Bill Date", field: "billDate", filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
+      { headerName: "Start Date", field: "startDate", filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
+      { headerName: "End Date", field: "endDate", filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
+      { headerName: "Payment Date", field: "paymentDate", filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
       { headerName: "Status", field: "status", filter: "agSetColumnFilter", cellClassRules },
       { headerName: "Project Id", field: "projectId", filter: "agSetColumnFilter", cellClassRules },
       {

@@ -12,6 +12,7 @@ import "ag-grid-community/styles/ag-theme-alpine.css";
 import "react-datepicker/dist/react-datepicker.css";
 import AdjustmentForm from "./AdjustmentForm";
 import { formatCurrency } from "../Utils/CurrencyFormatter";
+import { formatDateMDY } from "../Utils/dateFormat";
 import { useFilteredTotalsRow } from "../Utils/useFilteredTotalsRow";
 import GridToolbar from "../Utils/GridToolbar";
 
@@ -91,6 +92,7 @@ const AdjustementDetails = ({ employeeId, isCollapsed }) => {
         field: "adjustmentDate",
         sortable: isSortable,
         filter: "agSetColumnFilter",
+        valueFormatter: (params) => formatDateMDY(params.value),
       },
     ];
     return columns;

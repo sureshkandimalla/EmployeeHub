@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import API_ENDPOINTS from "../config";
 import { sizeColumnsForHeader } from "../Utils/agGridColumnSizing";
-import { formatMonthYear } from "../Utils/dateFormat";
+import { formatMonthYear, formatDateMDY } from "../Utils/dateFormat";
 import { AgGridReact } from "@ag-grid-community/react";
 import axios from "axios";
 import "ag-grid-enterprise";
@@ -112,8 +112,8 @@ const InvoiceById = ({ url, employeeId, isCollapsed }) => {
         sortable: isSortable,
         valueFormatter: (params) => formatCurrency(params.value), // Format with dollar sign
       },
-      { headerName: "Start Date", field: "startDate", sortable: isSortable },
-      { headerName: "End Date", field: "endDate", sortable: isSortable },
+      { headerName: "Start Date", field: "startDate", sortable: isSortable, valueFormatter: (params) => formatDateMDY(params.value) },
+      { headerName: "End Date", field: "endDate", sortable: isSortable, valueFormatter: (params) => formatDateMDY(params.value) },
       {
         headerName: "Status",
         field: "status",

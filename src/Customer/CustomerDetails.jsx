@@ -16,6 +16,7 @@ import API_ENDPOINTS, {
   paymentTermsList,
 } from "../config";
 import { sizeColumnsForHeader } from "../Utils/agGridColumnSizing";
+import { formatDateMDY } from "../Utils/dateFormat";
 import GridToolbar from "../Utils/GridToolbar";
 import NotesActionButton from "../Notes/NotesActionButton";
 import NotesModal from "../Notes/NotesModal";
@@ -214,6 +215,7 @@ const CustomerDetails = () => {
         },
         cellClass: isIdColumn ? "ag-center-cols" : undefined,
         cellStyle: isIdColumn ? { textAlign: "center" } : undefined,
+        valueFormatter: type === "date" ? (params) => formatDateMDY(params.value) : undefined,
         cellRenderer:
           field === "customerCompanyName"
             ? (params) => (

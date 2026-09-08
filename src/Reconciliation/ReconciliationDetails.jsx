@@ -7,6 +7,7 @@ import "ag-grid-community/styles/ag-theme-alpine.css";
 import "ag-grid-enterprise";
 import axios from "axios";
 import { formatCurrency } from "../Utils/CurrencyFormatter";
+import { formatDateMDY } from "../Utils/dateFormat";
 import API_ENDPOINTS from "../config";
 import { sizeColumnsForHeader } from "../Utils/agGridColumnSizing";
 import { useFilteredTotalsRow } from "../Utils/useFilteredTotalsRow";
@@ -124,8 +125,8 @@ export default function ReconciliationDetails({ employeeId }) {
       filter: "agSetColumnFilter",
     },
     
-    { field: "startDate", headerName: "Start Date", filter: "agSetColumnFilter" },
-    { field: "endDate", headerName: "End Date", filter: "agSetColumnFilter" },
+    { field: "startDate", headerName: "Start Date", filter: "agSetColumnFilter", valueFormatter: (params) => formatDateMDY(params.value) },
+    { field: "endDate", headerName: "End Date", filter: "agSetColumnFilter", valueFormatter: (params) => formatDateMDY(params.value) },
   ];
 
   const getRowStyle = (params) => {
@@ -158,8 +159,8 @@ export default function ReconciliationDetails({ employeeId }) {
           filter: "agSetColumnFilter",
         },
         { field: "expenseType", headerName: "Expense Type", filter: "agSetColumnFilter" },
-        { field: "startDate", headerName: "Start Date", filter: "agSetColumnFilter" },
-        { field: "endDate", headerName: "End Date", filter: "agSetColumnFilter" },
+        { field: "startDate", headerName: "Start Date", filter: "agSetColumnFilter", valueFormatter: (params) => formatDateMDY(params.value) },
+        { field: "endDate", headerName: "End Date", filter: "agSetColumnFilter", valueFormatter: (params) => formatDateMDY(params.value) },
       ],
       defaultColDef: {
         flex: 1,

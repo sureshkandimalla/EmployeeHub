@@ -10,6 +10,7 @@ import API_ENDPOINTS from "../config";
 import "@ag-grid-community/styles/ag-theme-alpine.css";
 import WorkOrderForm from "./WorkOrderForm";
 import { formatCurrency } from "../Utils/CurrencyFormatter";
+import { formatDateMDY } from "../Utils/dateFormat";
 import "./WorkOrderDetails.css";
 import DocumentsPanel from "../Documents/DocumentsPanel";
 import { openDocumentInNewTab } from "../Documents/openDocument";
@@ -142,6 +143,7 @@ const WorkOrderDetails = ({ rowData, isCollapsed, onRefresh }) => {
         sortable: isSortable,
         editable: true,
         filter: "agSetColumnFilter",
+        valueFormatter: (params) => formatDateMDY(params.value),
       },
       {
         headerName: "Project End Date",
@@ -149,6 +151,7 @@ const WorkOrderDetails = ({ rowData, isCollapsed, onRefresh }) => {
         sortable: isSortable,
         editable: true,
         filter: "agSetColumnFilter",
+        valueFormatter: (params) => formatDateMDY(params.value),
       },
       // { headerName: 'Wage', field: 'wage', sortable: isSortable, editable: true, filter: 'agTextColumnFilter' },
       {

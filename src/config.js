@@ -217,6 +217,8 @@ export const API_ENDPOINTS = {
   getAllAdjustments: `${API_BASE_URL}/adjustment/getAdjustments`,
   saveWage: `${API_BASE_URL}/wages/wage`,
   createPotentialEmployee: `${API_BASE_URL}/visa/potentialEmployees`,
+  // Backend requires selectedDate (400s without it) — callers with no
+  // month picked should pass endDate itself rather than omit it.
   activeProjects: (endDate, selectedDate) => `${API_BASE_URL}/activeProjects?endDate=${endDate}&selectedDate=${selectedDate}`,
   activeProjectsForInvoiceByEmployee: (employeeId) => `${API_BASE_URL}/activeProjectsForInvoiceByEmployee?employeeId=${employeeId}`,
   masterDataTemplate: (entityType) => `${API_BASE_URL}/masterdata/template/${entityType}`,

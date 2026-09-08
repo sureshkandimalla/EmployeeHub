@@ -23,13 +23,27 @@ export const formatDate = (isoDateString) => {
   });
 };
 
+// Renders a stored "yyyy-MM-dd" date as "MM/DD/YYYY" for AG Grid cells that
+// otherwise show the raw stored string as-is (no valueFormatter). Same
+// local-parse approach as formatDate — avoids the UTC-parse pitfall.
+export const formatDateMDY = (isoDateString) => {
+  const date = parseLocalDateSafe(isoDateString);
+  if (!date) return "";
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${mm}/${dd}/${date.getFullYear()}`;
+};
+
 // Parses a "yyyy-MM-dd"-prefixed string into a local-midnight Date (not a
 // UTC one, unlike `new Date(isoString)`), for callers that need the actual
 // Date object rather than just a formatted string (e.g. day-count math,
 // custom formatting). Returns null for anything that isn't a valid date.
 export const parseLocalDateSafe = (isoDateString) => {
   if (!isoDateString) return null;
-  const [year, month, day] = String(isoDateString).split("-").map(Number);
+  // Drop a trailing "Thh:mm:ss..." time component, if present, so a full
+  // ISO timestamp (not just a bare "yyyy-MM-dd") still parses correctly.
+  const datePart = String(isoDateString).split("T")[0];
+  const [year, month, day] = datePart.split("-").map(Number);
   if (!year || !month || !day) return null;
   const date = new Date(year, month - 1, day);
   return isNaN(date) ? null : date;

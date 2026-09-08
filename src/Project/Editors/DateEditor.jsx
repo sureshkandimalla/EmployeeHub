@@ -25,7 +25,7 @@ const DateEditor = forwardRef((props, ref) => {
     <DatePicker
       value={date}
       onChange={(d) => setDate(d)}
-      format={"YYYY-MM-DD"}
+      format={"MM/DD/YYYY"}
       style={{ width: '100%' }}
     />
   );

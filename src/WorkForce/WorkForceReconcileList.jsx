@@ -9,6 +9,7 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import "./WorkForceList.css";
 import { formatCurrency } from "../Utils/CurrencyFormatter";
+import { formatDateMDY } from "../Utils/dateFormat";
 import GridToolbar from "../Utils/GridToolbar";
 
 const WorkForceReconcileList = ({ employees, isCollapsed, onRefresh }) => {
@@ -115,7 +116,10 @@ const WorkForceReconcileList = ({ employees, isCollapsed, onRefresh }) => {
           }
           else if (params.colDef.field === "expense") {
             return formatCurrency(params.value);
-          }else {
+          }
+          else if (["startDate", "endDate", "dob"].includes(params.colDef.field)) {
+            return formatDateMDY(params.value);
+          } else {
             return params.value;
           }
         },

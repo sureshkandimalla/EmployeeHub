@@ -1,5 +1,5 @@
 import { Button, Modal, Form, Input, DatePicker, Select, Row, Col } from "antd";
-import { LCA_FIELD_LABELS, LCA_STATUS_OPTIONS } from "./visaConstants";
+import { LCA_FIELD_LABELS, LCA_STATUS_OPTIONS, LCA_WAGE_LEVEL_OPTIONS } from "./visaConstants";
 
 const MODAL_HEADER_COLOR = "#1677ff";
 
@@ -95,6 +95,11 @@ export default function LcaFormModal({
             </Form.Item>
           </Col>
           <Col span={12}>
+            <Form.Item name="wageLevel" label={LCA_FIELD_LABELS.wageLevel}>
+              <Select allowClear options={LCA_WAGE_LEVEL_OPTIONS} />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
             <Form.Item name="status" label={LCA_FIELD_LABELS.status}>
               <Select options={LCA_STATUS_OPTIONS} />
             </Form.Item>
@@ -131,27 +136,27 @@ export default function LcaFormModal({
           </Col>
           <Col span={12}>
             <Form.Item name="employmentStartDate" label={LCA_FIELD_LABELS.employmentStartDate}>
-              <DatePicker style={{ width: "100%" }} />
+              <DatePicker style={{ width: "100%" }} format="MM/DD/YYYY" />
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item name="employmentEndDate" label={LCA_FIELD_LABELS.employmentEndDate}>
-              <DatePicker style={{ width: "100%" }} />
+              <DatePicker style={{ width: "100%" }} format="MM/DD/YYYY" />
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item name="lcaPostedFromDate" label={LCA_FIELD_LABELS.lcaPostedFromDate}>
-              <DatePicker style={{ width: "100%" }} />
+              <DatePicker style={{ width: "100%" }} format="MM/DD/YYYY" />
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item name="lcaPostedToDate" label={LCA_FIELD_LABELS.lcaPostedToDate}>
-              <DatePicker style={{ width: "100%" }} />
+              <DatePicker style={{ width: "100%" }} format="MM/DD/YYYY" />
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item name="certifiedDate" label={LCA_FIELD_LABELS.certifiedDate}>
-              <DatePicker style={{ width: "100%" }} />
+              <DatePicker style={{ width: "100%" }} format="MM/DD/YYYY" />
             </Form.Item>
           </Col>
         </Row>

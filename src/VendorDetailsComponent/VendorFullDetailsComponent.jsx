@@ -9,6 +9,7 @@ import { Card, Tabs, Typography, Row, Col } from "antd";
 import { ShopOutlined, MailOutlined, PhoneOutlined, GlobalOutlined, CalendarOutlined } from "@ant-design/icons";
 import API_ENDPOINTS from "../config";
 import { sizeColumnsForHeader } from "../Utils/agGridColumnSizing";
+import { formatDateMDY } from "../Utils/dateFormat";
 import CoiGrid from "../Coi/CoiGrid";
 
 const cellClassRules = {
@@ -64,7 +65,7 @@ const EmployeesTab = ({ vendorId }) => {
       { headerName: "Status", field: "status", filter: "agSetColumnFilter", cellClassRules },
       { headerName: "Employee Type", field: "employeeType", filter: "agSetColumnFilter", cellClassRules },
       { headerName: "Email", field: "emailId", filter: "agSetColumnFilter", cellClassRules },
-      { headerName: "Start Date", field: "startDate", filter: "agSetColumnFilter", cellClassRules },
+      { headerName: "Start Date", field: "startDate", filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
     ],
     [],
   );

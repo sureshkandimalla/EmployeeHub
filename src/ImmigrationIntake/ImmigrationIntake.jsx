@@ -8,6 +8,7 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import API_ENDPOINTS, { workAuthorizationList } from "../config";
 import { formatCurrency } from "../Utils/CurrencyFormatter";
+import { formatDateMDY } from "../Utils/dateFormat";
 import { sizeColumnsForHeader } from "../Utils/agGridColumnSizing";
 import NotesActionButton from "../Notes/NotesActionButton";
 import NotesModal from "../Notes/NotesModal";
@@ -305,8 +306,8 @@ export default function ImmigrationIntake() {
         cellEditorParams: { values: PREMIUM_STATUS_VALUES },
       },
       { field: "receiptNumber", headerName: FIELD_LABELS.receiptNumber, filter: "agSetColumnFilter", editable: true, cellClassRules },
-      { field: "startDate", headerName: FIELD_LABELS.startDate, filter: "agSetColumnFilter", editable: true, cellClassRules },
-      { field: "endDate", headerName: FIELD_LABELS.endDate, filter: "agSetColumnFilter", editable: true, cellClassRules },
+      { field: "startDate", headerName: FIELD_LABELS.startDate, filter: "agSetColumnFilter", editable: true, cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
+      { field: "endDate", headerName: FIELD_LABELS.endDate, filter: "agSetColumnFilter", editable: true, cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
       { field: "lcaTitle", headerName: FIELD_LABELS.lcaTitle, filter: "agSetColumnFilter", editable: true, cellClassRules },
       { field: "lcaCaseNumber", headerName: FIELD_LABELS.lcaCaseNumber, filter: "agSetColumnFilter", editable: true, cellClassRules },
       {
@@ -321,7 +322,7 @@ export default function ImmigrationIntake() {
       { field: "vendor", headerName: FIELD_LABELS.vendor, filter: "agSetColumnFilter", editable: true, cellClassRules },
       { field: "workLocation1", headerName: FIELD_LABELS.workLocation1, filter: "agSetColumnFilter", editable: true, cellClassRules },
       { field: "workLocation2", headerName: FIELD_LABELS.workLocation2, filter: "agSetColumnFilter", editable: true, cellClassRules },
-      { field: "caseFiledDate", headerName: FIELD_LABELS.caseFiledDate, filter: "agSetColumnFilter", editable: true, cellClassRules },
+      { field: "caseFiledDate", headerName: FIELD_LABELS.caseFiledDate, filter: "agSetColumnFilter", editable: true, cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
       { field: "caseRank", headerName: FIELD_LABELS.caseRank, filter: "agNumberColumnFilter", editable: true, cellClassRules },
       {
         colId: "action",
@@ -551,17 +552,17 @@ export default function ImmigrationIntake() {
             </Col>
             <Col span={12}>
               <Form.Item name="startDate" label={FIELD_LABELS.startDate}>
-                <DatePicker style={{ width: "100%" }} />
+                <DatePicker style={{ width: "100%" }} format="MM/DD/YYYY" />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="endDate" label={FIELD_LABELS.endDate}>
-                <DatePicker style={{ width: "100%" }} />
+                <DatePicker style={{ width: "100%" }} format="MM/DD/YYYY" />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="caseFiledDate" label={FIELD_LABELS.caseFiledDate}>
-                <DatePicker style={{ width: "100%" }} />
+                <DatePicker style={{ width: "100%" }} format="MM/DD/YYYY" />
               </Form.Item>
             </Col>
             <Col span={12}>

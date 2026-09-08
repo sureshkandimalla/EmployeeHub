@@ -8,6 +8,7 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import API_ENDPOINTS from "../config";
 import { ROLES } from "../Utils/roleAccess";
+import { formatDateMDY } from "../Utils/dateFormat";
 
 const ROLE_OPTIONS = Object.values(ROLES);
 
@@ -98,7 +99,7 @@ const UserRoles = () => {
       cellEditor: "agSelectCellEditor",
       cellEditorParams: { values: ROLE_OPTIONS },
     },
-    { field: "lastUpdated", headerName: "Last Updated", flex: 1, minWidth: 140 },
+    { field: "lastUpdated", headerName: "Last Updated", flex: 1, minWidth: 140, valueFormatter: (params) => formatDateMDY(params.value) },
     {
       headerName: "",
       width: 90,

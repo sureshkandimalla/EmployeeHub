@@ -18,6 +18,7 @@ import {
   FILING_TYPE_LABEL_MAP,
 } from "./visaConstants";
 import { formatCurrency } from "../Utils/CurrencyFormatter";
+import { formatDateMDY } from "../Utils/dateFormat";
 import { sizeColumnsForHeader } from "../Utils/agGridColumnSizing";
 import NotesActionButton from "../Notes/NotesActionButton";
 import NotesModal from "../Notes/NotesModal";
@@ -78,18 +79,27 @@ const VisaMasterList = () => {
       .catch(() => setEmployeeOptions([]));
   }, []);
 
-  const fetchLcaOptions = () => {
+  // currentLcaId: the LCA already assigned to the Visa being edited (if
+  // any) — kept selectable even though it's "used" so editing an existing
+  // Visa doesn't lose its own LCA out of the dropdown.
+  const fetchLcaOptions = (currentLcaId = null) => {
     axios.get(API_ENDPOINTS.getAllLCAs)
       .then((res) => {
         const raw = Array.isArray(res.data) ? res.data
           : Array.isArray(res.data?.data) ? res.data.data
           : [];
-        setLcaOptions(raw.map((l) => ({
-          value: l.lcaId,
-          label: `${l.lcaId} — ${l.lcaNumber || ""}`,
-          lcaNumber: l.lcaNumber || "",
-          lca: l,
-        })));
+        // An LCA already attached to a Visa isn't available to pick again.
+        const available = raw.filter((l) => !l.visa || l.lcaId === currentLcaId);
+        setLcaOptions(available.map((l) => {
+          const emp = l.employee || l.visa?.employee;
+          const employeeName = emp ? `${emp.firstName || ""} ${emp.lastName || ""}`.trim() : "";
+          return {
+            value: l.lcaId,
+            label: `${employeeName || l.lcaId} — ${l.lcaNumber || ""}`,
+            lcaNumber: l.lcaNumber || "",
+            lca: l,
+          };
+        }));
       })
       .catch(() => setLcaOptions([]));
   };
@@ -188,13 +198,26 @@ const VisaMasterList = () => {
   }, []);
 
   const openEditVisaModal = (visa) => {
-    fetchLcaOptions();
+    fetchLcaOptions(visa?.lca?.lcaId ?? null);
     setIsNewVisa(false);
     setVisaModalData(visa);
     visaForm.setFieldsValue({
       ...visa,
       employeeId: visa?.employee?.employeeId ?? null,
       filingYear: visa.filingYear != null ? String(visa.filingYear) : null,
+      // Fall back to the linked LCA's own values whenever the visa record
+      // itself was never stamped with them (e.g. lcaWage often lags behind
+      // since it isn't part of the form the LCA-picker auto-fills at
+      // creation time) — otherwise these show blank despite the LCA
+      // clearly having the data.
+      jobTitle:     visa?.jobTitle     ?? visa?.lca?.jobTitle     ?? null,
+      lcaNumber:    visa?.lcaNumber    ?? visa?.lca?.lcaNumber    ?? null,
+      socCode:      visa?.socCode      ?? visa?.lca?.socCode      ?? null,
+      client:       visa?.client       ?? visa?.lca?.client       ?? null,
+      customer:     visa?.customer     ?? visa?.lca?.customer     ?? null,
+      jobLocation:  visa?.jobLocation  ?? visa?.lca?.jobLocation  ?? null,
+      jobLocation2: visa?.jobLocation2 ?? visa?.lca?.jobLocation2 ?? null,
+      lcaWage:      visa?.lcaWage      ?? visa?.lca?.lcaWage      ?? null,
       startDate:    visa?.startDate    ? dayjs(visa.startDate)    : null,
       endDate:      visa?.endDate      ? dayjs(visa.endDate)      : null,
       approvedDate: visa?.approvedDate ? dayjs(visa.approvedDate) : null,
@@ -215,14 +238,17 @@ const VisaMasterList = () => {
       startDate:       values.startDate?.format("YYYY-MM-DD") || null,
       endDate:         values.endDate?.format("YYYY-MM-DD")   || null,
       approvedDate:    values.approvedDate?.format("YYYY-MM-DD") || null,
-      jobTitle:        values.jobTitle      ?? null,
-      lcaNumber:       values.lcaNumber     ?? null,
-      socCode:         values.socCode       ?? null,
-      client:          values.client        ?? null,
-      customer:          values.customer        ?? null,
-      jobLocation:     values.jobLocation   ?? null,
-      jobLocation2:    values.jobLocation2  ?? null,
-      lcaWage:         values.lcaWage       ?? null,
+      // Falls back to the linked LCA's own value whenever neither the form
+      // nor the existing visa record has it — so saving backfills the gap
+      // onto the visa record itself instead of leaving it null forever.
+      jobTitle:        values.jobTitle      ?? visaModalData?.lca?.jobTitle      ?? null,
+      lcaNumber:       values.lcaNumber     ?? visaModalData?.lca?.lcaNumber     ?? null,
+      socCode:         values.socCode       ?? visaModalData?.lca?.socCode       ?? null,
+      client:          values.client        ?? visaModalData?.lca?.client        ?? null,
+      customer:          values.customer        ?? visaModalData?.lca?.customer        ?? null,
+      jobLocation:     values.jobLocation   ?? visaModalData?.lca?.jobLocation   ?? null,
+      jobLocation2:    values.jobLocation2  ?? visaModalData?.lca?.jobLocation2  ?? null,
+      lcaWage:         values.lcaWage       ?? visaModalData?.lca?.lcaWage       ?? null,
       status:          values.status        ?? null,
       lca:             values.lcaId != null ? values.lcaId : (visaModalData?.lca?.lcaId ?? null),
       lastUpdated:     new Date().toISOString().split("T")[0],
@@ -332,10 +358,10 @@ const VisaMasterList = () => {
     { colId: "customer", field: "customer", headerName: DETAIL_FIELD_LABELS.customer, filter: "agSetColumnFilter", cellClassRules },
     { colId: "jobLocation", field: "jobLocation", headerName: DETAIL_FIELD_LABELS.jobLocation, filter: "agSetColumnFilter", cellClassRules },
     { colId: "jobLocation2", field: "jobLocation2", headerName: DETAIL_FIELD_LABELS.jobLocation2, filter: "agSetColumnFilter", cellClassRules, hide: true },
-    { colId: "startDate", field: "startDate", headerName: DETAIL_FIELD_LABELS.startDate, filter: "agSetColumnFilter", cellClassRules },
-    { colId: "endDate", field: "endDate", headerName: DETAIL_FIELD_LABELS.endDate, filter: "agSetColumnFilter", cellClassRules },
-    { colId: "approvedDate", field: "approvedDate", headerName: DETAIL_FIELD_LABELS.approvedDate, filter: "agSetColumnFilter", cellClassRules },
-    { colId: "lastUpdated", field: "lastUpdated", headerName: DETAIL_FIELD_LABELS.lastUpdated, filter: "agSetColumnFilter", cellClassRules, editable: false },
+    { colId: "startDate", field: "startDate", headerName: DETAIL_FIELD_LABELS.startDate, filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
+    { colId: "endDate", field: "endDate", headerName: DETAIL_FIELD_LABELS.endDate, filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
+    { colId: "approvedDate", field: "approvedDate", headerName: DETAIL_FIELD_LABELS.approvedDate, filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
+    { colId: "lastUpdated", field: "lastUpdated", headerName: DETAIL_FIELD_LABELS.lastUpdated, filter: "agSetColumnFilter", cellClassRules, editable: false, valueFormatter: (params) => formatDateMDY(params.value) },
     {
       colId: "action",
       headerName: "Action",

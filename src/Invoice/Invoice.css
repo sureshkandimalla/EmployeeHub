@@ -36,6 +36,21 @@ input {
 }
 
 
+/* react-datepicker doesn't forward a `style` prop down to its underlying
+   input, and neither the label nor the input otherwise has any protected
+   width — inside the GridToolbar flex row that left both free to be
+   squeezed down to a few px (and the label wrapping onto two lines)
+   whenever the row ran short on space. */
+.invoice-date-field {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.invoice-date-picker {
+  width: 110px;
+  box-sizing: border-box;
+}
+
 .invoice1-grid-wrapper{
   display: flex;
   flex-direction: column;

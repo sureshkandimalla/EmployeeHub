@@ -8,7 +8,7 @@ import "ag-grid-enterprise";
 import axios from "axios";
 import API_ENDPOINTS from "../config";
 import { formatCurrency } from "../Utils/CurrencyFormatter";
-import { formatMonthYear, formatDate } from "../Utils/dateFormat";
+import { formatMonthYear, formatDate, formatDateMDY } from "../Utils/dateFormat";
 import { sizeColumnsForHeader } from "../Utils/agGridColumnSizing";
 import GridToolbar from "../Utils/GridToolbar";
 
@@ -409,8 +409,8 @@ export default function FinalReportDetails({ employeeId }) {
           valueFormatter: (params) => formatCurrency(params.value),
         },
         { field: "paymentDetails", headerName: "Payment Details", filter: "agSetColumnFilter" },
-        { field: "payPeriodStartDate", headerName: "Pay Cycle Start", filter: "agSetColumnFilter" },
-        { field: "payPeriodEndDate", headerName: "Pay Cycle End", filter: "agSetColumnFilter" },
+        { field: "payPeriodStartDate", headerName: "Pay Cycle Start", filter: "agSetColumnFilter", valueFormatter: (params) => formatDateMDY(params.value) },
+        { field: "payPeriodEndDate", headerName: "Pay Cycle End", filter: "agSetColumnFilter", valueFormatter: (params) => formatDateMDY(params.value) },
       ],
       defaultColDef: { flex: 1, minWidth: 20, resizable: true },
     },
@@ -426,7 +426,7 @@ export default function FinalReportDetails({ employeeId }) {
         { field: "description", headerName: "Type", filter: "agSetColumnFilter" },
         { field: "from", headerName: "From", filter: "agSetColumnFilter" },
         { field: "to", headerName: "To", filter: "agSetColumnFilter" },
-        { field: "date", headerName: "Date", filter: "agSetColumnFilter" },
+        { field: "date", headerName: "Date", filter: "agSetColumnFilter", valueFormatter: (params) => formatDateMDY(params.value) },
         { field: "notes", headerName: "Notes", filter: "agSetColumnFilter" },
         {
           field: "totalPayment",
@@ -471,7 +471,7 @@ export default function FinalReportDetails({ employeeId }) {
           filter: "agSetColumnFilter",
           valueFormatter: (params) => (params.value ? "Yes" : "No"),
         },
-        { field: "date", headerName: "Date", filter: "agSetColumnFilter" },
+        { field: "date", headerName: "Date", filter: "agSetColumnFilter", valueFormatter: (params) => formatDateMDY(params.value) },
         { field: "status", headerName: "Status", filter: "agSetColumnFilter" },
       ],
       defaultColDef: { flex: 1, minWidth: 20, resizable: true },

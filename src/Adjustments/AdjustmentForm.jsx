@@ -221,8 +221,9 @@ const AdjustmentForm = ({ onClose }) => {
                             <Col span={8} className='form-row'>
                                 <Form.Item label="Adjustment Date">
                                 <DatePicker
-                                    onChange={(date, dateString) => handleGeneralData(dateString, 'adjustmentDate')}
+                                    onChange={(date) => handleGeneralData(date ? date.format("YYYY-MM-DD") : "", 'adjustmentDate')}
                                     className='dobDatepicker'
+                                    format="MM/DD/YYYY"
                                     value={generalDetails.adjustmentDate ? moment(generalDetails.adjustmentDate) : null}
                                 />
                                 </Form.Item>

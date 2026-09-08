@@ -10,6 +10,7 @@ import "./PotentialEmployees.css";
 import axios from "axios";
 import API_ENDPOINTS from "../config";
 import { sizeColumnsForHeader } from "../Utils/agGridColumnSizing";
+import { formatDateMDY } from "../Utils/dateFormat";
 import NotesActionButton from "../Notes/NotesActionButton";
 import NotesModal from "../Notes/NotesModal";
 import { buildRowActions } from "../Notes/rowActions";
@@ -181,11 +182,12 @@ const PotentialEmployees = () => {
         editable: true, 
         filter: "agSetColumnFilter" 
       },
-      { 
-        headerName: "DOB", 
-        field: "dob", 
-        editable: true, 
-        filter: "agSetColumnFilter" 
+      {
+        headerName: "DOB",
+        field: "dob",
+        editable: true,
+        filter: "agSetColumnFilter",
+        valueFormatter: (params) => formatDateMDY(params.value),
       },
       { 
         headerName: "Primary Skills", 
@@ -205,17 +207,19 @@ const PotentialEmployees = () => {
         editable: true, 
         filter: "agSetColumnFilter" 
       },
-      { 
-        headerName: "Start Date", 
-        field: "startDate", 
-        editable: true, 
-        filter: "agSetColumnFilter" 
+      {
+        headerName: "Start Date",
+        field: "startDate",
+        editable: true,
+        filter: "agSetColumnFilter",
+        valueFormatter: (params) => formatDateMDY(params.value),
       },
       {
         headerName: "End Date",
         field: "endDate",
         editable: true,
-        filter: "agSetColumnFilter"
+        filter: "agSetColumnFilter",
+        valueFormatter: (params) => formatDateMDY(params.value),
       },
       {
         colId: "action",

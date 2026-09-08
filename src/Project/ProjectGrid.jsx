@@ -8,6 +8,7 @@ import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
 import "@ag-grid-community/styles/ag-grid.css";
 import "./ProjectGrid.css";
 import { invoiceTermLabel } from "../Utils/invoiceTerm";
+import { formatDateMDY } from "../Utils/dateFormat";
 import ProjectOnBoardingForm from "../OnBoardingComponent/ProjectOnBoarding";
 import NewCustomer from "../Customer/NewCustomer";
 import GridToolbar from "../Utils/GridToolbar";
@@ -47,8 +48,8 @@ const ProjectGrid = ({ employeeId, customerId, isCollapsed }) => {
       filter: "agSetColumnFilter",
     },
     { headerName: "Payment Term", field: "paymentTerm", filter: "agSetColumnFilter" },
-    { headerName: "Start Date", field: "startDate", filter: "agSetColumnFilter" },
-    { headerName: "End Date", field: "endDate", filter: "agSetColumnFilter" },
+    { headerName: "Start Date", field: "startDate", filter: "agSetColumnFilter", valueFormatter: (params) => formatDateMDY(params.value) },
+    { headerName: "End Date", field: "endDate", filter: "agSetColumnFilter", valueFormatter: (params) => formatDateMDY(params.value) },
     { headerName: "Status", field: "status", filter: "agSetColumnFilter" },
   ];
 
