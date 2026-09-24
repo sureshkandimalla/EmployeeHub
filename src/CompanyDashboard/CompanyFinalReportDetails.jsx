@@ -112,7 +112,15 @@ export default function CompanyFinalReportDetails() {
       .filter((e) => e.reimbursable)
       .reduce((sum, e) => sum + (e.amount || 0), 0);
 
-    const totalPayment = payrollTotal + adjustmentsPaid + expenses;
+    const { data: healthInsuranceRecords } = await axios.get(
+      API_ENDPOINTS.getHealthInsuranceForEmp(employee.employeeId),
+    );
+    const healthInsurance = (healthInsuranceRecords || []).reduce(
+      (sum, h) => sum + (h.total || 0),
+      0,
+    );
+
+    const totalPayment = payrollTotal + adjustmentsPaid + expenses + healthInsurance;
 
     // Match Reconciliation/FinalReportDetails.jsx (the per-employee FINAL
     // REPORT tab): Income/Income Paid include adjustments the employee is
@@ -138,11 +146,15 @@ export default function CompanyFinalReportDetails() {
       adjustmentsReceived,
       companyExpenses,
       expenses,
+      healthInsurance,
       employerTax,
-      // Net = (all invoices for the employee + adjustments received +
-      // reimbursable expenses) - (bills for all invoices for the employee
-      // + employer tax + non-reimbursable expenses).
-      net: (totalInvoiceAmount + adjustmentsReceived + expenses) - (employeePay + employerTax + (companyExpenses - expenses)),
+      // Employee total = employeePay (bills) + adjustments the employee
+      // paid out themselves (fronted, owed back to them) — this is `income`.
+      // Expense = payroll already paid + adjustments paid to the employee +
+      // reimbursable expenses + health insurance — this is `totalPayment`.
+      // Employer expense = employer tax + non-reimbursable expenses.
+      // Net = Employee total - Expense - Employer expense.
+      net: income - totalPayment - (employerTax + (companyExpenses - expenses)),
       balance,
       balancePaid: incomePaidTotal - totalPayment,
     };
@@ -193,6 +205,7 @@ export default function CompanyFinalReportDetails() {
     adjustmentsReceived: rows.reduce((sum, row) => sum + (row.adjustmentsReceived || 0), 0),
     companyExpenses: rows.reduce((sum, row) => sum + (row.companyExpenses || 0), 0),
     expenses: rows.reduce((sum, row) => sum + (row.expenses || 0), 0),
+    healthInsurance: rows.reduce((sum, row) => sum + (row.healthInsurance || 0), 0),
     employerTax: rows.reduce((sum, row) => sum + (row.employerTax || 0), 0),
     net: rows.reduce((sum, row) => sum + (row.net || 0), 0),
     balance: rows.reduce((sum, row) => sum + (row.balance || 0), 0),
@@ -310,6 +323,11 @@ export default function CompanyFinalReportDetails() {
     {
       field: "expenses",
       headerName: "Expenses",
+      valueFormatter: (params) => formatSignedCurrency(params.value),
+    },
+    {
+      field: "healthInsurance",
+      headerName: "Health Insurance",
       valueFormatter: (params) => formatSignedCurrency(params.value),
     },
     {
