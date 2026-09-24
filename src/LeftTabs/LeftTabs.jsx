@@ -207,6 +207,7 @@ const REPORTS_MENU = [
     title: "Accounting",
     items: [
       { label: "Project Invoice Summary", to: "/projectInvoiceSummary" },
+      { label: "Company Report", to: "/companyreport" },
       { label: "Customer Dashboard", to: "/customerDashboard" },
       { label: "Vendor Dashboard", to: "/vendorDashboard" },
     ],

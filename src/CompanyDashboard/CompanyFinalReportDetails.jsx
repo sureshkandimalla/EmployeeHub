@@ -139,10 +139,10 @@ export default function CompanyFinalReportDetails() {
       companyExpenses,
       expenses,
       employerTax,
-      // Gross = (all invoices for the employee + adjustments received +
+      // Net = (all invoices for the employee + adjustments received +
       // reimbursable expenses) - (bills for all invoices for the employee
       // + employer tax + non-reimbursable expenses).
-      gross: (totalInvoiceAmount + adjustmentsReceived + expenses) - (employeePay + employerTax + (companyExpenses - expenses)),
+      net: (totalInvoiceAmount + adjustmentsReceived + expenses) - (employeePay + employerTax + (companyExpenses - expenses)),
       balance,
       balancePaid: incomePaidTotal - totalPayment,
     };
@@ -194,7 +194,7 @@ export default function CompanyFinalReportDetails() {
     companyExpenses: rows.reduce((sum, row) => sum + (row.companyExpenses || 0), 0),
     expenses: rows.reduce((sum, row) => sum + (row.expenses || 0), 0),
     employerTax: rows.reduce((sum, row) => sum + (row.employerTax || 0), 0),
-    gross: rows.reduce((sum, row) => sum + (row.gross || 0), 0),
+    net: rows.reduce((sum, row) => sum + (row.net || 0), 0),
     balance: rows.reduce((sum, row) => sum + (row.balance || 0), 0),
     balancePaid: rows.reduce((sum, row) => sum + (row.balancePaid || 0), 0),
   });
@@ -249,8 +249,8 @@ export default function CompanyFinalReportDetails() {
       },
     },
     {
-      field: "gross",
-      headerName: "Gross",
+      field: "net",
+      headerName: "Net",
       valueFormatter: (params) => formatSignedCurrency(params.value),
       cellStyle: negativeRedCellStyle,
     },
