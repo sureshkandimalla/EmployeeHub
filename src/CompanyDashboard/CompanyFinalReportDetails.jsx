@@ -102,8 +102,9 @@ export default function CompanyFinalReportDetails() {
       API_ENDPOINTS.getExpensesForEmployee(employee.employeeId),
     );
     // Company Expenses: everything spent on/for the employee, reimbursable
-    // or not. Expenses: just the reimbursable portion — money owed back to
-    // the employee, which is what counts toward Total Payment.
+    // or not. Expenses: just the reimbursable portion — money the EMPLOYEE
+    // owes back to the company (not money paid to them), so it's excluded
+    // from Total Payment and instead counted as a deduction in Net below.
     const companyExpenses = (expenseRecords || []).reduce(
       (sum, e) => sum + (e.amount || 0),
       0,
@@ -120,7 +121,7 @@ export default function CompanyFinalReportDetails() {
       0,
     );
 
-    const totalPayment = payrollTotal + adjustmentsPaid + expenses + healthInsurance;
+    const totalPayment = payrollTotal + adjustmentsPaid + healthInsurance;
 
     // Match Reconciliation/FinalReportDetails.jsx (the per-employee FINAL
     // REPORT tab): Income/Income Paid include adjustments the employee is
@@ -151,10 +152,11 @@ export default function CompanyFinalReportDetails() {
       // Employee total = employeePay (bills) + adjustments the employee
       // paid out themselves (fronted, owed back to them) — this is `income`.
       // Expense = payroll already paid + adjustments paid to the employee +
-      // reimbursable expenses + health insurance — this is `totalPayment`.
+      // health insurance — this is `totalPayment`.
+      // Employee owes company = reimbursable expenses (`expenses`).
       // Employer expense = employer tax + non-reimbursable expenses.
-      // Net = Employee total - Expense - Employer expense.
-      net: income - totalPayment - (employerTax + (companyExpenses - expenses)),
+      // Net = Employee total - Expense - Employee owes company - Employer expense.
+      net: income - totalPayment - expenses - (employerTax + (companyExpenses - expenses)),
       balance,
       balancePaid: incomePaidTotal - totalPayment,
     };

@@ -153,10 +153,10 @@ export default function FinalReportDetails({ employeeId }) {
   };
 
   // Expenses: same combined-row-with-drilldown pattern as Adjustments — but
-  // the top-level Total Payment only sums reimbursable expenses (money
-  // actually owed back to the employee). Non-reimbursable expenses still
-  // show in the drill-down for the full picture, they just don't count
-  // toward the total.
+  // reimbursable expenses are money the EMPLOYEE owes the company (not
+  // money paid to them), so they reduce Income rather than count toward
+  // Total Payment. Non-reimbursable expenses still show in the drill-down
+  // for the full picture, they just don't count toward either total.
   const fetchExpenseRows = async () => {
     const { data: expenses } = await axios.get(API_ENDPOINTS.getExpensesForEmployee(employeeId));
 
@@ -175,7 +175,7 @@ export default function FinalReportDetails({ employeeId }) {
         category: "Expenses",
         detailType: "expenses",
         description: "Expenses",
-        totalPayment: expenseRecords
+        income: -expenseRecords
           .filter((r) => r.reimbursable)
           .reduce((sum, r) => sum + r.amount, 0),
         expenseRecords,
