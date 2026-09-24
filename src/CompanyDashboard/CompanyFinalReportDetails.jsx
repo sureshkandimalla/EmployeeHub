@@ -112,6 +112,7 @@ export default function CompanyFinalReportDetails() {
     const expenses = (expenseRecords || [])
       .filter((e) => e.reimbursable)
       .reduce((sum, e) => sum + (e.amount || 0), 0);
+    const nonReimbursableExpenses = companyExpenses - expenses;
 
     const { data: healthInsuranceRecords } = await axios.get(
       API_ENDPOINTS.getHealthInsuranceForEmp(employee.employeeId),
@@ -142,11 +143,13 @@ export default function CompanyFinalReportDetails() {
       invoicesPaid,
       employeePay: income,
       incomePaid: incomePaidTotal,
+      payrollPaid: payrollTotal,
       totalPayment,
       adjustmentsPaid,
       adjustmentsReceived,
       companyExpenses,
       expenses,
+      nonReimbursableExpenses,
       healthInsurance,
       employerTax,
       // Employee total = employeePay (bills) + adjustments the employee
@@ -156,7 +159,7 @@ export default function CompanyFinalReportDetails() {
       // Employee owes company = reimbursable expenses (`expenses`).
       // Employer expense = employer tax + non-reimbursable expenses.
       // Net = Employee total - Expense - Employee owes company - Employer expense.
-      net: income - totalPayment - expenses - (employerTax + (companyExpenses - expenses)),
+      net: income - totalPayment - expenses - (employerTax + nonReimbursableExpenses),
       balance,
       balancePaid: incomePaidTotal - totalPayment,
     };
@@ -202,11 +205,13 @@ export default function CompanyFinalReportDetails() {
     invoicesPaid: rows.reduce((sum, row) => sum + (row.invoicesPaid || 0), 0),
     employeePay: rows.reduce((sum, row) => sum + (row.employeePay || 0), 0),
     incomePaid: rows.reduce((sum, row) => sum + (row.incomePaid || 0), 0),
+    payrollPaid: rows.reduce((sum, row) => sum + (row.payrollPaid || 0), 0),
     totalPayment: rows.reduce((sum, row) => sum + (row.totalPayment || 0), 0),
     adjustmentsPaid: rows.reduce((sum, row) => sum + (row.adjustmentsPaid || 0), 0),
     adjustmentsReceived: rows.reduce((sum, row) => sum + (row.adjustmentsReceived || 0), 0),
     companyExpenses: rows.reduce((sum, row) => sum + (row.companyExpenses || 0), 0),
     expenses: rows.reduce((sum, row) => sum + (row.expenses || 0), 0),
+    nonReimbursableExpenses: rows.reduce((sum, row) => sum + (row.nonReimbursableExpenses || 0), 0),
     healthInsurance: rows.reduce((sum, row) => sum + (row.healthInsurance || 0), 0),
     employerTax: rows.reduce((sum, row) => sum + (row.employerTax || 0), 0),
     net: rows.reduce((sum, row) => sum + (row.net || 0), 0),
@@ -308,23 +313,33 @@ export default function CompanyFinalReportDetails() {
       valueFormatter: (params) => formatSignedCurrency(params.value),
     },
     {
+      field: "payrollPaid",
+      headerName: "Payroll Paid",
+      valueFormatter: (params) => formatSignedCurrency(params.value),
+    },
+    {
       field: "adjustmentsPaid",
-      headerName: "Adjustments Paid",
+      headerName: "Adjustments Employee Got",
       valueFormatter: (params) => formatSignedCurrency(params.value),
     },
     {
       field: "adjustmentsReceived",
-      headerName: "Adjustments Received",
+      headerName: "Adjustments Employee Paid",
       valueFormatter: (params) => formatSignedCurrency(params.value),
     },
     {
       field: "companyExpenses",
-      headerName: "Company Expenses",
+      headerName: "Total Expenses",
       valueFormatter: (params) => formatSignedCurrency(params.value),
     },
     {
       field: "expenses",
-      headerName: "Expenses",
+      headerName: "Reimbursable Expenses (Employee Cost)",
+      valueFormatter: (params) => formatSignedCurrency(params.value),
+    },
+    {
+      field: "nonReimbursableExpenses",
+      headerName: "Non-Reimbursable Expenses (Company Cost)",
       valueFormatter: (params) => formatSignedCurrency(params.value),
     },
     {
