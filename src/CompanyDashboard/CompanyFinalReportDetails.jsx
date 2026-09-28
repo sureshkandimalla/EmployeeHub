@@ -84,6 +84,10 @@ export default function CompanyFinalReportDetails() {
     const { data: payrolls } = await axios.get(API_ENDPOINTS.getPayrollsForEmp(employee.employeeId));
     const payrollTotal = (payrolls || []).reduce((sum, p) => sum + (p.totalPaid || 0), 0);
     const employerTax = (payrolls || []).reduce((sum, p) => sum + (p.employerLiability || 0), 0);
+    // Medical deduction withheld from the employee's paycheck — already
+    // excluded from totalPaid, so purely informational here (doesn't
+    // change Total Payment/Net/Balance).
+    const payrollDeductions = (payrolls || []).reduce((sum, p) => sum + (p.deductions || 0), 0);
 
     const { data: adjustments } = await axios.get(
       `${API_ENDPOINTS.findAdjustmentsByEmployeeId}?id=${employee.employeeId}`,
@@ -147,6 +151,7 @@ export default function CompanyFinalReportDetails() {
       employeePay: income,
       incomePaid: incomePaidTotal,
       payrollPaid: payrollTotal,
+      payrollDeductions,
       totalPayment,
       adjustmentsPaid,
       adjustmentsReceived,
@@ -206,6 +211,7 @@ export default function CompanyFinalReportDetails() {
     employeePay: rows.reduce((sum, row) => sum + (row.employeePay || 0), 0),
     incomePaid: rows.reduce((sum, row) => sum + (row.incomePaid || 0), 0),
     payrollPaid: rows.reduce((sum, row) => sum + (row.payrollPaid || 0), 0),
+    payrollDeductions: rows.reduce((sum, row) => sum + (row.payrollDeductions || 0), 0),
     totalPayment: rows.reduce((sum, row) => sum + (row.totalPayment || 0), 0),
     adjustmentsPaid: rows.reduce((sum, row) => sum + (row.adjustmentsPaid || 0), 0),
     adjustmentsReceived: rows.reduce((sum, row) => sum + (row.adjustmentsReceived || 0), 0),
@@ -315,6 +321,11 @@ export default function CompanyFinalReportDetails() {
     {
       field: "payrollPaid",
       headerName: "Payroll Paid",
+      valueFormatter: (params) => formatSignedCurrency(params.value),
+    },
+    {
+      field: "payrollDeductions",
+      headerName: "Payroll Deductions (Medical)",
       valueFormatter: (params) => formatSignedCurrency(params.value),
     },
     {

@@ -106,6 +106,10 @@ export default function FinalReportDetails({ employeeId }) {
       detailType: "payroll",
       description: `Payroll for ${year}`,
       totalPayment: records.reduce((sum, r) => sum + (r.totalPaid || 0), 0),
+      // Medical deduction withheld from the employee's paycheck — already
+      // excluded from totalPaid, so purely informational (doesn't change
+      // Total Payment/Balance).
+      deductions: records.reduce((sum, r) => sum + (r.deductions || 0), 0),
       payRecords: records,
     }));
   };
@@ -283,6 +287,7 @@ export default function FinalReportDetails({ employeeId }) {
           return {
             ...row,
             totalPayment: filteredRecords.reduce((sum, r) => sum + (r.totalPaid || 0), 0),
+            deductions: filteredRecords.reduce((sum, r) => sum + (r.deductions || 0), 0),
             payRecords: filteredRecords,
           };
         }
@@ -314,6 +319,7 @@ export default function FinalReportDetails({ employeeId }) {
               const income = filteredRowData.reduce((sum, row) => sum + (row.income || 0), 0);
               const incomePaid = filteredRowData.reduce((sum, row) => sum + (row.incomePaid || 0), 0);
               const totalPayment = filteredRowData.reduce((sum, row) => sum + (row.totalPayment || 0), 0);
+              const deductions = filteredRowData.reduce((sum, row) => sum + (row.deductions || 0), 0);
               return {
                 description: "Total",
                 hours,
@@ -321,6 +327,7 @@ export default function FinalReportDetails({ employeeId }) {
                 income,
                 incomePaid,
                 totalPayment,
+                deductions,
                 balancePaid: incomePaid - totalPayment,
                 balance: income - totalPayment,
               };
@@ -371,6 +378,12 @@ export default function FinalReportDetails({ employeeId }) {
     {
       field: "totalPayment",
       headerName: "Total Payment",
+      aggFunc: "sum",
+      valueFormatter: (params) => (params.value ? formatCurrency(params.value) : ""),
+    },
+    {
+      field: "deductions",
+      headerName: "Deductions (Medical)",
       aggFunc: "sum",
       valueFormatter: (params) => (params.value ? formatCurrency(params.value) : ""),
     },
@@ -429,6 +442,12 @@ export default function FinalReportDetails({ employeeId }) {
           headerName: "Total Paid",
           filter: "agSetColumnFilter",
           valueFormatter: (params) => formatCurrency(params.value),
+        },
+        {
+          field: "deductions",
+          headerName: "Deductions (Medical)",
+          filter: "agSetColumnFilter",
+          valueFormatter: (params) => (params.value ? formatCurrency(params.value) : ""),
         },
         { field: "paymentDetails", headerName: "Payment Details", filter: "agSetColumnFilter" },
         { field: "payPeriodStartDate", headerName: "Pay Cycle Start", filter: "agSetColumnFilter", valueFormatter: (params) => formatDateMDY(params.value) },
