@@ -131,7 +131,10 @@ export default function CompanyFinalReportDetails() {
     // amount counts toward both Income and Income Paid there.
     const income = employeePay + adjustmentsReceived;
     const incomePaidTotal = incomePaid + adjustmentsReceived;
-    const balance = income - totalPayment;
+    // Reimbursable expenses are money the employee owes the company, so
+    // they reduce the balance the company still owes the employee too,
+    // not just Net.
+    const balance = income - totalPayment - expenses;
 
     return {
       employeeId: employee.employeeId,
@@ -161,7 +164,7 @@ export default function CompanyFinalReportDetails() {
       // Net = Employee total - Expense - Employee owes company - Employer expense.
       net: income - totalPayment - expenses - (employerTax + nonReimbursableExpenses),
       balance,
-      balancePaid: incomePaidTotal - totalPayment,
+      balancePaid: incomePaidTotal - totalPayment - expenses,
     };
   };
 
