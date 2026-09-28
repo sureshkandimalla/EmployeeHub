@@ -155,14 +155,11 @@ export default function CompanyFinalReportDetails() {
       nonReimbursableExpenses,
       healthInsurance,
       employerTax,
-      // Employee total = employeePay (bills) + adjustments the employee
-      // paid out themselves (fronted, owed back to them) — this is `income`.
-      // Expense = payroll already paid + adjustments paid to the employee +
-      // health insurance — this is `totalPayment`.
-      // Employee owes company = reimbursable expenses (`expenses`).
-      // Employer expense = employer tax + non-reimbursable expenses.
-      // Net = Employee total - Expense - Employee owes company - Employer expense.
-      net: income - totalPayment - expenses - (employerTax + nonReimbursableExpenses),
+      // Net = Invoice Amount (revenue billed to the client) - Employee Pay
+      // - Employer Tax - Non-Reimbursable Expenses. This is the company's
+      // margin on the employee: what was billed out, minus what the
+      // employee is paid and what the company itself absorbed in tax/cost.
+      net: totalInvoiceAmount - income - employerTax - nonReimbursableExpenses,
       balance,
       balancePaid: incomePaidTotal - totalPayment - expenses,
     };
