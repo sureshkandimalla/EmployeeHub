@@ -84,9 +84,9 @@ export default function CompanyFinalReportDetails() {
     const { data: payrolls } = await axios.get(API_ENDPOINTS.getPayrollsForEmp(employee.employeeId));
     const payrollTotal = (payrolls || []).reduce((sum, p) => sum + (p.totalPaid || 0), 0);
     const employerTax = (payrolls || []).reduce((sum, p) => sum + (p.employerLiability || 0), 0);
-    // Medical deduction withheld from the employee's paycheck — counted as
-    // already paid on the employee's behalf (like Health Insurance), so it
-    // adds to Total Payment below.
+    // Medical deduction withheld from the employee's paycheck, shown for
+    // visibility — already funds part of Health Insurance below, so it's
+    // not separately added to Total Payment (would double-count it).
     const payrollDeductions = (payrolls || []).reduce((sum, p) => sum + (p.deductions || 0), 0);
 
     const { data: adjustments } = await axios.get(
@@ -121,16 +121,16 @@ export default function CompanyFinalReportDetails() {
     const { data: healthInsuranceRecords } = await axios.get(
       API_ENDPOINTS.getHealthInsuranceForEmp(employee.employeeId),
     );
-    const healthInsuranceGross = (healthInsuranceRecords || []).reduce(
+    // Displayed as its full raw premium amount — the employee's own
+    // payroll medical deduction already funds part of it, so Total
+    // Payment below counts this once (not this + payrollDeductions
+    // separately, which would double-count that portion).
+    const healthInsurance = (healthInsuranceRecords || []).reduce(
       (sum, h) => sum + (h.total || 0),
       0,
     );
-    // The employee's own payroll medical deduction already funds part of
-    // this premium, so it's netted out here — otherwise it'd be counted
-    // twice: once as part of the full premium, once as payrollDeductions.
-    const healthInsurance = healthInsuranceGross - payrollDeductions;
 
-    const totalPayment = payrollTotal + adjustmentsPaid + healthInsurance + payrollDeductions;
+    const totalPayment = payrollTotal + adjustmentsPaid + healthInsurance;
 
     // Match Reconciliation/FinalReportDetails.jsx (the per-employee FINAL
     // REPORT tab): Income/Income Paid include adjustments the employee is

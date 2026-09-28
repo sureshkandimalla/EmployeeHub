@@ -101,20 +101,17 @@ export default function FinalReportDetails({ employeeId }) {
         byYear[year].push(payroll);
       });
 
-    return Object.entries(byYear).map(([year, records]) => {
-      const deductions = records.reduce((sum, r) => sum + (r.deductions || 0), 0);
-      return {
-        category: "Payments",
-        detailType: "payroll",
-        description: `Payroll for ${year}`,
-        // Medical deduction withheld from the employee's paycheck — counted
-        // as already paid on the employee's behalf, so it's added into
-        // Total Payment (kept visible separately in its own column too).
-        totalPayment: records.reduce((sum, r) => sum + (r.totalPaid || 0), 0) + deductions,
-        deductions,
-        payRecords: records,
-      };
-    });
+    return Object.entries(byYear).map(([year, records]) => ({
+      category: "Payments",
+      detailType: "payroll",
+      description: `Payroll for ${year}`,
+      totalPayment: records.reduce((sum, r) => sum + (r.totalPaid || 0), 0),
+      // Medical deduction withheld from the employee's paycheck, shown for
+      // visibility — already funds part of the Health Insurance premium,
+      // so it's not separately added to Total Payment (would double-count).
+      deductions: records.reduce((sum, r) => sum + (r.deductions || 0), 0),
+      payRecords: records,
+    }));
   };
 
   // Adjustments: one combined row at the top level (Total Payment / Income /
@@ -194,25 +191,21 @@ export default function FinalReportDetails({ employeeId }) {
   // it's a real cost paid on the employee's behalf, so it counts toward
   // Total Payment same as payroll.
   const fetchHealthInsuranceRows = async () => {
-    const [{ data: healthInsuranceRecords }, { data: payrolls }] = await Promise.all([
-      axios.get(API_ENDPOINTS.getHealthInsuranceForEmp(employeeId)),
-      axios.get(API_ENDPOINTS.getPayrollsForEmp(employeeId)),
-    ]);
+    const { data: healthInsuranceRecords } = await axios.get(
+      API_ENDPOINTS.getHealthInsuranceForEmp(employeeId),
+    );
 
     if (!healthInsuranceRecords || healthInsuranceRecords.length === 0) return [];
-
-    const healthInsuranceGross = healthInsuranceRecords.reduce((sum, h) => sum + (h.total || 0), 0);
-    // The employee's own payroll medical deduction (counted separately in
-    // the Payments row's Total Payment) already funds part of this
-    // premium, so it's netted out here to avoid counting it twice.
-    const deductions = (payrolls || []).reduce((sum, p) => sum + (p.deductions || 0), 0);
 
     return [
       {
         category: "Health Insurance",
         detailType: "healthInsurance",
         description: "Health Insurance",
-        totalPayment: healthInsuranceGross - deductions,
+        // Shown as its full raw premium amount — the Payments row's
+        // Deductions already shows the employee-funded portion of this
+        // same premium separately, without double-counting the total.
+        totalPayment: healthInsuranceRecords.reduce((sum, h) => sum + (h.total || 0), 0),
         healthInsuranceRecords,
       },
     ];
@@ -294,12 +287,10 @@ export default function FinalReportDetails({ employeeId }) {
           const filteredRecords = (row.payRecords || []).filter(
             (r) => r.checkDate && r.checkDate <= payrollCutoffDate,
           );
-          const filteredDeductions = filteredRecords.reduce((sum, r) => sum + (r.deductions || 0), 0);
           return {
             ...row,
-            totalPayment:
-              filteredRecords.reduce((sum, r) => sum + (r.totalPaid || 0), 0) + filteredDeductions,
-            deductions: filteredDeductions,
+            totalPayment: filteredRecords.reduce((sum, r) => sum + (r.totalPaid || 0), 0),
+            deductions: filteredRecords.reduce((sum, r) => sum + (r.deductions || 0), 0),
             payRecords: filteredRecords,
           };
         }
