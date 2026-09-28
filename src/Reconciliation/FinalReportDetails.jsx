@@ -194,18 +194,25 @@ export default function FinalReportDetails({ employeeId }) {
   // it's a real cost paid on the employee's behalf, so it counts toward
   // Total Payment same as payroll.
   const fetchHealthInsuranceRows = async () => {
-    const { data: healthInsuranceRecords } = await axios.get(
-      API_ENDPOINTS.getHealthInsuranceForEmp(employeeId),
-    );
+    const [{ data: healthInsuranceRecords }, { data: payrolls }] = await Promise.all([
+      axios.get(API_ENDPOINTS.getHealthInsuranceForEmp(employeeId)),
+      axios.get(API_ENDPOINTS.getPayrollsForEmp(employeeId)),
+    ]);
 
     if (!healthInsuranceRecords || healthInsuranceRecords.length === 0) return [];
+
+    const healthInsuranceGross = healthInsuranceRecords.reduce((sum, h) => sum + (h.total || 0), 0);
+    // The employee's own payroll medical deduction (counted separately in
+    // the Payments row's Total Payment) already funds part of this
+    // premium, so it's netted out here to avoid counting it twice.
+    const deductions = (payrolls || []).reduce((sum, p) => sum + (p.deductions || 0), 0);
 
     return [
       {
         category: "Health Insurance",
         detailType: "healthInsurance",
         description: "Health Insurance",
-        totalPayment: healthInsuranceRecords.reduce((sum, h) => sum + (h.total || 0), 0),
+        totalPayment: healthInsuranceGross - deductions,
         healthInsuranceRecords,
       },
     ];

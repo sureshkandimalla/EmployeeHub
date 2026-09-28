@@ -121,10 +121,14 @@ export default function CompanyFinalReportDetails() {
     const { data: healthInsuranceRecords } = await axios.get(
       API_ENDPOINTS.getHealthInsuranceForEmp(employee.employeeId),
     );
-    const healthInsurance = (healthInsuranceRecords || []).reduce(
+    const healthInsuranceGross = (healthInsuranceRecords || []).reduce(
       (sum, h) => sum + (h.total || 0),
       0,
     );
+    // The employee's own payroll medical deduction already funds part of
+    // this premium, so it's netted out here — otherwise it'd be counted
+    // twice: once as part of the full premium, once as payrollDeductions.
+    const healthInsurance = healthInsuranceGross - payrollDeductions;
 
     const totalPayment = payrollTotal + adjustmentsPaid + healthInsurance + payrollDeductions;
 
