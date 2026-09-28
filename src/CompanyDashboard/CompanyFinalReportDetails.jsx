@@ -84,9 +84,9 @@ export default function CompanyFinalReportDetails() {
     const { data: payrolls } = await axios.get(API_ENDPOINTS.getPayrollsForEmp(employee.employeeId));
     const payrollTotal = (payrolls || []).reduce((sum, p) => sum + (p.totalPaid || 0), 0);
     const employerTax = (payrolls || []).reduce((sum, p) => sum + (p.employerLiability || 0), 0);
-    // Medical deduction withheld from the employee's paycheck — already
-    // excluded from totalPaid, so purely informational here (doesn't
-    // change Total Payment/Net/Balance).
+    // Medical deduction withheld from the employee's paycheck — counted as
+    // already paid on the employee's behalf (like Health Insurance), so it
+    // adds to Total Payment below.
     const payrollDeductions = (payrolls || []).reduce((sum, p) => sum + (p.deductions || 0), 0);
 
     const { data: adjustments } = await axios.get(
@@ -126,7 +126,7 @@ export default function CompanyFinalReportDetails() {
       0,
     );
 
-    const totalPayment = payrollTotal + adjustmentsPaid + healthInsurance;
+    const totalPayment = payrollTotal + adjustmentsPaid + healthInsurance + payrollDeductions;
 
     // Match Reconciliation/FinalReportDetails.jsx (the per-employee FINAL
     // REPORT tab): Income/Income Paid include adjustments the employee is

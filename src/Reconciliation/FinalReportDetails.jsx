@@ -101,17 +101,20 @@ export default function FinalReportDetails({ employeeId }) {
         byYear[year].push(payroll);
       });
 
-    return Object.entries(byYear).map(([year, records]) => ({
-      category: "Payments",
-      detailType: "payroll",
-      description: `Payroll for ${year}`,
-      totalPayment: records.reduce((sum, r) => sum + (r.totalPaid || 0), 0),
-      // Medical deduction withheld from the employee's paycheck — already
-      // excluded from totalPaid, so purely informational (doesn't change
-      // Total Payment/Balance).
-      deductions: records.reduce((sum, r) => sum + (r.deductions || 0), 0),
-      payRecords: records,
-    }));
+    return Object.entries(byYear).map(([year, records]) => {
+      const deductions = records.reduce((sum, r) => sum + (r.deductions || 0), 0);
+      return {
+        category: "Payments",
+        detailType: "payroll",
+        description: `Payroll for ${year}`,
+        // Medical deduction withheld from the employee's paycheck — counted
+        // as already paid on the employee's behalf, so it's added into
+        // Total Payment (kept visible separately in its own column too).
+        totalPayment: records.reduce((sum, r) => sum + (r.totalPaid || 0), 0) + deductions,
+        deductions,
+        payRecords: records,
+      };
+    });
   };
 
   // Adjustments: one combined row at the top level (Total Payment / Income /
@@ -284,10 +287,12 @@ export default function FinalReportDetails({ employeeId }) {
           const filteredRecords = (row.payRecords || []).filter(
             (r) => r.checkDate && r.checkDate <= payrollCutoffDate,
           );
+          const filteredDeductions = filteredRecords.reduce((sum, r) => sum + (r.deductions || 0), 0);
           return {
             ...row,
-            totalPayment: filteredRecords.reduce((sum, r) => sum + (r.totalPaid || 0), 0),
-            deductions: filteredRecords.reduce((sum, r) => sum + (r.deductions || 0), 0),
+            totalPayment:
+              filteredRecords.reduce((sum, r) => sum + (r.totalPaid || 0), 0) + filteredDeductions,
+            deductions: filteredDeductions,
             payRecords: filteredRecords,
           };
         }
