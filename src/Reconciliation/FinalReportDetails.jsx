@@ -183,16 +183,38 @@ export default function FinalReportDetails({ employeeId }) {
     ];
   };
 
+  // Health Insurance: same combined-row-with-drilldown pattern as Payments —
+  // it's a real cost paid on the employee's behalf, so it counts toward
+  // Total Payment same as payroll.
+  const fetchHealthInsuranceRows = async () => {
+    const { data: healthInsuranceRecords } = await axios.get(
+      API_ENDPOINTS.getHealthInsuranceForEmp(employeeId),
+    );
+
+    if (!healthInsuranceRecords || healthInsuranceRecords.length === 0) return [];
+
+    return [
+      {
+        category: "Health Insurance",
+        detailType: "healthInsurance",
+        description: "Health Insurance",
+        totalPayment: healthInsuranceRecords.reduce((sum, h) => sum + (h.total || 0), 0),
+        healthInsuranceRecords,
+      },
+    ];
+  };
+
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [projectRows, paymentRows, adjustmentRows, expenseRows] = await Promise.all([
+      const [projectRows, paymentRows, adjustmentRows, expenseRows, healthInsuranceRows] = await Promise.all([
         fetchProjectRows(),
         fetchPaymentRows(),
         fetchAdjustmentRows(),
         fetchExpenseRows(),
+        fetchHealthInsuranceRows(),
       ]);
-      setRowData([...projectRows, ...paymentRows, ...adjustmentRows, ...expenseRows]);
+      setRowData([...projectRows, ...paymentRows, ...adjustmentRows, ...expenseRows, ...healthInsuranceRows]);
     } catch (error) {
       console.error("Error fetching final report data:", error);
     } finally {
@@ -481,14 +503,60 @@ export default function FinalReportDetails({ employeeId }) {
     },
   };
 
+  const healthInsuranceDetailConfig = {
+    detailGridOptions: {
+      domLayout: "autoHeight",
+      columnDefs: [
+        { field: "dateOfBill", headerName: "Date of Bill", filter: "agSetColumnFilter", valueFormatter: (params) => formatDateMDY(params.value) },
+        { field: "dueDate", headerName: "Due Date", filter: "agSetColumnFilter", valueFormatter: (params) => formatDateMDY(params.value) },
+        {
+          field: "claimPrefund",
+          headerName: "Claim Prefund",
+          filter: "agSetColumnFilter",
+          valueFormatter: (params) => (params.value ? formatCurrency(params.value) : ""),
+        },
+        {
+          field: "specificStopLoss",
+          headerName: "Specific Stop Loss",
+          filter: "agSetColumnFilter",
+          valueFormatter: (params) => (params.value ? formatCurrency(params.value) : ""),
+        },
+        {
+          field: "aggregateStopLoss",
+          headerName: "Aggregate Stop Loss",
+          filter: "agSetColumnFilter",
+          valueFormatter: (params) => (params.value ? formatCurrency(params.value) : ""),
+        },
+        {
+          field: "adminFee",
+          headerName: "Admin Fee",
+          filter: "agSetColumnFilter",
+          valueFormatter: (params) => (params.value ? formatCurrency(params.value) : ""),
+        },
+        {
+          field: "total",
+          headerName: "Total",
+          filter: "agSetColumnFilter",
+          valueFormatter: (params) => (params.value ? formatCurrency(params.value) : ""),
+        },
+        { field: "comment", headerName: "Comment", filter: "agSetColumnFilter" },
+      ],
+      defaultColDef: { flex: 1, minWidth: 20, resizable: true },
+    },
+    getDetailRowData: (params) => {
+      params.successCallback(params.data.healthInsuranceRecords || []);
+    },
+  };
+
   // Which detail grid to show depends on the row's own category — Projects
   // drill down into bills, Payments (year rows) drill down into the
-  // individual pay records for that year, Adjustments/Expenses drill down
-  // into their own individual records.
+  // individual pay records for that year, Adjustments/Expenses/Health
+  // Insurance drill down into their own individual records.
   const detailCellRendererParams = (params) => {
     if (params.data?.detailType === "payroll") return payrollDetailConfig;
     if (params.data?.detailType === "adjustments") return adjustmentDetailConfig;
     if (params.data?.detailType === "expenses") return expenseDetailConfig;
+    if (params.data?.detailType === "healthInsurance") return healthInsuranceDetailConfig;
     return billDetailConfig;
   };
 
