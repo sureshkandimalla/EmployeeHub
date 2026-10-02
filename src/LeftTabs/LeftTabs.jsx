@@ -182,6 +182,7 @@ const TEAM_MENU = [
   { label: "Employees", to: "/workforce" },
   { label: "Visa Employees", to: "/visaEmployees" },
   { label: "Potential Employees", to: "/potentialEmployees" },
+  { label: "Timesheets", to: "/timesheets" },
 ];
 
 // Single-column "Reports" flyout — mirrors one column of the Create
