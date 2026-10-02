@@ -23,18 +23,31 @@ const ProjectDashboard = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   useNudgeResize();
 
+  const [open, setOpen] = useState(false);
+  // Set when a row's Project Id is clicked (full nested Project entity,
+  // fetched by ProjectsList) — passed to ProjectOnBoardingForm so it opens
+  // pre-filled in edit mode instead of a blank "create" form.
+  const [editingProject, setEditingProject] = useState(null);
+
   const addNewProject = () => {
+    setEditingProject(null);
+    setOpen(true);
+  };
+
+  const openEditProject = (project) => {
+    setEditingProject(project);
     setOpen(true);
   };
 
   const onClose = () => {
     setOpen(false);
+    setEditingProject(null);
+    fetchData();
   };
 
   const handleCollapseChange = () => {
     setIsCollapsed((prev) => !prev);
   };
-  const [open, setOpen] = useState(false);
 
   // Left-nav "Create > Customers > Project" links here with ?new=1 to land
   // straight on the add-project drawer instead of just the grid.
@@ -159,22 +172,50 @@ const ProjectDashboard = () => {
     {
       key: "1",
       label: "Active",
-      children: <ProjectList projectsList={processedData?.active} isCollapsed={isCollapsed} onRefresh={fetchData} />,
+      children: (
+        <ProjectList
+          projectsList={processedData?.active}
+          isCollapsed={isCollapsed}
+          onRefresh={fetchData}
+          onEditProject={openEditProject}
+        />
+      ),
     },
     {
       key: "3",
       label: "Yet to Start",
-      children: <ProjectList projectsList={processedData?.yetToStart} isCollapsed={isCollapsed} onRefresh={fetchData} />,
+      children: (
+        <ProjectList
+          projectsList={processedData?.yetToStart}
+          isCollapsed={isCollapsed}
+          onRefresh={fetchData}
+          onEditProject={openEditProject}
+        />
+      ),
     },
     {
       key: "4",
       label: "Current",
-      children: <ProjectList projectsList={processedData?.current} isCollapsed={isCollapsed} onRefresh={fetchData} />,
+      children: (
+        <ProjectList
+          projectsList={processedData?.current}
+          isCollapsed={isCollapsed}
+          onRefresh={fetchData}
+          onEditProject={openEditProject}
+        />
+      ),
     },
     {
       key: "2",
       label: "All",
-      children: <ProjectList projectsList={rowData} isCollapsed={isCollapsed} onRefresh={fetchData} />,
+      children: (
+        <ProjectList
+          projectsList={rowData}
+          isCollapsed={isCollapsed}
+          onRefresh={fetchData}
+          onEditProject={openEditProject}
+        />
+      ),
     },
   ];
 
@@ -209,13 +250,19 @@ const ProjectDashboard = () => {
         </Collapse>
 
         <Drawer
-          title={`Create New Project`}
+          title={editingProject ? "Edit Project" : "Create New Project"}
           placement="right"
           size="large"
           onClose={onClose}
           open={open}
+          // The form's prefill effect doesn't key off `editingProject` itself
+          // (see ProjectOnBoarding.jsx), so without a remount, opening Edit on
+          // a second project right after closing the first would still show
+          // the first project's data — destroyOnClose forces a fresh mount
+          // (and a fresh prefill) every time this drawer reopens.
+          destroyOnClose
         >
-          <ProjectOnBoardingForm onClose={onClose} />
+          <ProjectOnBoardingForm onClose={onClose} editingProject={editingProject} />
         </Drawer>
         <div
           className={`project-c ${isCollapsed ? "expanded" : "collapsed"}`}

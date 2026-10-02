@@ -107,6 +107,11 @@ const LCADetails = () => {
     setLcaModalData(lca);
     lcaForm.setFieldsValue({
       ...lca,
+      // lca.employeeId isn't a real field from the API — the employee
+      // comes back nested (directly, or via the linked Visa record when
+      // the LCA itself has no direct employee_id) — so it's pulled out
+      // here for the Select, which just wants a plain id.
+      employeeId: lca?.employee?.employeeId ?? lca?.visa?.employee?.employeeId ?? null,
       employmentStartDate: lca?.employmentStartDate ? dayjs(lca.employmentStartDate) : null,
       employmentEndDate:   lca?.employmentEndDate   ? dayjs(lca.employmentEndDate)   : null,
       lcaPostedFromDate:   lca?.lcaPostedFromDate   ? dayjs(lca.lcaPostedFromDate)   : null,
@@ -407,7 +412,7 @@ const LCADetails = () => {
         lcaData={lcaModalData}
         form={lcaForm}
         saving={lcaSaving}
-        showEmployeeSelect={isNewLca}
+        showEmployeeSelect
         employeeOptions={employeeOptions}
         onCancel={() => { setLcaModalData(null); lcaForm.resetFields(); }}
         onSave={handleLcaSave}

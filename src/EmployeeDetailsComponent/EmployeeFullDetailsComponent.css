@@ -219,3 +219,51 @@ body {
   align-items: center;
   cursor: pointer;
 }
+
+/* Personnel File — card-based redesign */
+.personnel-file-redesign {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 4px;
+}
+
+.personnel-profile-header-content {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.personnel-avatar {
+  background-color: #042c54;
+  flex-shrink: 0;
+}
+
+.personnel-profile-header-text h2 {
+  margin: 0 0 6px 0;
+  color: #042c54;
+}
+
+.personnel-profile-header-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.personnel-id {
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.personnel-cards-row .ant-card-head-title {
+  color: #042c54;
+  font-weight: 600;
+}
+
+.personnel-card-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}

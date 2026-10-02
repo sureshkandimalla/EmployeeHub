@@ -14,7 +14,8 @@ const MODAL_HEADER_COLOR = "#1677ff";
  *  saving            {boolean}       — shows loading on save button
  *  onCancel          {function}      — close handler
  *  onSave            {function}      — form onFinish handler
- *  showEmployeeSelect{boolean}       — show employee picker (for standalone Add New LCA)
+ *  showEmployeeSelect{boolean}       — show employee picker (both Add and Edit, so an
+ *                                       LCA missing its employee link can be fixed)
  *  employeeOptions   {array}         — [{ value, label }] for employee dropdown
  */
 export default function LcaFormModal({

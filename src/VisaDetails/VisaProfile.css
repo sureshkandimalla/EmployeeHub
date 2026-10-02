@@ -1,0 +1,16 @@
+.visa-profile-cards-row {
+  padding: 4px;
+}
+
+.visa-profile-cards-row .ant-card-head-title {
+  color: #042c54;
+  font-weight: 600;
+}
+
+.visa-profile-cards-row .ant-card-head-title .anticon {
+  margin-right: 8px;
+}
+
+.visa-profile-cards-row .ant-descriptions-item-label {
+  width: 45%;
+}

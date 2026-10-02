@@ -30,7 +30,7 @@ import { buildRowActions } from "../Notes/rowActions";
 import GridToolbar from "../Utils/GridToolbar";
 import { formatDateMDY } from "../Utils/dateFormat";
 
-const ProjectList = ({ projectsList, isCollapsed, onRefresh }) => {
+const ProjectList = ({ projectsList, isCollapsed, onRefresh, onEditProject }) => {
   console.log(projectsList);
   const gridRef = useRef(null);
   const [searchText, setSearchText] = useState("");
@@ -45,6 +45,17 @@ const ProjectList = ({ projectsList, isCollapsed, onRefresh }) => {
   const [poDocByWageId, setPoDocByWageId] = useState({});
   const [poModalWageId, setPoModalWageId] = useState(null);
   const [noteModalRow, setNoteModalRow] = useState(null);
+
+  // ProjectOnBoardingForm's editingProject prop expects the raw nested
+  // Project entity (employee/customer/billRates objects) — this grid's own
+  // rows are the flattened getProjects DTO, so the full entity is fetched
+  // fresh by id rather than reshaping the row in place.
+  const handleEditProject = (projectId) => {
+    axios
+      .get(API_ENDPOINTS.projectsById(projectId))
+      .then(({ data }) => onEditProject?.(data))
+      .catch(() => message.error("Failed to load project details. Please try again."));
+  };
 
   const handleArchiveProject = (row) => {
     axios
@@ -233,6 +244,29 @@ const ProjectList = ({ projectsList, isCollapsed, onRefresh }) => {
         },
       },
       {
+        headerName: "Id",
+        field: "projectId",
+        pinned: "left",
+        width: 90,
+        minWidth: 90,
+        maxWidth: 90,
+        suppressSizeToFit: true,
+        sortable: isSortable,
+        editable: false,
+        filter: "agSetColumnFilter",
+        cellRenderer: (params) => {
+          if (!params.data || params.node.rowPinned) return params.value ?? "";
+          return (
+            <span
+              style={{ color: "#1677ff", cursor: "pointer", textDecoration: "underline" }}
+              onClick={() => handleEditProject(params.data.projectId)}
+            >
+              {params.value}
+            </span>
+          );
+        },
+      },
+      {
         headerName: "Employee Name",
         field: "employeeName",
         cellRenderer: (params) => {
@@ -400,13 +434,6 @@ const ProjectList = ({ projectsList, isCollapsed, onRefresh }) => {
       {
         headerName: "Company",
         field: "companyName",
-        sortable: isSortable,
-        editable: false,
-        filter: "agSetColumnFilter",
-      },
-      {
-        headerName: "Project Id",
-        field: "projectId",
         sortable: isSortable,
         editable: false,
         filter: "agSetColumnFilter",

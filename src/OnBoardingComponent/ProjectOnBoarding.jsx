@@ -26,8 +26,16 @@ import { buildPoFileName } from "../Documents/poFileName";
 //import React, { useState, useEffect } from "react";
 //import { useLocation } from 'react-router-dom'
 
-const ProjectOnBoardingForm = ({ onClose }) => {
+// Pass `editingProject` (a project row, e.g. from ProjectGrid) to edit an
+// existing project instead of creating a new one — every field is
+// pre-populated from it, Employee/Customer become locked (reassigning a
+// project to someone else isn't a thing this form supports), and saving
+// updates the project/wage/work-site-address records in place rather than
+// creating new ones. This is also the only way to add a Work Location to a
+// project that was onboarded before that feature existed.
+const ProjectOnBoardingForm = ({ onClose, editingProject }) => {
   const { Option } = Select;
+  const isEditMode = !!editingProject;
   const [form] = Form.useForm();
   const [rowData, setRowData] = useState();
   const [selectedEmployeeId, setSelectedEmployeeId] = useState();
@@ -35,12 +43,71 @@ const ProjectOnBoardingForm = ({ onClose }) => {
   const [employees, setEmployeesData] = useState();
   const [customers, setCustomersData] = useState();
   const [loading, setLoading] = useState(true);
+  const [wageId, setWageId] = useState(null);
   // Held locally and uploaded only after the project itself is saved and
   // has a real projectId — DocumentsPanel's presign/confirm flow (same one
   // used for COI) needs an existing entityId, which doesn't exist yet
   // while this form is still being filled out.
   const [poFile, setPoFile] = useState(null);
   const [uploadingPo, setUploadingPo] = useState(false);
+
+  // Work site address for this project — captured here rather than left to
+  // a separate step, since it's needed (for H1B compliance, among other
+  // things) from the moment the assignment starts. Stored as a WORKSITE-
+  // type Address row tied to the project once it's created (see
+  // handleFormSubmit below), reusing the same Address table/endpoint as the
+  // employee's home address history, distinguished by `type`.
+  const [workArrangement, setWorkArrangement] = useState(null);
+  const [workAddress, setWorkAddress] = useState({
+    address: "",
+    city: "",
+    state: "",
+    zipCode: "",
+    country: "",
+  });
+  const [loadingHomeAddress, setLoadingHomeAddress] = useState(false);
+
+  const handleWorkArrangementChange = (value) => {
+    setWorkArrangement(value);
+    if (value === "Remote" && selectedEmployeeId) {
+      fetchHomeAddressForWorksite(selectedEmployeeId);
+    } else {
+      // Hybrid/Onsite always starts blank — carrying over a Remote
+      // prefill here risks someone submitting a home address as the
+      // on-site work location by accident.
+      setWorkAddress({ address: "", city: "", state: "", zipCode: "", country: "" });
+    }
+  };
+
+  // Remote defaults the work site address to the employee's current home
+  // address — still editable afterward, since a remote worker's actual
+  // setup may differ from what's on file.
+  const fetchHomeAddressForWorksite = async (employeeId) => {
+    setLoadingHomeAddress(true);
+    try {
+      const { data } = await axios.get(
+        `${API_ENDPOINTS.getEmployeeAddressHistory(employeeId)}?type=HOME`,
+      );
+      const home = (data || []).find((a) => a.active == null || a.active) || data?.[0];
+      if (home) {
+        setWorkAddress({
+          address: home.address || "",
+          city: home.city || "",
+          state: home.state || "",
+          zipCode: home.zipCode || "",
+          country: home.country || "",
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching home address:", error);
+    } finally {
+      setLoadingHomeAddress(false);
+    }
+  };
+
+  const handleWorkAddressChange = (field, value) => {
+    setWorkAddress((prev) => ({ ...prev, [field]: value }));
+  };
 
   const fetchEmployeesAndCustomers = async () => {
     try {
@@ -93,6 +160,9 @@ const ProjectOnBoardingForm = ({ onClose }) => {
       // alone doesn't reach the DOM, so the form store needs the same push.
       form.setFieldsValue({ "project Name": autoName });
     }
+    if (workArrangement === "Remote" && value) {
+      fetchHomeAddressForWorksite(value);
+    }
   };
 
   const handleCustomerChange = (value) => {
@@ -140,6 +210,67 @@ const ProjectOnBoardingForm = ({ onClose }) => {
     total: 0,
   });
 
+  // Prefill everything from the project being edited once employees/
+  // customers have loaded (buildAutoProjectName and the Select options both
+  // need those lists first). Also fetches the project's current work site
+  // address, if one's been captured, so it isn't mistaken for "never set".
+  useEffect(() => {
+    if (!isEditMode || !employees || !customers) return;
+
+    const firstWage = editingProject.billRates?.[0];
+    setSelectedEmployeeId(editingProject.employee?.employeeId);
+    setSelectedCustomerId(editingProject.customer?.customerId);
+    setWageId(firstWage?.wageId || null);
+
+    const prefill = {
+      projectId: editingProject.projectId,
+      employeeId: editingProject.employee?.employeeId,
+      customerId: editingProject.customer?.customerId,
+      client: editingProject.client || "",
+      projectName: editingProject.projectName || "",
+      startDate: editingProject.startDate || "",
+      endDate: editingProject.endDate || "",
+      workOrderStartDate: firstWage?.startDate || editingProject.startDate || "",
+      workOrderEndDate: firstWage?.endDate || editingProject.endDate || "",
+      billRate: firstWage?.wage || 0,
+      status: editingProject.status || "",
+      invoiceTerm: editingProject.invoiceTerm || null,
+      paymentTerm: editingProject.paymentTerm || "",
+      weekStartDay: editingProject.weekStartDay || DEFAULT_WEEK_START_DAY,
+    };
+    setGeneralDetails((prev) => ({ ...prev, ...prefill }));
+    form.setFieldsValue({
+      employeeId: prefill.employeeId,
+      customerId: prefill.customerId,
+      Client: prefill.client,
+      "project Name": prefill.projectName,
+      "Bill Rate": prefill.billRate,
+      Status: prefill.status,
+      "Invoice Term": prefill.invoiceTerm,
+      "Payment Term": prefill.paymentTerm,
+      "Week Start Day": prefill.weekStartDay,
+    });
+
+    axios
+      .get(API_ENDPOINTS.getWorksiteAddressForProject(editingProject.projectId))
+      .then(({ data }) => {
+        if (!data) return;
+        setWorkAddress({
+          address: data.address || "",
+          city: data.city || "",
+          state: data.state || "",
+          zipCode: data.zipCode || "",
+          country: data.country || "",
+        });
+        if (data.workArrangement) {
+          setWorkArrangement(data.workArrangement);
+          form.setFieldsValue({ "Work Arrangement": data.workArrangement });
+        }
+      })
+      .catch((error) => console.error("Error fetching work site address:", error));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditMode, employees, customers]);
+
   // Same 3-step presign/PUT-to-S3/confirm dance as DocumentsPanel (used for
   // COI) — reimplemented here rather than reused because DocumentsPanel is
   // a self-fetching list+uploader that needs an existing entityId; this
@@ -169,6 +300,43 @@ const ProjectOnBoardingForm = ({ onClose }) => {
     });
   };
 
+  // Updates the existing Project, its first Wage (bill rate / WO dates —
+  // see ProjectsList.jsx's identical split), and upserts the work site
+  // address. Project's own Start/End Date aren't included — ProjectController
+  // #updateProject doesn't accept them (see its own comment), so there's
+  // nothing to send; they stay whatever they were set to at creation.
+  const handleUpdateSubmit = async (details) => {
+    try {
+      await axios.put(API_ENDPOINTS.projectsById(details.projectId), {
+        projectName: details.projectName,
+        invoiceTerm: details.invoiceTerm,
+        paymentTerm: details.paymentTerm,
+        status: details.status,
+        client: details.client,
+        weekStartDay: details.weekStartDay,
+      });
+      if (wageId) {
+        await axios.put(API_ENDPOINTS.wagesById(wageId), {
+          wage: details.billRate,
+          startDate: details.workOrderStartDate,
+          endDate: details.workOrderEndDate,
+        });
+      }
+      if (workAddress.address) {
+        await axios.put(API_ENDPOINTS.updateEmployeeAddress(selectedEmployeeId), {
+          ...workAddress,
+          type: "WORKSITE",
+          workArrangement,
+          projectId: details.projectId,
+        });
+      }
+      Modal.success({ content: "Project updated successfully", onOk: onClose });
+    } catch (error) {
+      console.error("Error updating project:", error);
+      Modal.error({ content: "Error updating project. Please try again later." });
+    }
+  };
+
   const handleFormSubmit = (generalDetails) => {
     //api should be called here
 
@@ -186,6 +354,21 @@ const ProjectOnBoardingForm = ({ onClose }) => {
         if (response && response.status === 200) {
           console.log("response.data: " + JSON.stringify(response.data));
           const newWageId = response.data?.wageId;
+          const newProjectId = response.data?.projectId;
+          if (newProjectId && workAddress.address) {
+            try {
+              await axios.put(API_ENDPOINTS.updateEmployeeAddress(selectedEmployeeId), {
+                ...workAddress,
+                type: "WORKSITE",
+                workArrangement,
+                projectId: newProjectId,
+                startDate: generalDetails.startDate || null,
+              });
+            } catch (addressError) {
+              console.error("Error saving work site address:", addressError);
+              message.error("Project was saved, but the work site address failed to save.");
+            }
+          }
           if (poFile && newWageId) {
             setUploadingPo(true);
             try {
@@ -237,6 +420,8 @@ const ProjectOnBoardingForm = ({ onClose }) => {
   const handleClear = () => {
     form.resetFields();
     setPoFile(null);
+    setWorkArrangement(null);
+    setWorkAddress({ address: "", city: "", state: "", zipCode: "", country: "" });
     setGeneralDetails({
       projectId: null,
       projectName: "",
@@ -304,7 +489,11 @@ const ProjectOnBoardingForm = ({ onClose }) => {
 
     //console.log("generalDetails: "+generalDetails);
     // Make API call with formData
-    handleFormSubmit(generalDetails);
+    if (isEditMode) {
+      handleUpdateSubmit(generalDetails);
+    } else {
+      handleFormSubmit(generalDetails);
+    }
 
     // Clear the form after submission
     //handleClear();
@@ -334,7 +523,7 @@ const ProjectOnBoardingForm = ({ onClose }) => {
 
   return (
     <div className="employee-onboarding-form">
-      <h3 className="header">Onboard Project(s)</h3>
+      <h3 className="header">{isEditMode ? "Edit Project" : "Onboard Project(s)"}</h3>
       <Card className="employee-onboard-card">
         <Form form={form}>
           <Row className="card-header-section">
@@ -359,6 +548,7 @@ const ProjectOnBoardingForm = ({ onClose }) => {
               >
                 <Select
                   showSearch
+                  disabled={isEditMode}
                   value={selectedEmployeeId}
                   onChange={handleEmployeeChange}
                   filterOption={(input, option) =>
@@ -386,6 +576,7 @@ const ProjectOnBoardingForm = ({ onClose }) => {
               >
                 <Select
                   showSearch
+                  disabled={isEditMode}
                   value={selectedCustomerId}
                   onChange={handleCustomerChange}
                   filterOption={(input, option) =>
@@ -403,6 +594,75 @@ const ProjectOnBoardingForm = ({ onClose }) => {
               </Form.Item>
             </Col>
           </Row>
+          <Row gutter={30}>
+            <Col span={12} className="form-row">
+              <Form.Item
+                label="Work Arrangement"
+                name="Work Arrangement"
+                rules={isEditMode ? [] : [{ required: true, message: "Please select a work arrangement" }]}
+                tooltip={isEditMode ? "Optional here — pick it to re-fetch the home address for Remote; the work location below is editable either way." : undefined}
+              >
+                <Select placeholder="Select Work Arrangement" onChange={handleWorkArrangementChange}>
+                  <Option value="Remote">Remote</Option>
+                  <Option value="Hybrid">Hybrid</Option>
+                  <Option value="Onsite">Onsite</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+          {(workArrangement || isEditMode) && (
+            <Row gutter={30}>
+              <Col span={24} className="form-row">
+                <Spin spinning={loadingHomeAddress} tip="Loading employee's home address...">
+                  <Row gutter={16}>
+                    <Col span={24}>
+                      <Form.Item label="Work Site Address">
+                        <Input
+                          placeholder="Address"
+                          value={workAddress.address}
+                          onChange={(e) => handleWorkAddressChange("address", e.target.value)}
+                        />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+                  <Row gutter={16}>
+                    <Col span={6}>
+                      <Form.Item label="City">
+                        <Input
+                          value={workAddress.city}
+                          onChange={(e) => handleWorkAddressChange("city", e.target.value)}
+                        />
+                      </Form.Item>
+                    </Col>
+                    <Col span={6}>
+                      <Form.Item label="State">
+                        <Input
+                          value={workAddress.state}
+                          onChange={(e) => handleWorkAddressChange("state", e.target.value)}
+                        />
+                      </Form.Item>
+                    </Col>
+                    <Col span={6}>
+                      <Form.Item label="Zip Code">
+                        <Input
+                          value={workAddress.zipCode}
+                          onChange={(e) => handleWorkAddressChange("zipCode", e.target.value)}
+                        />
+                      </Form.Item>
+                    </Col>
+                    <Col span={6}>
+                      <Form.Item label="Country">
+                        <Input
+                          value={workAddress.country}
+                          onChange={(e) => handleWorkAddressChange("country", e.target.value)}
+                        />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+                </Spin>
+              </Col>
+            </Row>
+          )}
           <Row gutter={30}>
             <Col span={12} className="form-row">
               <Form.Item
@@ -438,8 +698,13 @@ const ProjectOnBoardingForm = ({ onClose }) => {
           </Row>
           <Row gutter={30}>
             <Col span={12} className="form-row">
-              <Form.Item label="Start Date" rules={[{ required: true }]}>
+              <Form.Item
+                label="Start Date"
+                rules={[{ required: true }]}
+                tooltip={isEditMode ? "Not editable after creation — update the WO Start Date below instead." : undefined}
+              >
                 <DatePicker
+                  disabled={isEditMode}
                   onChange={(date) => {
                     // WO Start Date tracks the project's own Start Date —
                     // keeps the two in sync since a project's first work
@@ -463,8 +728,12 @@ const ProjectOnBoardingForm = ({ onClose }) => {
               </Form.Item>
             </Col>
             <Col span={12} className="form-row">
-              <Form.Item label="End Date">
+              <Form.Item
+                label="End Date"
+                tooltip={isEditMode ? "Not editable after creation — update the WO End Date below instead." : undefined}
+              >
                 <DatePicker
+                  disabled={isEditMode}
                   onChange={(date) =>
                     handleGeneralData(date ? date.format("YYYY-MM-DD") : "", "endDate")
                   }
@@ -648,7 +917,7 @@ const ProjectOnBoardingForm = ({ onClose }) => {
                     htmlType="submit"
                     onClick={handleSubmit}
                   >
-                    Onboard
+                    {isEditMode ? "Update" : "Onboard"}
                   </Button>
                 </Form.Item>
               </Col>

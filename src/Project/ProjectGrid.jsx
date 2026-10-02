@@ -4,7 +4,7 @@ import API_ENDPOINTS from "../config";
 import { createRoot } from "react-dom/client";
 import { AgGridReact } from "@ag-grid-community/react";
 import { Button, Drawer } from "antd";
-import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
+import { PlusOutlined, ReloadOutlined, EditOutlined } from "@ant-design/icons";
 import "@ag-grid-community/styles/ag-grid.css";
 import "./ProjectGrid.css";
 import { invoiceTermLabel } from "../Utils/invoiceTerm";
@@ -18,7 +18,28 @@ const ProjectGrid = ({ employeeId, customerId, isCollapsed }) => {
   const [rowData, setRowData] = useState([]);
   const [projectDrawerOpen, setProjectDrawerOpen] = useState(false);
   const [customerDrawerOpen, setCustomerDrawerOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState(null);
   const columnDefs = [
+    {
+      headerName: "",
+      colId: "actions",
+      pinned: "left",
+      width: 70,
+      minWidth: 70,
+      maxWidth: 70,
+      sortable: false,
+      filter: false,
+      cellRenderer: (params) => (
+        <Button
+          size="small"
+          icon={<EditOutlined />}
+          onClick={() => {
+            setEditingProject(params.data);
+            setProjectDrawerOpen(true);
+          }}
+        />
+      ),
+    },
     {
       headerName: "Employee Name",
       field: "employee.firstName",
@@ -128,16 +149,24 @@ const ProjectGrid = ({ employeeId, customerId, isCollapsed }) => {
       >
     <div className="ag-theme-alpine workforce-container">
       <Drawer
-        title="Project Onboarding"
+        title={editingProject ? "Edit Project" : "Project Onboarding"}
         placement="right"
         size="large"
         onClose={() => {
           setProjectDrawerOpen(false);
+          setEditingProject(null);
           fetchData();
         }}
         open={projectDrawerOpen}
       >
-        <ProjectOnBoardingForm />
+        <ProjectOnBoardingForm
+          editingProject={editingProject}
+          onClose={() => {
+            setProjectDrawerOpen(false);
+            setEditingProject(null);
+            fetchData();
+          }}
+        />
       </Drawer>
       <Drawer
         title="Customer Onboarding"
@@ -169,7 +198,10 @@ const ProjectGrid = ({ employeeId, customerId, isCollapsed }) => {
         <Button
           type="primary"
           className="button-customer"
-          onClick={() => setProjectDrawerOpen(true)}
+          onClick={() => {
+            setEditingProject(null);
+            setProjectDrawerOpen(true);
+          }}
           style={{ marginLeft: "10px" }}
         >
           <PlusOutlined /> Add New Project

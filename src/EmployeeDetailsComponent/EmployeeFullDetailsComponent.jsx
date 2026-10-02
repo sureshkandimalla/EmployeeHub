@@ -8,6 +8,7 @@ import "./EmployeeFullDetailsComponent.css";
 import ProjectGrid from "../Project/ProjectGrid";
 import { useLocation } from "react-router-dom";
 import EmployeePersonnelFilePage from "../EmployeeDetailsComponent/EmployeePersonnelFilePage";
+import VisaProfile from "../VisaDetails/VisaProfile";
 import { useChartOverview, ChartSettingsIcon } from "../Utils/ChartOverviewPanel";
 import { employeeRevenueByMonth } from "../Charts/globalChartRegistry";
 import InvoiceDetails from "../Invoice/InvoiceDetails";
@@ -18,7 +19,8 @@ import FinalReportDetails from "../Reconciliation/FinalReportDetails";
 import BillingDetails from "../Billings/BillingDetails";
 import PassportController from "../Passport/PassportController";
 import EmployeeTimesheetSummary from "../Timesheet/EmployeeTimesheetSummary";
-import { UpOutlined, DownOutlined,CalendarOutlined, DollarOutlined,MailOutlined,PhoneOutlined, UserOutlined } from "@ant-design/icons";
+import DocumentsPanel from "../Documents/DocumentsPanel";
+import { UpOutlined, DownOutlined,CalendarOutlined, DollarOutlined,MailOutlined,PhoneOutlined, UserOutlined, FolderOutlined } from "@ant-design/icons";
 import { Tabs, Card,Typography,Collapse, Row, Col, Button, Drawer, Spin, message } from "antd";
 import AuthContext from "../Authentication/Context/AuthContext";
 import { ROLES, canAccessEntity } from "../Utils/roleAccess";
@@ -28,6 +30,8 @@ import { ROLES, canAccessEntity } from "../Utils/roleAccess";
 // content built yet, so they're left ungated.
 const TAB_ROLES = {
   "PERSONNEL FILE": [ROLES.HR],
+  "VISA PROFILE": [ROLES.HR, ROLES.IMMIGRATION],
+  DOCUMENTS: [ROLES.HR],
   PROJECTS: [ROLES.HR],
   INVOICES: [ROLES.ACCOUNTING],
   PAYROLLS: [ROLES.ACCOUNTING],
@@ -91,6 +95,32 @@ const EmployeeFullDetails = () => {
       children: (
         <div className="employee-List-grid" style={{ height: "100%" }}>
           <EmployeePersonnelFilePage />
+        </div>
+      ),
+    },
+    {
+      key: 15,
+      label: "VISA PROFILE",
+      children: (
+        <div className="employee-List-grid" style={{ height: "100%", overflow: "auto" }}>
+          <VisaProfile employeeId={rowData.employeeId} employee={rowData} />
+        </div>
+      ),
+    },
+    {
+      key: 16,
+      label: "DOCUMENTS",
+      children: (
+        <div className="employee-List-grid" style={{ height: "100%", overflow: "auto", padding: 16 }}>
+          <Card
+            title={
+              <>
+                <FolderOutlined /> Documents
+              </>
+            }
+          >
+            <DocumentsPanel entityType="Employee" entityId={rowData.employeeId} />
+          </Card>
         </div>
       ),
     },

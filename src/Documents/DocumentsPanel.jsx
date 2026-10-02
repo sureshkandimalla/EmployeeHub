@@ -1,9 +1,31 @@
 import React, { useEffect, useState } from "react";
-import { Upload, Button, List, message, Typography, Empty } from "antd";
-import { UploadOutlined, DownloadOutlined, DeleteOutlined, FileOutlined } from "@ant-design/icons";
+import { Upload, Button, Table, message, Modal, Form, Select, Input, Tag } from "antd";
+import { UploadOutlined, DownloadOutlined, DeleteOutlined, FileOutlined, InboxOutlined } from "@ant-design/icons";
 import axios from "axios";
 import API_ENDPOINTS from "../config";
 import { openDocumentInNewTab } from "./openDocument";
+import { formatDateMDY } from "../Utils/dateFormat";
+
+const { Dragger } = Upload;
+
+export const DOCUMENT_TYPE_OPTIONS = ["Visa", "H1B", "Passport", "I94", "Education", "Other"];
+
+const documentTypeColor = (type) => {
+  switch (type) {
+    case "Visa":
+      return "blue";
+    case "H1B":
+      return "purple";
+    case "Passport":
+      return "green";
+    case "I94":
+      return "gold";
+    case "Education":
+      return "cyan";
+    default:
+      return "default";
+  }
+};
 
 // Reusable across any entity that needs file attachments — Insurance today,
 // Customer MSAs / Project POs / Employee docs are the same shape, just a
@@ -11,11 +33,15 @@ import { openDocumentInNewTab } from "./openDocument";
 // presigned S3 PUT url, PUT the raw file straight to S3 (bypassing our own
 // API and its axios interceptor — a presigned URL's signature doesn't
 // tolerate an extra Authorization header), then tell the backend the
-// upload succeeded so it can record the metadata row.
+// upload succeeded so it can record the metadata row (now also carrying
+// the Document Type / Description captured in the Add Document form).
 const DocumentsPanel = ({ entityType, entityId }) => {
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [form] = Form.useForm();
 
   const fetchDocuments = () => {
     if (!entityId) return;
@@ -29,40 +55,60 @@ const DocumentsPanel = ({ entityType, entityId }) => {
 
   useEffect(fetchDocuments, [entityType, entityId]);
 
-  const handleUpload = async ({ file, onSuccess, onError }) => {
-    setUploading(true);
+  const openAddModal = () => {
+    form.resetFields();
+    setSelectedFile(null);
+    setModalOpen(true);
+  };
+
+  const closeAddModal = () => {
+    setModalOpen(false);
+    setSelectedFile(null);
+    form.resetFields();
+  };
+
+  const handleSubmit = async () => {
+    const values = await form.validateFields().catch(() => null);
+    if (!values) return;
+    if (!selectedFile) {
+      message.error("Please select a file to upload.");
+      return;
+    }
+
+    setSubmitting(true);
     try {
       const presign = await axios.post(API_ENDPOINTS.presignDocumentUpload, {
         entityType,
         entityId,
-        fileName: file.name,
-        contentType: file.type || "application/octet-stream",
+        fileName: selectedFile.name,
+        contentType: selectedFile.type || "application/octet-stream",
       });
       const { uploadUrl, s3Key } = presign.data;
 
       await fetch(uploadUrl, {
         method: "PUT",
-        headers: { "Content-Type": file.type || "application/octet-stream" },
-        body: file,
+        headers: { "Content-Type": selectedFile.type || "application/octet-stream" },
+        body: selectedFile,
       });
 
       await axios.post(API_ENDPOINTS.createDocument, {
         entityType,
         entityId,
-        fileName: file.name,
+        fileName: selectedFile.name,
         s3Key,
-        contentType: file.type || "application/octet-stream",
-        sizeBytes: file.size,
+        contentType: selectedFile.type || "application/octet-stream",
+        sizeBytes: selectedFile.size,
+        documentType: values.documentType,
+        description: values.description || "",
       });
 
-      message.success(`${file.name} uploaded.`);
-      onSuccess("ok");
+      message.success(`${selectedFile.name} uploaded.`);
+      closeAddModal();
       fetchDocuments();
     } catch (error) {
       message.error(`Upload failed: ${error.message}`);
-      onError(error);
     } finally {
-      setUploading(false);
+      setSubmitting(false);
     }
   };
 
@@ -81,40 +127,108 @@ const DocumentsPanel = ({ entityType, entityId }) => {
       .catch(() => message.error("Delete failed."));
   };
 
+  const columns = [
+    {
+      title: "File Name",
+      dataIndex: "fileName",
+      key: "fileName",
+      render: (fileName) => (
+        <>
+          <FileOutlined style={{ marginRight: 8 }} />
+          {fileName}
+        </>
+      ),
+    },
+    {
+      title: "Document Type",
+      dataIndex: "documentType",
+      key: "documentType",
+      render: (documentType) => (documentType ? <Tag color={documentTypeColor(documentType)}>{documentType}</Tag> : "NA"),
+    },
+    {
+      title: "Description",
+      dataIndex: "description",
+      key: "description",
+      render: (description) => description || "NA",
+    },
+    {
+      title: "Uploaded",
+      dataIndex: "uploadedDate",
+      key: "uploadedDate",
+      render: (uploadedDate) => (uploadedDate ? formatDateMDY(uploadedDate) : "NA"),
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      width: 100,
+      render: (_, doc) => (
+        <>
+          <Button
+            type="link"
+            icon={<DownloadOutlined />}
+            onClick={() => openDocumentInNewTab(doc.id)}
+          />
+          <Button type="link" danger icon={<DeleteOutlined />} onClick={() => handleDelete(doc)} />
+        </>
+      ),
+    },
+  ];
+
   return (
     <div>
-      <Upload customRequest={handleUpload} showUploadList={false} multiple>
-        <Button icon={<UploadOutlined />} loading={uploading} style={{ marginBottom: 12 }}>
-          Upload Document
-        </Button>
-      </Upload>
-      <List
+      <Button icon={<UploadOutlined />} onClick={openAddModal} style={{ marginBottom: 12 }}>
+        Add Document
+      </Button>
+      <Table
+        rowKey="id"
         loading={loading}
         dataSource={documents}
-        locale={{ emptyText: <Empty description="No documents uploaded yet" /> }}
-        renderItem={(doc) => (
-          <List.Item
-            actions={[
-              <Button
-                key="download"
-                type="link"
-                icon={<DownloadOutlined />}
-                onClick={() => openDocumentInNewTab(doc.id)}
-              />,
-              <Button
-                key="delete"
-                type="link"
-                danger
-                icon={<DeleteOutlined />}
-                onClick={() => handleDelete(doc)}
-              />,
-            ]}
-          >
-            <FileOutlined style={{ marginRight: 8 }} />
-            <Typography.Text>{doc.fileName}</Typography.Text>
-          </List.Item>
-        )}
+        columns={columns}
+        pagination={false}
+        size="small"
+        locale={{ emptyText: "No documents uploaded yet" }}
       />
+
+      <Modal
+        title="Add Document"
+        open={modalOpen}
+        onCancel={closeAddModal}
+        onOk={handleSubmit}
+        confirmLoading={submitting}
+        okText="Upload"
+      >
+        <Form form={form} layout="vertical">
+          <Form.Item
+            label="Document Type"
+            name="documentType"
+            rules={[{ required: true, message: "Please select a document type" }]}
+          >
+            <Select
+              placeholder="Select document type"
+              options={DOCUMENT_TYPE_OPTIONS.map((value) => ({ value, label: value }))}
+            />
+          </Form.Item>
+          <Form.Item label="Description" name="description">
+            <Input.TextArea rows={3} placeholder="Optional notes about this document" />
+          </Form.Item>
+          <Form.Item label="File" required>
+            <Dragger
+              beforeUpload={(file) => {
+                setSelectedFile(file);
+                return false;
+              }}
+              onRemove={() => setSelectedFile(null)}
+              fileList={selectedFile ? [selectedFile] : []}
+              maxCount={1}
+            >
+              <p className="ant-upload-drag-icon">
+                <InboxOutlined />
+              </p>
+              <p className="ant-upload-text">Click or drag a file here to select it</p>
+            </Dragger>
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };
