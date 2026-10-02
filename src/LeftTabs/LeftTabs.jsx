@@ -95,6 +95,7 @@ const CREATE_MENU = [
     title: "Other",
     items: [
       { label: "Dashboard", to: "/dashboard" },
+      { label: "Timesheets", to: "/timesheets" },
       { label: "Master Data Load", to: "/masterdataload" },
       { label: "User Access", to: "/userAccess" },
       { label: "Pending Requests", to: "/pendingRequests" },
