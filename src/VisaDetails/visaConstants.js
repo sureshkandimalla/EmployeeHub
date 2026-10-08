@@ -142,15 +142,20 @@ export const VISA_CATEGORY_OPTIONS = [
 ];
 
 export const VISA_SUB_CATEGORY_OPTIONS = [
-  { value: "Transfer",       label: "Transfer" },
-  { value: "CAP",            label: "CAP" },
-  { value: "Transfer-India", label: "Transfer-India" },
+  { value: "Extension",            label: "Extension" },
+  { value: "Amendment + Extension", label: "Amendment + Extension" },
+  { value: "Amendment",            label: "Amendment" },
+  { value: "Transfer",             label: "Transfer" },
+  { value: "Concurrent",           label: "Concurrent" },
+  { value: "CAP",                  label: "CAP" },
+  { value: "Transfer-India",       label: "Transfer-India" },
 ];
 
 /** Values used in the AG Grid agSelectCellEditor (strings only) */
 export const VISA_SUB_CATEGORY_VALUES = VISA_SUB_CATEGORY_OPTIONS.map((o) => o.value);
 
 export const FILING_TYPE_OPTIONS = [
+  { value: "Regular",         label: "Regular" },
   { value: "Transfer",        label: "Transfer" },
   { value: "Consular",        label: "Consular" },
   { value: "Change of Status", label: "COS" },

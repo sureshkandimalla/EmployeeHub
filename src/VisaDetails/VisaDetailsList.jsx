@@ -436,6 +436,7 @@ export default function VisaDetailsList({ preloadedData }) {
       cellEditor: "agSelectCellEditor",
       cellEditorParams: { values: VISA_CATEGORY_OPTIONS.map((o) => o.value) },
     },
+    { field: "employmentType",      headerName: MASTER_FIELD_LABELS.employmentType,     filter: "agSetColumnFilter",  cellClassRules },
     { field: "receiptNumber",       headerName: MASTER_FIELD_LABELS.receiptNumber,      filter: "agSetColumnFilter",  cellClassRules,
       cellRenderer: (params) => {
         const receiptNum = params.value;
@@ -450,7 +451,6 @@ export default function VisaDetailsList({ preloadedData }) {
         );
       },
     },
-    { field: "employmentType",      headerName: MASTER_FIELD_LABELS.employmentType,     filter: "agSetColumnFilter",  cellClassRules, hide: true },
     { field: "employeeType",        headerName: MASTER_FIELD_LABELS.employeeType,       filter: "agSetColumnFilter",  cellClassRules, hide: true },
     { field: "applicationStatus",   headerName: MASTER_FIELD_LABELS.applicationStatus,  filter: "agSetColumnFilter",  cellClassRules, cellStyle: statusCellStyle,
       editable: (params) => !!params.data?.visaId,

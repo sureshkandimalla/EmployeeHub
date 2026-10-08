@@ -37,6 +37,7 @@ export const workAuthorizationList = [
   { value: "GC", label: "GC" },
   { value: "L1", label: "L1" },
   { value: "E3", label: "E3" },
+  { value: "Other", label: "Other" },
 
 ];
 
@@ -293,6 +294,7 @@ export const paymentTermsList = [
   { value: "Net 30", label: "Net 30" },
   { value: "Net 45", label: "Net 45" },
   { value: "Net 60", label: "Net 60" },
+  { value: "Net 90", label: "Net 90" },
 ];
 
 export const vendorTypeList = [

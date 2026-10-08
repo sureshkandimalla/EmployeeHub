@@ -172,6 +172,15 @@ const AssignmentDetails = ({ projectId, isCollapsed }) => {
         }}
       >
       <div className="ag-theme-alpine workforce-container">
+      <Drawer
+        title={`Create New Assignment`}
+        placement="right"
+        size="large"
+        onClose={onClose}
+        open={open}
+      >
+        <AssignmentForm onClose={onClose} />
+      </Drawer>
       <GridToolbar className="workforce-search-container">
           <Button
             type="default"
@@ -187,15 +196,6 @@ const AssignmentDetails = ({ projectId, isCollapsed }) => {
             value={searchText}
             onChange={handleSearchInputChange}
           />
-          <Drawer
-            title={`Create New Assignment`}
-            placement="right"
-            size="large"
-            onClose={onClose}
-            open={open}
-          >
-            <AssignmentForm onClose={onClose} />
-          </Drawer>
           <Button
             type="primary"
             className="button-customer"

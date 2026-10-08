@@ -190,6 +190,15 @@ const WorkOrderDetails = ({ rowData, isCollapsed, onRefresh }) => {
         }}
       >
     <div className="ag-theme-alpine workforce-container">
+      <Drawer
+        title={`Create New WorkOrder`}
+        placement="right"
+        size="large"
+        onClose={onClose}
+        open={open}
+      >
+        <WorkOrderForm onClose={onClose} />
+      </Drawer>
       <GridToolbar className="workforce-search-container">
           <Button
             type="default"
@@ -205,15 +214,6 @@ const WorkOrderDetails = ({ rowData, isCollapsed, onRefresh }) => {
             value={searchText}
             onChange={handleSearchInputChange}
           />
-          <Drawer
-            title={`Create New WorkOrder`}
-            placement="right"
-            size="large"
-            onClose={onClose}
-            open={open}
-          >
-            <WorkOrderForm onClose={onClose} />
-          </Drawer>
           <Button
             type="primary"
             className="button-customer"
