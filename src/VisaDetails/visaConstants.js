@@ -64,6 +64,7 @@ export const MASTER_FIELD_LABELS = {
   status:             "Employee Status",
   visaCategory:       "Visa",
   employmentType:     "Employment Type",
+  lcaWage:            "LCA Wage",
   employeeType:       "Tax Term",
   filingType:         "Filing Type",
   visaSubCategory:    "Visa Sub Category",

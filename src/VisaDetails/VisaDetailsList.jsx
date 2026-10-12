@@ -239,6 +239,7 @@ export default function VisaDetailsList({ preloadedData }) {
         endDate:             latestVisa?.endDate         ?? emp.endDate         ?? null,
         receiptNumber:       latestVisa?.receiptNumber   ?? null,
         lcaNumber:           latestVisa?.lcaNumber       ?? latestLca?.lcaNumber ?? null,
+        lcaWage:             latestVisa?.lcaWage         ?? latestLca?.lcaWage   ?? null,
         visaId:              latestVisa?.visaId           ?? null,
         applicationStatus:   latestVisa?.status          ?? emp.applicationStatus ?? null,
         // ── Employment dates (from employee table, fall back to LCA) ──
@@ -437,6 +438,10 @@ export default function VisaDetailsList({ preloadedData }) {
       cellEditorParams: { values: VISA_CATEGORY_OPTIONS.map((o) => o.value) },
     },
     { field: "employmentType",      headerName: MASTER_FIELD_LABELS.employmentType,     filter: "agSetColumnFilter",  cellClassRules },
+    { field: "lcaWage",             headerName: MASTER_FIELD_LABELS.lcaWage,            filter: "agSetColumnFilter",  cellClassRules,
+      // Derived from the employee's latest Visa/LCA, not its own editable
+      // column here — edit it from the expanded row's LCA Wage column instead.
+      valueFormatter: (params) => params.value != null && params.value !== "" ? `$${Number(params.value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "" },
     { field: "receiptNumber",       headerName: MASTER_FIELD_LABELS.receiptNumber,      filter: "agSetColumnFilter",  cellClassRules,
       cellRenderer: (params) => {
         const receiptNum = params.value;

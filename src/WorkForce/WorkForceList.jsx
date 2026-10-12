@@ -74,6 +74,7 @@ const WorkForceList = ({ employees, isCollapsed, onRefresh }) => {
     "I9",
     "Paf",
     "Annual Pay",
+    "LCA Wage",
     "Designation",
     "StartDate",
     "Employee Id",
@@ -99,7 +100,13 @@ const WorkForceList = ({ employees, isCollapsed, onRefresh }) => {
   ];
 
   useEffect(() => {
-    setRowData(Array.isArray(employees) ? employees : []);
+    const withLcaWage = (Array.isArray(employees) ? employees : []).map((emp) => {
+      const latestVisa = [...(emp.visas || [])].sort(
+        (a, b) => (b.visaId ?? 0) - (a.visaId ?? 0)
+      )[0];
+      return { ...emp, lcaWage: latestVisa?.lcaWage ?? latestVisa?.lca?.lcaWage ?? null };
+    });
+    setRowData(withLcaWage);
   }, [employees]);
 
   const excelStyles = [
@@ -139,7 +146,14 @@ const WorkForceList = ({ employees, isCollapsed, onRefresh }) => {
         fieldValue.toLowerCase() === "dob"
       ) {
         fieldValue = fieldValue.toLowerCase();
-      }     
+      }
+      // "LCA Wage" -> "LCAWage" -> "lCAWage" via the generic derivation
+      // above, which doesn't match the actual row field "lcaWage" — same
+      // acronym-prefix problem as SSN/DOB, just mid-string instead of the
+      // whole label.
+      if (column === "LCA Wage") {
+        fieldValue = "lcaWage";
+      }
 
       let updatedColumn = column === "DOB" ? "Date of Birth" : column;
       updatedColumn = column;
@@ -201,7 +215,10 @@ const WorkForceList = ({ employees, isCollapsed, onRefresh }) => {
         headerName: updatedColumn,
         field: fieldValue,
         sortable: isSortable,
-        editable: true,
+        // Derived from the employee's latest Visa/LCA, not an Employee
+        // column — saveChanges() PUTs the whole row to updateEmployee, which
+        // has no lcaWage field to persist an edit into, so don't offer one.
+        editable: fieldValue !== "lcaWage",
         cellEditor,
         cellEditorParams,
         headerClass: column === "Employee Id" ? "ag-center-cols" : "ag-header-cell",
@@ -231,7 +248,7 @@ const WorkForceList = ({ employees, isCollapsed, onRefresh }) => {
                 {params.value}
               </Link>
             );
-          } else if (params.colDef.field === "annualPay") {
+          } else if (params.colDef.field === "annualPay" || params.colDef.field === "lcaWage") {
             return formatCurrency(params.value);
           } else if (["startDate", "endDate", "dob", "payrollStart", "lastUpdated"].includes(params.colDef.field)) {
             return formatDateMDY(params.value);
