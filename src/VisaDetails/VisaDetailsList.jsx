@@ -239,6 +239,7 @@ export default function VisaDetailsList({ preloadedData }) {
         filingYear:          latestVisa?.filingYear      ?? null,
         startDate:           latestVisa?.startDate       ?? emp.startDate       ?? null,
         endDate:             latestVisa?.endDate         ?? emp.endDate         ?? null,
+        approvedDate:        latestVisa?.approvedDate    ?? null,
         receiptNumber:       latestVisa?.receiptNumber   ?? null,
         lcaNumber:           latestVisa?.lcaNumber       ?? latestLca?.lcaNumber ?? null,
         lcaWage:             latestVisa?.lcaWage         ?? latestLca?.lcaWage   ?? null,
