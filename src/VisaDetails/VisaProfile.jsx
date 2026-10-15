@@ -107,6 +107,7 @@ const VisaProfile = ({ employeeId, employee }) => {
       status:          v.status          ?? null,
       startDate:       v.startDate       ? dayjs(v.startDate)    : null,
       endDate:         v.endDate         ? dayjs(v.endDate)      : null,
+      approvedDate:    v.approvedDate    ? dayjs(v.approvedDate) : null,
       lastUpdated:     v.lastUpdated     ? dayjs(v.lastUpdated)  : null,
       lcaId:           v.lca?.lcaId      ?? null,
     });
@@ -163,6 +164,7 @@ const VisaProfile = ({ employeeId, employee }) => {
       receiptNumber:   values.receiptNumber   ?? visaModalData?.receiptNumber ?? null,
       startDate:       values.startDate?.format("YYYY-MM-DD") || null,
       endDate:         values.endDate?.format("YYYY-MM-DD")   || null,
+      approvedDate:    values.approvedDate?.format("YYYY-MM-DD") || null,
       jobTitle:        values.jobTitle      ?? visaModalData?.lca?.jobTitle      ?? null,
       lcaNumber:       values.lcaNumber     ?? visaModalData?.lca?.lcaNumber     ?? null,
       socCode:         values.socCode       ?? visaModalData?.lca?.socCode       ?? null,
