@@ -20,6 +20,7 @@ import BillingDetails from "../Billings/BillingDetails";
 import PassportController from "../Passport/PassportController";
 import EmployeeTimesheetSummary from "../Timesheet/EmployeeTimesheetSummary";
 import DocumentsPanel from "../Documents/DocumentsPanel";
+import EmployeeDocumentsPanel from "../Documents/EmployeeDocumentsPanel";
 import { UpOutlined, DownOutlined,CalendarOutlined, DollarOutlined,MailOutlined,PhoneOutlined, UserOutlined, FolderOutlined } from "@ant-design/icons";
 import { Tabs, Card,Typography,Collapse, Row, Col, Button, Drawer, Spin, message } from "antd";
 import AuthContext from "../Authentication/Context/AuthContext";
@@ -32,6 +33,7 @@ const TAB_ROLES = {
   "PERSONNEL FILE": [ROLES.HR],
   "VISA PROFILE": [ROLES.HR, ROLES.IMMIGRATION],
   DOCUMENTS: [ROLES.HR],
+  "EMPLOYEE DOCUMENTS": [ROLES.HR],
   PROJECTS: [ROLES.HR],
   INVOICES: [ROLES.ACCOUNTING],
   PAYROLLS: [ROLES.ACCOUNTING],
@@ -120,6 +122,23 @@ const EmployeeFullDetails = () => {
             }
           >
             <DocumentsPanel entityType="Employee" entityId={rowData.employeeId} />
+          </Card>
+        </div>
+      ),
+    },
+    {
+      key: 17,
+      label: "EMPLOYEE DOCUMENTS",
+      children: (
+        <div className="employee-List-grid" style={{ height: "100%", overflow: "auto", padding: 16 }}>
+          <Card
+            title={
+              <>
+                <FolderOutlined /> Employee Documents
+              </>
+            }
+          >
+            <EmployeeDocumentsPanel entityId={rowData.employeeId} />
           </Card>
         </div>
       ),

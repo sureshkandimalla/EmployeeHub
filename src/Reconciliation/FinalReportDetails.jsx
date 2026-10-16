@@ -407,11 +407,24 @@ export default function FinalReportDetails({ employeeId }) {
       domLayout: "autoHeight",
       columnDefs: [
         { field: "billId", headerName: "Bill Id", filter: "agSetColumnFilter" },
+        { field: "invoiceNumber", headerName: "Invoice Number", filter: "agSetColumnFilter" },
         {
           field: "invoiceMonth",
           headerName: "Invoice Month",
           filter: "agSetColumnFilter",
           valueFormatter: (params) => formatMonthYear(params.value),
+        },
+        {
+          field: "startDate",
+          headerName: "Start Date",
+          filter: "agSetColumnFilter",
+          valueFormatter: (params) => (params.value ? formatDateMDY(params.value) : ""),
+        },
+        {
+          field: "endDate",
+          headerName: "End Date",
+          filter: "agSetColumnFilter",
+          valueFormatter: (params) => (params.value ? formatDateMDY(params.value) : ""),
         },
         { field: "hours", headerName: "Hours", filter: "agSetColumnFilter" },
         {
