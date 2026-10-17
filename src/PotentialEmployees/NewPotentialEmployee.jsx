@@ -12,12 +12,7 @@ import {
   Modal,
 } from "antd";
 import axios from "axios";
-import API_ENDPOINTS from "../config";
-
-const usCountryTelList = [
-  { value: "US", label: "US" },
-  { value: "IN", label: "IN" },
-];
+import API_ENDPOINTS, { usCountryTelList } from "../config";
 
 const genderOptions = [
   { value: "Male", label: "Male" },
@@ -137,7 +132,7 @@ const NewPotentialEmployee = ({ onClose}) => {
       <Form.Item label="Phone Number" required>
         <Space.Compact>
           <Select
-            defaultValue="US"
+            defaultValue="USA"
             options={usCountryTelList}
             onChange={(value) => handleGeneralData(value, "phoneCountryCode")}
           />

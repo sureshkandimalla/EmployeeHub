@@ -14,7 +14,7 @@ import {
 } from "antd";
 import "./Newemployee.css";
 import axios from "axios";
-import API_ENDPOINTS, { companyList, workAuthorizationList } from "../config";
+import API_ENDPOINTS, { companyList, workAuthorizationList, usCountryTelList } from "../config";
 
 const onFinish = (values) => {
   console.log("Success:", values);
@@ -22,17 +22,6 @@ const onFinish = (values) => {
 const onFinishFailed = (errorInfo) => {
   console.log("Failed:", errorInfo);
 };
-const usCountryTelList = [
-  //TODO later get from db/api call
-  {
-    value: "USA",
-    label: "USA",
-  },
-  {
-    value: "IN",
-    label: "IN",
-  },
-];
 const taxTermsList = [
   {
     value: "W2",

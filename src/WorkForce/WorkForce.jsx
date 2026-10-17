@@ -260,19 +260,19 @@ const WorkForceContent = () => {
   );
 };
 
-const WorkForce = () => {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-      },
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
     },
-  });
+  },
+});
 
-  const persister = createSyncStoragePersister({
-    storage: window.localStorage,
-  });
+const persister = createSyncStoragePersister({
+  storage: window.localStorage,
+});
 
+const WorkForce = () => {
   return (
     <PersistQueryClientProvider
       client={queryClient}

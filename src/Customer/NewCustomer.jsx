@@ -20,6 +20,7 @@ import API_ENDPOINTS, {
   msaStatusList,
   billingMethodList,
   paymentTermsList,
+  usCountryTelList,
 } from "../config";
 import { useNavigate } from "react-router-dom";
 
@@ -29,17 +30,6 @@ const onFinish = (values) => {
 const onFinishFailed = (errorInfo) => {
   console.log("Failed:", errorInfo);
 };
-const usCountryTelList = [
-  //TODO later get from db/api call
-  {
-    value: "USA",
-    label: "USA",
-  },
-  {
-    value: "IN",
-    label: "IN",
-  },
-];
 const NewCustomer = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
