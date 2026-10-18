@@ -242,6 +242,23 @@ const setInvoiceMonth = async (text = "07/2026") => {
   fireEvent.blur(monthInput);
 };
 
+// Start/End Date are *displayed* in MM/DD/YYYY (the app standardized every
+// date field on that format) while the component's own state and the submit
+// payload stay on ISO "yyyy-MM-dd". Tests are written in ISO throughout —
+// these two converters bridge the two so a future display-format change only
+// needs editing here.
+const isoToDisplay = (iso) => {
+  if (!iso) return "";
+  const [year, month, day] = iso.split("-");
+  return `${month}/${day}/${year}`;
+};
+
+const displayToIso = (display) => {
+  if (!display) return "";
+  const [month, day, year] = display.split("/");
+  return `${year}-${month}-${day}`;
+};
+
 // Driven via a single fireEvent.change (the full text in one shot) rather
 // than userEvent.clear + character-by-character typing. react-datepicker
 // parses on every keystroke and tracks a keyboard-focused calendar
@@ -250,19 +267,20 @@ const setInvoiceMonth = async (text = "07/2026") => {
 // while typing can produce a churn of spurious onChange calls unrelated to
 // the final value under test. One change + blur commits the intended value
 // directly via react-datepicker's parse-on-blur path.
-const setStartDate = async (text = "2026-07-01") => {
+const setStartDate = async (iso = "2026-07-01") => {
   const startDateInput = document.getElementById("startDate");
-  fireEvent.change(startDateInput, { target: { value: text } });
+  fireEvent.change(startDateInput, { target: { value: isoToDisplay(iso) } });
   fireEvent.blur(startDateInput);
 };
 
-const setEndDate = async (text) => {
+const setEndDate = async (iso) => {
   const endDateInput = document.getElementById("endDate");
-  fireEvent.change(endDateInput, { target: { value: text } });
+  fireEvent.change(endDateInput, { target: { value: isoToDisplay(iso) } });
   fireEvent.blur(endDateInput);
 };
 
-const getEndDateValue = () => document.getElementById("endDate").value;
+const getStartDateValue = () => displayToIso(document.getElementById("startDate").value);
+const getEndDateValue = () => displayToIso(document.getElementById("endDate").value);
 
 const getLastCallBody = (fetchMock, url) => {
   const call = fetchMock.mock.calls
@@ -677,13 +695,15 @@ describe("NewInvoice — R11 date pickers display the value actually selected (n
   it("R11.2 Start Date displays the day actually picked", async () => {
     await renderForm();
     await setStartDate("2026-07-15");
-    expect(document.getElementById("startDate")).toHaveValue("2026-07-15");
+    expect(document.getElementById("startDate")).toHaveValue("07/15/2026");
+    expect(getStartDateValue()).toBe("2026-07-15");
   });
 
   it("R11.3 End Date displays the day actually picked", async () => {
     await renderForm();
     await setEndDate("2026-07-20");
-    expect(document.getElementById("endDate")).toHaveValue("2026-07-20");
+    expect(document.getElementById("endDate")).toHaveValue("07/20/2026");
+    expect(getEndDateValue()).toBe("2026-07-20");
   });
 
   it("R11.4 Invoice Month displays the correct month after being auto-synced from Start Date (not a direct edit of its own field)", async () => {

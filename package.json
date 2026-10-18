@@ -56,12 +56,25 @@
     "start": "set PORT=3000 && react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
+    "test:ci": "react-scripts test --watchAll=false",
+    "test:coverage": "react-scripts test --watchAll=false --coverage",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
     "extends": [
       "react-app",
       "react-app/jest"
+    ]
+  },
+  "jest": {
+    "moduleNameMapper": {
+      "^axios$": "axios/dist/node/axios.cjs"
+    },
+    "collectCoverageFrom": [
+      "src/**/*.{js,jsx}",
+      "!src/index.js",
+      "!src/reportWebVitals.js",
+      "!src/**/*.test.{js,jsx}"
     ]
   },
   "browserslist": {
