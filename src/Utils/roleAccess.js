@@ -56,6 +56,7 @@ export const ROUTE_ROLES = {
   "/generateInvoice": [ROLES.ACCOUNTING],
   "/adjustmentDetails": [ROLES.ACCOUNTING],
   "/allBills": [ROLES.ACCOUNTING],
+  "/billingIntegrityReport": [ROLES.ACCOUNTING],
 
   "/masterdataload": [], // Admin only
   "/userAccess": [], // Admin only

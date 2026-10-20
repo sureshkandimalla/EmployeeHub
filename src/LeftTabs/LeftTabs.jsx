@@ -212,6 +212,7 @@ const REPORTS_MENU = [
       { label: "Company Report", to: "/companyreport" },
       { label: "Customer Dashboard", to: "/customerDashboard" },
       { label: "Vendor Dashboard", to: "/vendorDashboard" },
+      { label: "Billing Integrity Report", to: "/billingIntegrityReport" },
     ],
   },
 ];
