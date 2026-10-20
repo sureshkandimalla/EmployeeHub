@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from "react";
+import React, { useContext, useState, useEffect, useMemo, useRef } from "react";
 import axios from "axios";
 import API_ENDPOINTS from "../config";
 import "ag-grid-enterprise";
@@ -21,7 +21,8 @@ import PassportController from "../Passport/PassportController";
 import EmployeeTimesheetSummary from "../Timesheet/EmployeeTimesheetSummary";
 import DocumentsPanel from "../Documents/DocumentsPanel";
 import EmployeeDocumentsPanel from "../Documents/EmployeeDocumentsPanel";
-import { UpOutlined, DownOutlined,CalendarOutlined, DollarOutlined,MailOutlined,PhoneOutlined, UserOutlined, FolderOutlined } from "@ant-design/icons";
+import { UpOutlined, DownOutlined,CalendarOutlined, DollarOutlined,MailOutlined,PhoneOutlined, UserOutlined, FolderOutlined, PlusOutlined, IdcardOutlined } from "@ant-design/icons";
+import { formatDateMDY, parseLocalDateSafe } from "../Utils/dateFormat";
 import { Tabs, Card,Typography,Collapse, Row, Col, Button, Drawer, Spin, message } from "antd";
 import AuthContext from "../Authentication/Context/AuthContext";
 import { ROLES, canAccessEntity } from "../Utils/roleAccess";
@@ -70,6 +71,34 @@ const EmployeeFullDetails = () => {
   const [responseData, setResponseData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState();
+  const [passports, setPassports] = useState([]);
+  const passportRef = useRef(null);
+
+  const fetchPassports = (employeeId) => {
+    if (!employeeId) return;
+    axios
+      .get(API_ENDPOINTS.getPassportsByEmployee(employeeId))
+      .then((res) => setPassports(res.data || []))
+      .catch(() => setPassports([]));
+  };
+
+  useEffect(() => {
+    fetchPassports(responseData?.employeeId);
+  }, [responseData?.employeeId]);
+
+  // The most recently-expiring passport that hasn't expired yet — if the
+  // employee has one on file, there's nothing to prompt for; an expired-only
+  // passport still needs replacing, so that still falls through to "Add".
+  const currentPassport = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const valid = passports.filter((p) => {
+      const exp = parseLocalDateSafe(p.expiryDate);
+      return exp && exp >= today;
+    });
+    if (valid.length === 0) return null;
+    return valid.sort((a, b) => new Date(b.expiryDate) - new Date(a.expiryDate))[0];
+  }, [passports]);
 
   // Just the one chart, but still wrapped in useChartOverview so it gets
   // the same resize/download controls as every other Overview panel's
@@ -138,7 +167,7 @@ const EmployeeFullDetails = () => {
               </>
             }
           >
-            <EmployeeDocumentsPanel entityId={rowData.employeeId} />
+            <EmployeeDocumentsPanel entityId={rowData.employeeId} visaCategory={rowData.visa} />
           </Card>
         </div>
       ),
@@ -327,10 +356,23 @@ const EmployeeFullDetails = () => {
                   </div>
                   <div style={{ marginTop: "12px" }}>
                     <PassportController
-                      showTrigger
-                      triggerLabel="Add Passport"
+                      ref={passportRef}
                       employeeData={responseData}
+                      onSuccess={() => fetchPassports(responseData.employeeId)}
                     />
+                    {currentPassport ? (
+                      <Typography.Text
+                        style={{ color: "#1677ff", cursor: "pointer" }}
+                        onClick={() => passportRef.current?.openEdit(currentPassport)}
+                      >
+                        <IdcardOutlined style={{ marginRight: 5 }} />
+                        Passport: {currentPassport.passportNumber} (exp. {formatDateMDY(currentPassport.expiryDate)})
+                      </Typography.Text>
+                    ) : (
+                      <Button type="primary" onClick={() => passportRef.current?.open()}>
+                        <PlusOutlined /> Add Passport
+                      </Button>
+                    )}
                   </div>
                 </Card>
               )}

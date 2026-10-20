@@ -82,6 +82,7 @@ const DocumentsPanel = ({ entityType, entityId }) => {
         entityId,
         fileName: selectedFile.name,
         contentType: selectedFile.type || "application/octet-stream",
+        documentType: values.documentType,
       });
       const { uploadUrl, s3Key } = presign.data;
 
