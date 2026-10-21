@@ -439,8 +439,14 @@ const EmployeeFullDetails = () => {
         </Panel>
       </Collapse>
 
-      {/* Right Section (Tabs) */}
-      <div style={{ flex: "1", overflow: "hidden" }}>
+      {/* Right Section (Tabs). overflow:auto, not hidden — AG-Grid-heavy
+          tabs (Documents, Projects, ...) already manage their own bounded
+          internal scroll area (e.g. height: "70vh") so this almost never
+          visibly scrolls for them, but plain card-stack tabs (Personnel
+          File) have no such inner scroll container of their own and were
+          silently clipped below the fold with no way to reach the rest of
+          the page. */}
+      <div style={{ flex: "1", overflow: "auto" }}>
         <Card className="employeeTableCard" style={{ height: "100%" }}>
           <Tabs className="bean-home-tabs" defaultActiveKey={activeTab || "2"} items={visibleItems} />
         </Card>
