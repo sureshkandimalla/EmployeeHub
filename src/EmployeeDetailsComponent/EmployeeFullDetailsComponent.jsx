@@ -130,7 +130,12 @@ const EmployeeFullDetails = () => {
       label: "PERSONNEL FILE",
       title: "EmployeePersonnelFilePage /",
       children: (
-        <div className="employee-List-grid" style={{ height: "100%" }}>
+        // .employee-List-grid's global rule is overflow:hidden (correct
+        // for the AG-Grid tabs, which manage their own internal scroll) —
+        // this tab is a plain stack of cards with no such grid, so it
+        // needs the override other non-grid tabs already have, or its
+        // content gets clipped below the fold with no way to reach it.
+        <div className="employee-List-grid" style={{ height: "100%", overflow: "auto" }}>
           <EmployeePersonnelFilePage />
         </div>
       ),
