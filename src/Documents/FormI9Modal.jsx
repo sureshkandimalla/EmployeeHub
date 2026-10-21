@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { Modal, Form, Select, Input, DatePicker, Checkbox, Radio, Upload, Button, Alert, message } from "antd";
-import { InboxOutlined } from "@ant-design/icons";
+import { Modal, Form, Select, Input, DatePicker, Checkbox, Radio, Upload, Button, Alert, Tag, message } from "antd";
+import { InboxOutlined, FileSearchOutlined } from "@ant-design/icons";
 import axios from "axios";
+import dayjs from "dayjs";
 import API_ENDPOINTS from "../config";
 import {
   validate as i9Validate,
@@ -124,6 +125,72 @@ const VALID_FROM_LABEL = {
 };
 
 const iso = (v) => (v ? v.format("YYYY-MM-DD") : null);
+const toDayjs = (isoString) => (isoString ? dayjs(isoString) : undefined);
+
+// Maps I9RecordController#extractFromPdf's response onto this form's own
+// field names (section 3.1's "existing field" mapping, reused for the
+// reverse direction) — only the fields the PDF's AcroForm actually reads
+// deterministically (see I9PdfExtractor.java); anything it couldn't read
+// is simply absent, left for manual entry.
+function extractionToFormValues(extraction) {
+  return {
+    validFrom: toDayjs(extraction.validFrom),
+    section1Date: toDayjs(extraction.section1Date),
+    attestation: extraction.attestation || undefined,
+    section1AuthExpiry: toDayjs(extraction.section1AuthExpiry),
+    completedOn: toDayjs(extraction.completedOn),
+    docOption: extraction.docOption || undefined,
+    listACode: extraction.listACode || undefined,
+    listANumber: extraction.listANumber || undefined,
+    listAExpiry: toDayjs(extraction.listAExpiry),
+    i94Number: extraction.i94Number || undefined,
+    i94AdmitUntil: toDayjs(extraction.i94AdmitUntil),
+    listBCode: extraction.listBCode || undefined,
+    listBNumber: extraction.listBNumber || undefined,
+    listBExpiry: toDayjs(extraction.listBExpiry),
+    listCCode: extraction.listCCode || undefined,
+    listCNumber: extraction.listCNumber || undefined,
+    listCExpiry: toDayjs(extraction.listCExpiry),
+  };
+}
+
+// Which antd form field name each extracted value landed in, for the
+// "PDF" tag next to that field's label — drives visible pre-filled/review
+// flagging rather than treating extracted data the same as hand-typed.
+function extractionToFieldNames(extraction) {
+  const names = [];
+  if (extraction.validFrom) names.push("validFrom");
+  if (extraction.section1Date) names.push("section1Date");
+  if (extraction.attestation) names.push("attestation");
+  if (extraction.section1AuthExpiry) names.push("section1AuthExpiry");
+  if (extraction.completedOn) names.push("completedOn");
+  if (extraction.docOption) names.push("docOption");
+  if (extraction.listACode) names.push("listACode");
+  if (extraction.listANumber) names.push("listANumber");
+  if (extraction.listAExpiry) names.push("listAExpiry");
+  if (extraction.i94Number) names.push("i94Number");
+  if (extraction.i94AdmitUntil) names.push("i94AdmitUntil");
+  if (extraction.listBCode) names.push("listBCode");
+  if (extraction.listBNumber) names.push("listBNumber");
+  if (extraction.listBExpiry) names.push("listBExpiry");
+  if (extraction.listCCode) names.push("listCCode");
+  if (extraction.listCNumber) names.push("listCNumber");
+  if (extraction.listCExpiry) names.push("listCExpiry");
+  return names;
+}
+
+// A Form.Item label with a small "PDF" tag appended when that field was
+// pre-filled from an extracted PDF and hasn't been touched since — never
+// styled identically to hand-typed data, per the review-before-trust rule
+// for this compliance-sensitive form.
+function FieldLabel({ label, name, extractedFieldNames }) {
+  if (!extractedFieldNames.has(name)) return label;
+  return (
+    <span>
+      {label} <Tag color="purple">Extracted from PDF</Tag>
+    </span>
+  );
+}
 
 // Builds the plain i9Rules.I9RecordLike shape from the antd form's values —
 // the same shape both the live client-side validate() call and the save
@@ -201,6 +268,9 @@ export default function FormI9Modal({ open, employeeId, employeeContext, correct
   const [submitting, setSubmitting] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]); // [{file, role}]
   const [serverErrors, setServerErrors] = useState([]);
+  const [extracting, setExtracting] = useState(false);
+  const [extractedFieldNames, setExtractedFieldNames] = useState(new Set());
+  const [extractionNotice, setExtractionNotice] = useState(null); // {type, message}
 
   const subtype = Form.useWatch("subtype", form);
   const docOption = Form.useWatch("docOption", form);
@@ -216,8 +286,64 @@ export default function FormI9Modal({ open, employeeId, employeeContext, correct
       form.resetFields();
       setSelectedFiles([]);
       setServerErrors([]);
+      setExtractedFieldNames(new Set());
+      setExtractionNotice(null);
     }
   }, [open, form]);
+
+  // A pre-filled field loses its "Extracted from PDF" tag the moment the
+  // user actually edits it — at that point it's their own entry, reviewed
+  // or corrected, not an unverified machine read.
+  const handleValuesChange = (changed) => {
+    const changedNames = Object.keys(changed);
+    if (changedNames.length === 0) return;
+    setExtractedFieldNames((prev) => {
+      const next = new Set(prev);
+      changedNames.forEach((n) => next.delete(n));
+      return next;
+    });
+  };
+
+  const handleExtractFromPdf = async (file) => {
+    setExtracting(true);
+    setExtractionNotice(null);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const { data } = await axios.post(API_ENDPOINTS.extractI9Pdf(employeeId), formData);
+      const { extraction, nameMismatch, employeeNameOnFile } = data;
+
+      if (!extraction.populatedFields || extraction.populatedFields.length === 0) {
+        setExtractionNotice({
+          type: "warning",
+          message:
+            "No fillable fields found in this PDF — it's likely a scanned or flattened copy rather than the fillable USCIS form. Please fill in the form manually below.",
+        });
+        return false;
+      }
+
+      form.setFieldsValue(extractionToFormValues(extraction));
+      setExtractedFieldNames(new Set(extractionToFieldNames(extraction)));
+      setSelectedFiles((prev) => [...prev, { file, role: "Form I-9 (Sections 1–2)", uid: file.uid }]);
+
+      if (nameMismatch) {
+        setExtractionNotice({
+          type: "error",
+          message: `This PDF appears to be for "${[extraction.extractedFirstName, extraction.extractedLastName].filter(Boolean).join(" ")}", but you're adding a record for "${employeeNameOnFile}". Double-check you uploaded the right file before saving.`,
+        });
+      } else {
+        setExtractionNotice({
+          type: "success",
+          message: `Pre-filled ${extractionToFieldNames(extraction).length} field(s) from ${file.name}. Review every "Extracted from PDF" field below before saving.`,
+        });
+      }
+    } catch (error) {
+      setExtractionNotice({ type: "error", message: "Could not read that PDF. Fill in the form manually below." });
+    } finally {
+      setExtracting(false);
+    }
+    return false; // Never let antd auto-upload this file through its own mechanism.
+  };
 
   // The body reads every field via form.getFieldsValue() rather than these
   // variables directly, but they still have to be listed — they're what
@@ -319,6 +445,26 @@ export default function FormI9Modal({ open, employeeId, employeeContext, correct
 
   return (
     <Modal title="Add Form I-9 Record" open={open} onCancel={onClose} onOk={handleSubmit} confirmLoading={submitting} okText="Upload" width={760} destroyOnClose>
+      <Dragger
+        accept="application/pdf"
+        multiple={false}
+        showUploadList={false}
+        disabled={extracting}
+        beforeUpload={handleExtractFromPdf}
+        style={{ marginBottom: 16 }}
+      >
+        <p className="ant-upload-drag-icon">
+          <FileSearchOutlined />
+        </p>
+        <p className="ant-upload-text">{extracting ? "Reading PDF…" : "Optional: drop a filled Form I-9 PDF here to pre-fill the form below"}</p>
+        <p className="ant-upload-hint">
+          Works with the official fillable USCIS PDF (typed, not scanned). Everything below stays editable — review before you save.
+        </p>
+      </Dragger>
+      {extractionNotice && (
+        <Alert type={extractionNotice.type} showIcon closable style={{ marginBottom: 16 }} message={extractionNotice.message} />
+      )}
+
       {(liveValidation.errors.length > 0 || serverErrors.length > 0) && (
         <Alert
           type="error"
@@ -343,23 +489,23 @@ export default function FormI9Modal({ open, employeeId, employeeContext, correct
         />
       )}
 
-      <Form form={form} layout="vertical">
+      <Form form={form} layout="vertical" onValuesChange={handleValuesChange}>
         <Form.Item label="Sub type" name="subtype" rules={[{ required: true, message: "Choose the I-9 sub type" }]}>
           <Select options={I9_SUBTYPE_OPTIONS} placeholder="Select the I-9 action" />
         </Form.Item>
 
         {subtype && (
-          <Form.Item label={VALID_FROM_LABEL[subtype] || "Valid From"} name="validFrom" rules={[{ required: true, message: "Required" }]}>
+          <Form.Item label={<FieldLabel label={VALID_FROM_LABEL[subtype] || "Valid From"} name="validFrom" extractedFieldNames={extractedFieldNames} />} name="validFrom" rules={[{ required: true, message: "Required" }]}>
             <DatePicker style={{ width: "100%" }} format="MM/DD/YYYY" />
           </Form.Item>
         )}
 
         {showSection1 && (
           <>
-            <Form.Item label="Section 1 completed on" name="section1Date" rules={[{ required: true, message: "Required" }]}>
+            <Form.Item label={<FieldLabel label="Section 1 completed on" name="section1Date" extractedFieldNames={extractedFieldNames} />} name="section1Date" rules={[{ required: true, message: "Required" }]}>
               <DatePicker style={{ width: "100%" }} format="MM/DD/YYYY" />
             </Form.Item>
-            <Form.Item label="Section 1 attestation" name="attestation" rules={[{ required: true, message: "Required" }]}>
+            <Form.Item label={<FieldLabel label="Section 1 attestation" name="attestation" extractedFieldNames={extractedFieldNames} />} name="attestation" rules={[{ required: true, message: "Required" }]}>
               <Select
                 options={[
                   { value: "CITIZEN", label: "U.S. citizen" },
@@ -370,7 +516,7 @@ export default function FormI9Modal({ open, employeeId, employeeContext, correct
               />
             </Form.Item>
             {attestation === "NONCITIZEN_AUTHORIZED" && (
-              <Form.Item label="Work authorization expires (from Section 1)" name="section1AuthExpiry">
+              <Form.Item label={<FieldLabel label="Work authorization expires (from Section 1)" name="section1AuthExpiry" extractedFieldNames={extractedFieldNames} />} name="section1AuthExpiry">
                 <DatePicker style={{ width: "100%" }} format="MM/DD/YYYY" placeholder="Leave blank for N/A" />
               </Form.Item>
             )}
@@ -381,7 +527,7 @@ export default function FormI9Modal({ open, employeeId, employeeContext, correct
         )}
 
         {showSection2Date && (
-          <Form.Item label="Section 2 / Supplement B completed on" name="completedOn">
+          <Form.Item label={<FieldLabel label="Section 2 / Supplement B completed on" name="completedOn" extractedFieldNames={extractedFieldNames} />} name="completedOn">
             <DatePicker style={{ width: "100%" }} format="MM/DD/YYYY" placeholder="Blank = still in process" />
           </Form.Item>
         )}
@@ -420,7 +566,7 @@ export default function FormI9Modal({ open, employeeId, employeeContext, correct
         )}
 
         {needsDocOption && !receiptPresented && (
-          <Form.Item label="Document Option" name="docOption" rules={[{ required: true, message: "Choose the Document Option" }]}>
+          <Form.Item label={<FieldLabel label="Document Option" name="docOption" extractedFieldNames={extractedFieldNames} />} name="docOption" rules={[{ required: true, message: "Choose the Document Option" }]}>
             <Radio.Group
               onChange={() => {
                 form.setFieldsValue({ listACode: undefined, listBCode: undefined, listCCode: undefined });
@@ -437,10 +583,10 @@ export default function FormI9Modal({ open, employeeId, employeeContext, correct
 
         {showListA && (
           <>
-            <Form.Item label="List A document" name="listACode" rules={[{ required: true, message: "Pick the List A document" }]}>
+            <Form.Item label={<FieldLabel label="List A document" name="listACode" extractedFieldNames={extractedFieldNames} />} name="listACode" rules={[{ required: true, message: "Pick the List A document" }]}>
               <Select options={LIST_A_OPTIONS} />
             </Form.Item>
-            <Form.Item label="List A document number" name="listANumber" rules={[{ required: true, message: "Required" }]}>
+            <Form.Item label={<FieldLabel label="List A document number" name="listANumber" extractedFieldNames={extractedFieldNames} />} name="listANumber" rules={[{ required: true, message: "Required" }]}>
               <Input />
             </Form.Item>
             {listACode === A_GREEN_CARD && (
@@ -448,29 +594,34 @@ export default function FormI9Modal({ open, employeeId, employeeContext, correct
                 <Checkbox>No expiration date</Checkbox>
               </Form.Item>
             )}
-            <Form.Item label="List A expiration date" name="listAExpiry">
+            <Form.Item label={<FieldLabel label="List A expiration date" name="listAExpiry" extractedFieldNames={extractedFieldNames} />} name="listAExpiry">
               <DatePicker style={{ width: "100%" }} format="MM/DD/YYYY" />
             </Form.Item>
             {passportBased && (
-              <>
-                <Form.Item label="Passport number" name="passportNumber">
-                  <Input placeholder="Uses the employee's record on the Passport tab if left blank" />
-                </Form.Item>
-              </>
+              <Alert
+                style={{ marginBottom: 16 }}
+                type={employeeContext?.passportNumber ? "info" : "warning"}
+                showIcon
+                message={
+                  employeeContext?.passportNumber
+                    ? `Passport on file: ${employeeContext.passportNumber}, expires ${employeeContext.passportExpiry}`
+                    : "No current passport on file for this employee — add one on the Passport tab first (required for E11)."
+                }
+              />
             )}
           </>
         )}
 
         {showI94 && (
           <>
-            <Form.Item label="I-94 number" name="i94Number" rules={[{ required: true, message: "Required" }]}>
+            <Form.Item label={<FieldLabel label="I-94 number" name="i94Number" extractedFieldNames={extractedFieldNames} />} name="i94Number" rules={[{ required: true, message: "Required" }]}>
               <Input />
             </Form.Item>
             <Form.Item name="i94Ds" valuePropName="checked">
               <Checkbox>D/S (Duration of Status, no fixed admit-until date)</Checkbox>
             </Form.Item>
             {!i94Ds && (
-              <Form.Item label="I-94 admit-until date" name="i94AdmitUntil" rules={[{ required: true, message: "Required" }]}>
+              <Form.Item label={<FieldLabel label="I-94 admit-until date" name="i94AdmitUntil" extractedFieldNames={extractedFieldNames} />} name="i94AdmitUntil" rules={[{ required: true, message: "Required" }]}>
                 <DatePicker style={{ width: "100%" }} format="MM/DD/YYYY" />
               </Form.Item>
             )}
@@ -484,10 +635,10 @@ export default function FormI9Modal({ open, employeeId, employeeContext, correct
 
         {showListBC && (
           <>
-            <Form.Item label="List B document" name="listBCode" rules={[{ required: true, message: "Required" }]}>
+            <Form.Item label={<FieldLabel label="List B document" name="listBCode" extractedFieldNames={extractedFieldNames} />} name="listBCode" rules={[{ required: true, message: "Required" }]}>
               <Select options={LIST_B_OPTIONS} />
             </Form.Item>
-            <Form.Item label="List B document number" name="listBNumber">
+            <Form.Item label={<FieldLabel label="List B document number" name="listBNumber" extractedFieldNames={extractedFieldNames} />} name="listBNumber">
               <Input />
             </Form.Item>
           </>
@@ -495,10 +646,10 @@ export default function FormI9Modal({ open, employeeId, employeeContext, correct
 
         {(showListBC || showListCOnly) && (
           <>
-            <Form.Item label="List C document" name="listCCode" rules={[{ required: true, message: "Required" }]}>
+            <Form.Item label={<FieldLabel label="List C document" name="listCCode" extractedFieldNames={extractedFieldNames} />} name="listCCode" rules={[{ required: true, message: "Required" }]}>
               <Select options={LIST_C_OPTIONS} />
             </Form.Item>
-            <Form.Item label="List C document number" name="listCNumber">
+            <Form.Item label={<FieldLabel label="List C document number" name="listCNumber" extractedFieldNames={extractedFieldNames} />} name="listCNumber">
               <Input />
             </Form.Item>
             {listCCode === C_SSN && (
@@ -507,7 +658,7 @@ export default function FormI9Modal({ open, employeeId, employeeContext, correct
               </Form.Item>
             )}
             {listCCode === C_DHS_EAD && (
-              <Form.Item label="List C expiration date" name="listCExpiry" rules={[{ required: true, message: "Required" }]}>
+              <Form.Item label={<FieldLabel label="List C expiration date" name="listCExpiry" extractedFieldNames={extractedFieldNames} />} name="listCExpiry" rules={[{ required: true, message: "Required" }]}>
                 <DatePicker style={{ width: "100%" }} format="MM/DD/YYYY" />
               </Form.Item>
             )}

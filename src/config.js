@@ -186,6 +186,7 @@ export const API_ENDPOINTS = {
   createI9Record: `${API_BASE_URL}/i9records`,
   updateI9Record: (id) => `${API_BASE_URL}/i9records/${id}`,
   getI9Tasks: `${API_BASE_URL}/i9records/tasks`,
+  extractI9Pdf: (employeeId) => `${API_BASE_URL}/i9records/employee/${employeeId}/extractFromPdf`,
   // Generic notes (Employee, Visa, LCA, Invoice, ...) — type/entityId
   // scoped, see NoteController. entityId matches that type's own primary
   // key (e.g. Employee.employeeId for type="Employee").

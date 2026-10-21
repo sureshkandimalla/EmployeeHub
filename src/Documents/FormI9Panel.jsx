@@ -43,6 +43,7 @@ export default function FormI9Panel({ entityId, visaCategory }) {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [correctableRecords, setCorrectableRecords] = useState([]);
+  const [currentPassport, setCurrentPassport] = useState(null);
 
   const fetchData = () => {
     if (!entityId) return;
@@ -67,12 +68,33 @@ export default function FormI9Panel({ entityId, visaCategory }) {
 
   useEffect(fetchData, [entityId]);
 
+  // E11 (passport-based List A documents need a number+expiry on file)
+  // reads the dedicated Passport table server-side — fetched here too so
+  // the client-side live-validation preview agrees with it, instead of
+  // always showing E11 even when the employee already has a passport on
+  // file.
+  useEffect(() => {
+    if (!entityId) return;
+    axios
+      .get(API_ENDPOINTS.getPassportsByEmployee(entityId))
+      .then(({ data }) => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const valid = (data || []).filter((p) => p.expiryDate && new Date(p.expiryDate) >= today);
+        const latest = valid.sort((a, b) => new Date(b.expiryDate) - new Date(a.expiryDate))[0];
+        setCurrentPassport(latest || null);
+      })
+      .catch(() => setCurrentPassport(null));
+  }, [entityId]);
+
   const employeeContext = useMemo(
     () => ({
       employeeId: entityId,
       visaStatus: visaCategory,
+      passportNumber: currentPassport?.passportNumber || null,
+      passportExpiry: currentPassport?.expiryDate || null,
     }),
-    [entityId, visaCategory],
+    [entityId, visaCategory, currentPassport],
   );
 
   const openAddModal = () => {
