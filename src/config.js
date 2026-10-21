@@ -177,6 +177,15 @@ export const API_ENDPOINTS = {
   getAllDocumentsForType: (entityType) => `${API_BASE_URL}/documents?entityType=${entityType}`,
   documentDownloadUrl: (id) => `${API_BASE_URL}/documents/${id}/downloadUrl`,
   documentById: (id) => `${API_BASE_URL}/documents/${id}`,
+  // Form I-9 records — HR/IMMIGRATION/ADMIN only (see I9RecordController).
+  // Attachments reuse the generic documents endpoints above with
+  // entityType="I9Record"/entityId=the I9Record's own id.
+  getI9RecordsForEmployee: (employeeId) => `${API_BASE_URL}/i9records/employee/${employeeId}`,
+  getI9RecordsForCorrection: (employeeId) => `${API_BASE_URL}/i9records/employee/${employeeId}/forCorrection`,
+  validateI9Record: `${API_BASE_URL}/i9records/validate`,
+  createI9Record: `${API_BASE_URL}/i9records`,
+  updateI9Record: (id) => `${API_BASE_URL}/i9records/${id}`,
+  getI9Tasks: `${API_BASE_URL}/i9records/tasks`,
   // Generic notes (Employee, Visa, LCA, Invoice, ...) — type/entityId
   // scoped, see NoteController. entityId matches that type's own primary
   // key (e.g. Employee.employeeId for type="Employee").

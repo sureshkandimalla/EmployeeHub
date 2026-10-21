@@ -203,6 +203,7 @@ const REPORTS_MENU = [
     title: "Immigration",
     items: [
       { label: "Immigration Dashboard", to: "/immigrationDashboard" },
+      { label: "I-9 Compliance Tasks", to: "/i9TasksReport" },
     ],
   },
   {

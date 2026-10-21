@@ -30,9 +30,6 @@ const { Dragger } = Upload;
 export const EMPLOYEE_DOCUMENT_TAXONOMY = [
   { type: "Passport", subType: "", mandatory: true },
   { type: "I94", subType: "", mandatory: true },
-  { type: "Form I9", subType: "", mandatory: true },
-  { type: "Form I9", subType: "Part A", mandatory: true },
-  { type: "Form I9", subType: "Part B", mandatory: true },
   { type: "E-Verify", subType: "", mandatory: true },
   { type: "H1B", subType: "H1B Approval", mandatory: true, requiredVisa: "H1B" },
   { type: "H1B", subType: "H1B Receipt", mandatory: true, requiredVisa: "H1B" },
@@ -63,10 +60,9 @@ const subTypeOptionsFor = (documentType) =>
 // Which sub-type stands in for the whole Document Type on the master row's
 // Actions column (the same spot Passport/E-Verify show their one document
 // in, since those types have no sub-types at all). A multi-subtype type has
-// no single "the" document in general (Form I9's Part A/Part B are equally
-// important, so neither should be singled out) — H1B is the one exception
-// on today's checklist, where H1B Approval is the document that actually
-// answers "is this person authorized to work."
+// no single "the" document in general, so neither should be singled out —
+// H1B is the one exception on today's checklist, where H1B Approval is the
+// document that actually answers "is this person authorized to work."
 const PRIMARY_SUBTYPE = {
   H1B: "H1B Approval",
 };

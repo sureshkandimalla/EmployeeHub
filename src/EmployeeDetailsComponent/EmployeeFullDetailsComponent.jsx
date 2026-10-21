@@ -21,6 +21,7 @@ import PassportController from "../Passport/PassportController";
 import EmployeeTimesheetSummary from "../Timesheet/EmployeeTimesheetSummary";
 import DocumentsPanel from "../Documents/DocumentsPanel";
 import EmployeeDocumentsPanel from "../Documents/EmployeeDocumentsPanel";
+import FormI9Panel from "../Documents/FormI9Panel";
 import { UpOutlined, DownOutlined,CalendarOutlined, DollarOutlined,MailOutlined,PhoneOutlined, UserOutlined, FolderOutlined, PlusOutlined, IdcardOutlined } from "@ant-design/icons";
 import { formatDateMDY, parseLocalDateSafe } from "../Utils/dateFormat";
 import { Tabs, Card,Typography,Collapse, Row, Col, Button, Drawer, Spin, message } from "antd";
@@ -35,6 +36,11 @@ const TAB_ROLES = {
   "VISA PROFILE": [ROLES.HR, ROLES.IMMIGRATION],
   DOCUMENTS: [ROLES.HR, ROLES.IMMIGRATION],
   "EMPLOYEE DOCUMENTS": [ROLES.HR, ROLES.IMMIGRATION],
+  // I-9 is the most sensitive document category (SSN/A-numbers, work
+  // authorization) — HR + IMMIGRATION + ADMIN, same access as the other
+  // Employee Documents tabs above (not HR-only, which the I-9 rules spec's
+  // own guardrail literally says, but the access already granted here).
+  "FORM I-9": [ROLES.HR, ROLES.IMMIGRATION],
   PROJECTS: [ROLES.HR],
   INVOICES: [ROLES.ACCOUNTING],
   PAYROLLS: [ROLES.ACCOUNTING],
@@ -168,6 +174,23 @@ const EmployeeFullDetails = () => {
             }
           >
             <EmployeeDocumentsPanel entityId={rowData.employeeId} visaCategory={rowData.visa} />
+          </Card>
+        </div>
+      ),
+    },
+    {
+      key: 18,
+      label: "FORM I-9",
+      children: (
+        <div className="employee-List-grid" style={{ height: "100%", overflow: "auto", padding: 16 }}>
+          <Card
+            title={
+              <>
+                <FolderOutlined /> Form I-9
+              </>
+            }
+          >
+            <FormI9Panel entityId={rowData.employeeId} visaCategory={rowData.visa} />
           </Card>
         </div>
       ),

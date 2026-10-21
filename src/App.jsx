@@ -52,6 +52,7 @@ import ProjectInvoiceSummary from "./ProjectInvoiceSummary/ProjectInvoiceSummary
 import ImmigrationIntake from "./ImmigrationIntake/ImmigrationIntake";
 import AllBills from "./Billings/AllBills";
 import BillingIntegrityReport from "./Billings/BillingIntegrityReport";
+import I9TasksReport from "./I9/I9TasksReport";
 import UserRoles from "./Admin/UserRoles";
 import PendingRequests from "./Admin/PendingRequests";
 const clientId = '34277343649-4552ljfqc3ccsipco8jbf7jr3mu279j0.apps.googleusercontent.com';
@@ -109,6 +110,7 @@ const App = () => {
               <Route path="/immigrationIntake" element={<ImmigrationIntake />} />
               <Route path="/allBills" element={<AllBills />} />
               <Route path="/billingIntegrityReport" element={<BillingIntegrityReport />} />
+              <Route path="/i9TasksReport" element={<I9TasksReport />} />
               <Route
                 path="/employeeFullDetails"
                 element={<EmployeeFullDetailsComponent />}

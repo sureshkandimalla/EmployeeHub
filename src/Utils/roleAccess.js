@@ -57,6 +57,7 @@ export const ROUTE_ROLES = {
   "/adjustmentDetails": [ROLES.ACCOUNTING],
   "/allBills": [ROLES.ACCOUNTING],
   "/billingIntegrityReport": [ROLES.ACCOUNTING],
+  "/i9TasksReport": [ROLES.HR, ROLES.IMMIGRATION],
 
   "/masterdataload": [], // Admin only
   "/userAccess": [], // Admin only
