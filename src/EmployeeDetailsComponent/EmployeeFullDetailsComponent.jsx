@@ -319,13 +319,22 @@ const EmployeeFullDetails = () => {
     alert("toogle");
   }
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-      {/* Collapsible Left Section */}
+    <div style={{ height: "100%", minHeight: 0, display: "flex", flexDirection: "column", overflow: "auto" }}>
+      {/* Collapsible Left Section. flex-basis is a % of this column's own
+          height, not of the viewport — on a short screen that % can be
+          too little room for the Overview cards to render without
+          clipping, so this section gets its own min-height floor and
+          scrolls internally instead of being cut off silently (the
+          column's overflow was "hidden" before, which suppressed any
+          scrollbar entirely rather than letting the user reach the rest
+          of the page). */}
       <Collapse
         activeKey={isCollapsed ? "1" : null}
         onChange={handleCollapseChange}
         style={{
           flex: isCollapsed ? "0 0 25%" : "0 0 5%", // Shrinks when collapsed
+          minHeight: isCollapsed ? 220 : undefined,
+          overflow: "auto",
           marginBottom: "10px",
           transition: "flex 0.3s ease-in-out",
         }}
