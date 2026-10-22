@@ -235,6 +235,9 @@ function toRecordLike(values, existingId) {
     everify: { caseNo: values.everifyCaseNo, created: iso(values.everifyCreated), result: EVERIFY_RESULT_TO_CODE[values.everifyResult] },
     correctsRecordId: values.correctsRecordId,
     correctionReason: values.correctionReason,
+    destructionMethod: values.destructionMethod,
+    destroyedBy: values.destroyedBy,
+    notes: values.notes,
   };
 }
 
