@@ -93,16 +93,9 @@ const FILE_ROLES = [
   "Other",
 ];
 
-const EVERIFY_RESULT_OPTIONS = [
-  "Employment Authorized",
-  "Tentative Nonconfirmation (Mismatch)",
-  "Case in Continuance",
-  "Close Case and Resubmit",
-  "Final Nonconfirmation",
-  "Closed",
-  "N/A (not enrolled)",
-];
-
+// E-Verify will be its own separate item elsewhere, not collected on this
+// form — kept here only because toRecordLike still sends an (empty)
+// everify object, and this mapping is what that future UI will reuse.
 const EVERIFY_RESULT_TO_CODE = {
   "Employment Authorized": "AUTHORIZED",
   "Tentative Nonconfirmation (Mismatch)": "TNC_MISMATCH",
@@ -373,8 +366,6 @@ export default function FormI9Modal({ open, employeeId, employeeContext, correct
   const passportBased = [A_US_PASSPORT, A_FPI, A_FSM_RMI, A_TEMP_I551].includes(listACode);
   const showI94 = listACode === A_FPI || listACode === A_FSM_RMI || (showListCOnly && listCCode === C_DHS_EAD);
   const showExtension = (!!listACode && [A_EAD, A_FPI, A_FSM_RMI, A_GREEN_CARD].includes(listACode)) || listCCode === C_DHS_EAD;
-  const showEverify = subtype === "NEW_HIRE" || subtype === "REHIRE_NEW" || subtype === "REHIRE_SUPP_B";
-  const everifyRequired = subtype === "NEW_HIRE" || subtype === "REHIRE_NEW";
 
   const attestation = Form.useWatch("attestation", form);
 
@@ -685,20 +676,6 @@ export default function FormI9Modal({ open, employeeId, employeeContext, correct
           <Form.Item name="preparerUsed" valuePropName="checked">
             <Checkbox>Preparer / translator used (Supplement A)</Checkbox>
           </Form.Item>
-        )}
-
-        {showEverify && (
-          <>
-            <Form.Item label="E-Verify case number" name="everifyCaseNo" rules={everifyRequired ? [{ required: true, message: "Required" }] : []}>
-              <Input />
-            </Form.Item>
-            <Form.Item label="E-Verify date created" name="everifyCreated">
-              <DatePicker style={{ width: "100%" }} format="MM/DD/YYYY" />
-            </Form.Item>
-            <Form.Item label="E-Verify result" name="everifyResult">
-              <Select options={EVERIFY_RESULT_OPTIONS.map((v) => ({ value: v, label: v }))} />
-            </Form.Item>
-          </>
         )}
 
         {subtype === "CORRECTION" && (
