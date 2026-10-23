@@ -127,6 +127,14 @@ const toDayjs = (isoString) => (isoString ? dayjs(isoString) : undefined);
 // is simply absent, left for manual entry.
 function extractionToFormValues(extraction) {
   return {
+    // The extractor only ever reads page 1 (Section 1 + Section 2) of the
+    // official PDF — it has no way to detect Supplement A (preparer/
+    // translator) or Supplement B (reverification/rehire) data, so
+    // whenever it successfully reads anything at all, this is a New Hire
+    // I-9 by default. Not tagged "Extracted from PDF" like the other
+    // fields below — it's an assumption, not something the PDF itself
+    // states, and the user picks a different sub type if this one's wrong.
+    subtype: "NEW_HIRE",
     validFrom: toDayjs(extraction.validFrom),
     section1Date: toDayjs(extraction.section1Date),
     attestation: extraction.attestation || undefined,
