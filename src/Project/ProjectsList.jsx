@@ -574,7 +574,11 @@ const ProjectList = ({ projectsList, isCollapsed, onRefresh, onEditProject }) =>
           columnDefs={sizeColumnsForHeader(getColumnsDefList(true))}
           defaultColDef={{
             minWidth: 100,
-            maxWidth: 220,
+            // No maxWidth — a 220px ceiling here was silently blocking the
+            // "drag to widen" half of resizable:true for every column that
+            // doesn't set its own (e.g. Employee Email truncating with no
+            // way to see the full address). Columns that do want a real
+            // fixed width (the #/Id columns above) still set their own.
             resizable: true,
             filter: "agSetColumnFilter",
             enableRowGroup: true,
