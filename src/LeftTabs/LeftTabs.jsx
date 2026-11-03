@@ -113,18 +113,14 @@ const CREATE_MENU_COLUMNS = [
   ["Other"],
 ];
 
-// "Accounting" rail icon's flyout — the same Customers/Vendors sections
-// as the Create mega-menu, but stripped of "?new=1" (plain navigation to
-// the list page, not a quick-add shortcut) — derived from CREATE_MENU
-// rather than re-listed so the two stay in sync — plus an Adjustments
-// section that has no Create-menu counterpart.
+// "Accounting" rail icon's flyout. Customers/Vendors used to be
+// duplicated here too (derived from CREATE_MENU, same as CUSTOMERS_MENU/
+// VENDORS_MENU below) but those are already one click away via their own
+// dedicated rail icons and the Create menu — three copies of the same
+// links was pure clutter, so this now only holds what's NOT already
+// covered elsewhere: Adjustments/All Bills (Accounting-only), plus the
+// Invoices/Timesheets one-stop sections.
 const ACCOUNTING_MENU = [
-  ...CREATE_MENU
-    .filter((section) => section.title === "Customers" || section.title === "Vendors")
-    .map((section) => ({
-      ...section,
-      items: section.items.map((it) => ({ ...it, to: it.to.split("?")[0] })),
-    })),
   {
     title: "Adjustments",
     items: [
@@ -156,32 +152,38 @@ const ACCOUNTING_MENU = [
   },
 ];
 
-// Three columns — Customers alone in column 1, Vendors+Adjustments
-// stacked in column 2, Invoices+Timesheets stacked in column 3 — same
-// column-grouping pattern as CREATE_MENU_COLUMNS.
+// Two columns — Adjustments alone in column 1, Invoices+Timesheets
+// stacked in column 2 — same column-grouping pattern as
+// CREATE_MENU_COLUMNS.
 const ACCOUNTING_MENU_COLUMNS = [
-  ["Customers"],
-  ["Vendors", "Adjustments"],
+  ["Adjustments"],
   ["Invoices", "Timesheets"],
 ];
 
-// The rail's own "Customers"/"Vendors" icons reuse the exact same
-// Customers/Vendors sections as the Accounting flyout (same items, same
-// plain-navigation links) rather than re-deriving from CREATE_MENU again —
-// plus each rail icon's own Dashboard link up front (the icon's own click
-// target, per REPORTS_MENU's Accounting section), since hovering should
-// surface that destination too, not just reveal it on click.
-const CUSTOMERS_MENU = ACCOUNTING_MENU
+// The rail's own "Customers"/"Vendors" icons — same Customers/Vendors
+// sections as the Create mega-menu, stripped of "?new=1" (plain
+// navigation to the list page, not a quick-add shortcut), derived from
+// CREATE_MENU rather than re-listed so the two stay in sync — same
+// pattern IMMIGRATION_MENU below uses — plus each icon's own Dashboard
+// link up front, since hovering should surface that destination too, not
+// just reveal it on click.
+const CUSTOMERS_MENU = CREATE_MENU
   .filter((section) => section.title === "Customers")
   .map((section) => ({
     ...section,
-    items: [{ label: "Customer Dashboard", to: "/customerDashboard" }, ...section.items],
+    items: [
+      { label: "Customer Dashboard", to: "/customerDashboard" },
+      ...section.items.map((it) => ({ ...it, to: it.to.split("?")[0] })),
+    ],
   }));
-const VENDORS_MENU = ACCOUNTING_MENU
+const VENDORS_MENU = CREATE_MENU
   .filter((section) => section.title === "Vendors")
   .map((section) => ({
     ...section,
-    items: [{ label: "Vendor Dashboard", to: "/vendorDashboard" }, ...section.items],
+    items: [
+      { label: "Vendor Dashboard", to: "/vendorDashboard" },
+      ...section.items.map((it) => ({ ...it, to: it.to.split("?")[0] })),
+    ],
   }));
 
 // "Immigration" rail icon's flyout — same Immigration section as the

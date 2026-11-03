@@ -151,11 +151,10 @@
   color: #374151;
 }
 
-/* Three-column "Accounting" flyout — Customers alone in column 1,
-   Vendors+Adjustments stacked in column 2, Invoices+Timesheets stacked in
-   column 3 (see ACCOUNTING_MENU_COLUMNS in LeftTabs.jsx). Same
-   portal/positioning approach as .create-flyout, and now the same width
-   since it's back to three columns too. */
+/* Two-column "Accounting" flyout — Adjustments alone in column 1,
+   Invoices+Timesheets stacked in column 2 (see ACCOUNTING_MENU_COLUMNS in
+   LeftTabs.jsx). Same portal/positioning approach as .create-flyout, just
+   two columns instead of three and narrower to match. */
 .accounting-flyout {
   position: fixed;
   z-index: 2000;
@@ -164,12 +163,12 @@
   border-radius: 10px;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.14);
   padding: 20px 24px 12px;
-  width: 600px;
+  width: 400px;
 }
 
 .accounting-flyout-columns {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 24px;
 }
 
