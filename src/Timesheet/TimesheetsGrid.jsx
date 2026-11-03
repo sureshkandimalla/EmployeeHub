@@ -96,9 +96,6 @@ export default function TimesheetsGrid() {
           <Button type="default" icon={<ReloadOutlined />} onClick={fetchData} loading={loading} style={{ marginRight: "10px" }}>
             Refresh
           </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => openEntry(null)} style={{ marginRight: "10px" }}>
-            Add New Timesheet
-          </Button>
           <input
             type="text"
             placeholder="Search..."
@@ -106,8 +103,11 @@ export default function TimesheetsGrid() {
             onChange={(e) => setSearchText(e.target.value)}
             style={{ marginRight: "10px" }}
           />
-          <Button type="default" icon={<FileExcelOutlined />} onClick={onBtnExportDataAsExcel}>
+          <Button type="default" icon={<FileExcelOutlined />} onClick={onBtnExportDataAsExcel} style={{ marginRight: "10px" }}>
             Export to Excel
+          </Button>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => openEntry(null)}>
+            Add New Timesheet
           </Button>
         </GridToolbar>
         <div className="project-grid-wrapper">
