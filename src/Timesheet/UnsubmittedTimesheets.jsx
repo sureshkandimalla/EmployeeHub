@@ -27,6 +27,7 @@ export default function UnsubmittedTimesheets() {
   const navigate = useNavigate();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [searchText, setSearchText] = useState("");
 
   const fetchData = () => {
     setLoading(true);
@@ -82,10 +83,17 @@ export default function UnsubmittedTimesheets() {
           <Button type="default" icon={<ReloadOutlined />} onClick={fetchData} loading={loading} style={{ marginRight: "10px" }}>
             Refresh
           </Button>
+          <input
+            type="text"
+            placeholder="Search..."
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+          />
         </GridToolbar>
         <div className="project-grid-wrapper">
           <AgGridReact
             rowData={rows}
+            quickFilterText={searchText}
             columnDefs={sizeColumnsForHeader(columnDefs)}
             defaultColDef={{ minWidth: 100, resizable: true, filter: "agSetColumnFilter" }}
             domLayout="normal"
