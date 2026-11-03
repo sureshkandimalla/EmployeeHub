@@ -45,8 +45,25 @@ export default function TimesheetsGrid() {
   };
 
   const columnDefs = [
-    { field: "employeeId", headerName: "Employee ID", pinned: "left", filter: "agSetColumnFilter" },
+    {
+      colId: "rowNum",
+      headerName: "#",
+      valueGetter: (p) => p.node.rowIndex + 1,
+      width: 70,
+      minWidth: 70,
+      maxWidth: 70,
+      pinned: "left",
+      lockPosition: true,
+      suppressMovable: true,
+      sortable: false,
+      filter: false,
+      editable: false,
+      suppressSizeToFit: true,
+      cellStyle: { textAlign: "center", fontWeight: 500 },
+    },
     { field: "employeeName", headerName: "Employee", pinned: "left", filter: "agSetColumnFilter" },
+    { field: "employeeId", headerName: "Employee ID", filter: "agSetColumnFilter" },
+    { field: "employeeEmail", headerName: "Employee Email", filter: "agSetColumnFilter" },
     { field: "projectName", headerName: "Project", filter: "agSetColumnFilter" },
     { field: "yearMonth", headerName: "Month", filter: "agSetColumnFilter" },
     { field: "totalHours", headerName: "Total Hours", filter: "agNumberColumnFilter" },
