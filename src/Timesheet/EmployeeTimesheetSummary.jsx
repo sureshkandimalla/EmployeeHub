@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useContext } from "react";
 import { AgGridReact } from "@ag-grid-community/react";
 import { Tag, Button, Dropdown, message } from "antd";
 import { MoreOutlined, FormOutlined } from "@ant-design/icons";
@@ -10,6 +10,8 @@ import "ag-grid-enterprise";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
+import AuthContext from "../Authentication/Context/AuthContext";
+import { ROLES } from "../Utils/roleAccess";
 
 const STATUS_COLOR = { Draft: "default", Submitted: "gold", Approved: "green", Rejected: "red" };
 const STATUS_ICON_COLOR = { Draft: "#595959", Submitted: "#d48806", Approved: "#389e0d", Rejected: "#cf1322" };
@@ -23,6 +25,10 @@ const EmployeeTimesheetSummary = ({ employeeId, isCollapsed, gridHeight = "calc(
   const [rowData, setRowData] = useState([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  // Approve/Reopen are ADMIN-only server-side (TimeSheetController) —
+  // mirrored here so the menu items aren't shown only to 403.
+  const { user } = useContext(AuthContext);
+  const isAdmin = user?.role === ROLES.ADMIN;
 
   useEffect(() => {
     if (employeeId) fetchSummary();
@@ -168,23 +174,29 @@ const EmployeeTimesheetSummary = ({ employeeId, isCollapsed, gridHeight = "calc(
               onClick: () => handleStatusAction(API_ENDPOINTS.submitTimesheetRange, "submitted", row),
             },
             {
-              key: "approve",
-              label: "Approve",
-              disabled: status !== "Submitted",
-              onClick: () => handleStatusAction(API_ENDPOINTS.approveTimesheetRange, "approved", row),
-            },
-            {
               key: "reject",
               label: "Reject",
               disabled: status !== "Submitted",
               onClick: () => handleStatusAction(API_ENDPOINTS.rejectTimesheetRange, "rejected", row),
             },
-            {
-              key: "reopen",
-              label: "Reopen",
-              disabled: status !== "Approved" && status !== "Rejected",
-              onClick: () => handleStatusAction(API_ENDPOINTS.reopenTimesheetRange, "reopened", row),
-            },
+            // Approve/Reopen are ADMIN-only server-side (TimeSheetController)
+            // — left out of the menu entirely for anyone else.
+            ...(isAdmin
+              ? [
+                  {
+                    key: "approve",
+                    label: "Approve",
+                    disabled: status !== "Submitted",
+                    onClick: () => handleStatusAction(API_ENDPOINTS.approveTimesheetRange, "approved", row),
+                  },
+                  {
+                    key: "reopen",
+                    label: "Reopen",
+                    disabled: status !== "Approved" && status !== "Rejected",
+                    onClick: () => handleStatusAction(API_ENDPOINTS.reopenTimesheetRange, "reopened", row),
+                  },
+                ]
+              : []),
           ];
           return (
             <div style={{ display: "flex", alignItems: "center", gap: 8, height: "100%" }}>

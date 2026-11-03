@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, useContext } from "react";
 import { Card, Select, DatePicker, InputNumber, Button, Table, Tag, message, Row, Col } from "antd";
 import {
   SaveOutlined,
@@ -12,6 +12,8 @@ import axios from "axios";
 import dayjs from "dayjs";
 import { useLocation, useNavigate } from "react-router-dom";
 import API_ENDPOINTS from "../config";
+import AuthContext from "../Authentication/Context/AuthContext";
+import { ROLES } from "../Utils/roleAccess";
 
 const { Option } = Select;
 
@@ -108,6 +110,10 @@ const TimesheetEntry = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const preselectionApplied = useRef(false);
+  // Approve/Reopen are ADMIN-only server-side (TimeSheetController) —
+  // mirrored here so the buttons aren't shown as clickable only to 403.
+  const { user } = useContext(AuthContext);
+  const isAdmin = user?.role === ROLES.ADMIN;
 
   const [employees, setEmployees] = useState([]);
   const [assignments, setAssignments] = useState([]);
@@ -558,12 +564,16 @@ const TimesheetEntry = () => {
                 <Button icon={<SendOutlined />} onClick={handleSubmit} disabled={monthStatus !== "Draft"}>
                   Submit
                 </Button>
-                <Button icon={<CheckCircleOutlined />} onClick={handleApprove} disabled={monthStatus !== "Submitted"}>
-                  Approve
-                </Button>
-                <Button icon={<UnlockOutlined />} onClick={handleReopen} disabled={monthStatus === "Draft"}>
-                  Reopen
-                </Button>
+                {isAdmin && (
+                  <Button icon={<CheckCircleOutlined />} onClick={handleApprove} disabled={monthStatus !== "Submitted"}>
+                    Approve
+                  </Button>
+                )}
+                {isAdmin && (
+                  <Button icon={<UnlockOutlined />} onClick={handleReopen} disabled={monthStatus === "Draft"}>
+                    Reopen
+                  </Button>
+                )}
               </div>
             }
           >

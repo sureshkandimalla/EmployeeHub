@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, useContext } from "react";
 import { AgGridReact } from "@ag-grid-community/react";
 import { Card, Button, DatePicker, Dropdown, Select, Popover, Badge, List, Empty, message } from "antd";
 import { ReloadOutlined, SaveOutlined, MoreOutlined, BellOutlined } from "@ant-design/icons";
@@ -11,6 +11,8 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import "./MonthlyTimesheets.css";
 import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
+import AuthContext from "../Authentication/Context/AuthContext";
+import { ROLES } from "../Utils/roleAccess";
 
 const pad = (n) => String(n).padStart(2, "0");
 
@@ -121,20 +123,28 @@ const STATUS_COLOR = { Draft: "#595959", Submitted: "#d48806", Approved: "#389e0
 // week) and in the pinned "Monthly Actions" column (rangeDates = the whole
 // month). `rangeDates` and the handlers arrive via cellRendererParams.
 const RangeActionsCell = (params) => {
-  const { data: row, rangeDates, scopeLabel, onSave, onSubmit, onApprove, onReject, onReopen } = params;
+  const { data: row, rangeDates, scopeLabel, onSave, onSubmit, onApprove, onReject, onReopen, isAdmin } = params;
   const status = getRangeStatus(row, rangeDates);
 
   const items = [
     { key: "save", label: `Save ${scopeLabel}`, onClick: () => onSave(row, rangeDates) },
     { key: "submit", label: "Submit", disabled: status !== "Draft", onClick: () => onSubmit(row, rangeDates) },
-    { key: "approve", label: "Approve", disabled: status !== "Submitted", onClick: () => onApprove(row, rangeDates) },
     { key: "reject", label: "Reject", disabled: status !== "Submitted", onClick: () => onReject(row, rangeDates) },
-    {
-      key: "reopen",
-      label: "Reopen",
-      disabled: status !== "Approved" && status !== "Rejected",
-      onClick: () => onReopen(row, rangeDates),
-    },
+    // Approve/Reopen are ADMIN-only server-side (TimeSheetController) —
+    // left out of the menu entirely for anyone else rather than shown
+    // disabled, since disabled here already means "wrong status", a
+    // different reason than "wrong role".
+    ...(isAdmin
+      ? [
+          { key: "approve", label: "Approve", disabled: status !== "Submitted", onClick: () => onApprove(row, rangeDates) },
+          {
+            key: "reopen",
+            label: "Reopen",
+            disabled: status !== "Approved" && status !== "Rejected",
+            onClick: () => onReopen(row, rangeDates),
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -176,7 +186,7 @@ const getRowCalendarWeeks = (row) => {
 // month (weekIdx omitted) or one real Monday-Sunday week of it (weekIdx =
 // index into getRowCalendarWeeks, clipped to that week's in-month days).
 const MonthRowActionsCell = (params) => {
-  const { data: row, weekIdx, onSave, onSubmit, onApprove, onReject, onReopen } = params;
+  const { data: row, weekIdx, onSave, onSubmit, onApprove, onReject, onReopen, isAdmin } = params;
   const scopeLabel = weekIdx == null ? "Month" : "Week";
   let rangeDates;
   if (weekIdx == null) {
@@ -192,19 +202,25 @@ const MonthRowActionsCell = (params) => {
   const items = [
     { key: "save", label: `Save ${scopeLabel}`, onClick: () => onSave(row, rangeDates) },
     { key: "submit", label: "Submit", disabled: status !== "Draft", onClick: () => onSubmit(minimalRow, rangeDates) },
-    {
-      key: "approve",
-      label: "Approve",
-      disabled: status !== "Submitted",
-      onClick: () => onApprove(minimalRow, rangeDates),
-    },
     { key: "reject", label: "Reject", disabled: status !== "Submitted", onClick: () => onReject(minimalRow, rangeDates) },
-    {
-      key: "reopen",
-      label: "Reopen",
-      disabled: status !== "Approved" && status !== "Rejected",
-      onClick: () => onReopen(minimalRow, rangeDates),
-    },
+    // Approve/Reopen are ADMIN-only server-side (TimeSheetController) — see
+    // the matching comment in RangeActionsCell above.
+    ...(isAdmin
+      ? [
+          {
+            key: "approve",
+            label: "Approve",
+            disabled: status !== "Submitted",
+            onClick: () => onApprove(minimalRow, rangeDates),
+          },
+          {
+            key: "reopen",
+            label: "Reopen",
+            disabled: status !== "Approved" && status !== "Rejected",
+            onClick: () => onReopen(minimalRow, rangeDates),
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -222,6 +238,11 @@ const MonthRowActionsCell = (params) => {
 
 const MonthlyTimesheets = () => {
   const gridRef = useRef(null);
+  // Approve/Reopen are ADMIN-only server-side (TimeSheetController) —
+  // threaded through cellRendererParams to RangeActionsCell/
+  // MonthRowActionsCell below so the menu items aren't shown only to 403.
+  const { user } = useContext(AuthContext);
+  const isAdmin = user?.role === ROLES.ADMIN;
   // "Fill Timesheet" on the Employee Full Details Timesheets tab links here
   // with { employeeId, yearMonth } in route state, to land straight on that
   // employee's month instead of starting from the blank picker state.
@@ -925,6 +946,7 @@ const MonthlyTimesheets = () => {
           onApprove: handleRangeApprove,
           onReject: handleRangeReject,
           onReopen: handleRangeReopen,
+          isAdmin,
         },
       },
       ...Array.from({ length: MAX_WEEK_GROUPS }, (_, weekIdx) => ({
@@ -994,6 +1016,7 @@ const MonthlyTimesheets = () => {
               onApprove: handleRangeApprove,
               onReject: handleRangeReject,
               onReopen: handleRangeReopen,
+              isAdmin,
             },
           },
         ],
@@ -1059,6 +1082,7 @@ const MonthlyTimesheets = () => {
           onApprove: handleRangeApprove,
           onReject: handleRangeReject,
           onReopen: handleRangeReopen,
+          isAdmin,
         },
       },
       ...calendarWeeks.map((week) => ({
@@ -1107,6 +1131,7 @@ const MonthlyTimesheets = () => {
               onApprove: handleRangeApprove,
               onReject: handleRangeReject,
               onReopen: handleRangeReopen,
+              isAdmin,
             },
           },
         ],
