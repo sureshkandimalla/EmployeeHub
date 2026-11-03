@@ -19,7 +19,7 @@ import API_ENDPOINTS from "../config";
 import { openDocumentInNewTab } from "./openDocument";
 import { formatDateMDY, parseLocalDateSafe } from "../Utils/dateFormat";
 import { sizeColumnsForHeader } from "../Utils/agGridColumnSizing";
-import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
+import { getCellCopyContextMenuItems, gridPopupParent } from "../Utils/agGridCellCopy";
 
 const { Dragger } = Upload;
 
@@ -505,6 +505,7 @@ const EmployeeDocumentsPanel = ({ entityId, visaCategory }) => {
       <div className="ag-theme-alpine" style={{ height: "70vh", minHeight: 420 }}>
         <AgGridReact
           getContextMenuItems={getCellCopyContextMenuItems}
+          popupParent={gridPopupParent}
           ref={gridRef}
           rowData={rowData}
           columnDefs={sizeColumnsForHeader(masterColumnDefs)}

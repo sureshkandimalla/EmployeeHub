@@ -10,7 +10,7 @@ import Sidebar from "../../Commons/Sidebar/Sidebar";
 import ProjectDashboard from "../EmployeeProjectForm/ProjectDashboard";
 import { useHistory } from "react-router-dom";
 import API_ENDPOINTS from "../config";
-import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
+import { getCellCopyContextMenuItems, gridPopupParent } from "../Utils/agGridCellCopy";
 
 const Grid = () => {
   const [rowData, setRowData] = useState([]);
@@ -193,6 +193,7 @@ const Grid = () => {
         </div>
         <AgGridReact
           getContextMenuItems={getCellCopyContextMenuItems}
+          popupParent={gridPopupParent}
           enableCellTextSelection={true}
           ensureDomOrder={true}
           rowData={filterData()}

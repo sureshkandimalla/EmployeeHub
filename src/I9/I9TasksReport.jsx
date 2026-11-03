@@ -10,7 +10,7 @@ import API_ENDPOINTS from "../config";
 import { formatDateMDY } from "../Utils/dateFormat";
 import { sizeColumnsForHeader } from "../Utils/agGridColumnSizing";
 import GridToolbar from "../Utils/GridToolbar";
-import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
+import { getCellCopyContextMenuItems, gridPopupParent } from "../Utils/agGridCellCopy";
 
 const PRIORITY_COLOR = { HIGH: "error", MEDIUM: "warning", LOW: "default" };
 
@@ -72,6 +72,7 @@ export default function I9TasksReport() {
         <div className="project-grid-wrapper">
           <AgGridReact
             getContextMenuItems={getCellCopyContextMenuItems}
+            popupParent={gridPopupParent}
             rowData={rowData}
             columnDefs={sizeColumnsForHeader(columnDefs)}
             defaultColDef={{ minWidth: 100, resizable: true, filter: "agSetColumnFilter" }}

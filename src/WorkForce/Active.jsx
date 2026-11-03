@@ -4,7 +4,7 @@ import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import CustomHeader from "../CustomHeader/CustomHeader";
-import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
+import { getCellCopyContextMenuItems, gridPopupParent } from "../Utils/agGridCellCopy";
 
 const Active = () => {
   const gridApi = useRef(null);
@@ -93,6 +93,7 @@ const Active = () => {
       >
         <AgGridReact
           getContextMenuItems={getCellCopyContextMenuItems}
+          popupParent={gridPopupParent}
           enableCellTextSelection={true}
           ensureDomOrder={true}
           rowData={employeeData}
