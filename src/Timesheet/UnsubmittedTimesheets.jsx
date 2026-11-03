@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AgGridReact } from "@ag-grid-community/react";
 import { Button, Tag } from "antd";
-import { ReloadOutlined, FileExcelOutlined } from "@ant-design/icons";
+import { ReloadOutlined, FileExcelOutlined, PlusOutlined } from "@ant-design/icons";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "ag-grid-enterprise";
@@ -47,7 +47,9 @@ export default function UnsubmittedTimesheets() {
 
   const openEntry = (row) => {
     navigate("/timesheets/entry", {
-      state: { employeeId: row.employeeId, assignmentId: row.assignmentId, yearMonth: row.yearMonth },
+      state: row
+        ? { employeeId: row.employeeId, assignmentId: row.assignmentId, yearMonth: row.yearMonth }
+        : undefined,
     });
   };
 
@@ -95,8 +97,11 @@ export default function UnsubmittedTimesheets() {
             onChange={(e) => setSearchText(e.target.value)}
             style={{ marginRight: "10px" }}
           />
-          <Button type="default" icon={<FileExcelOutlined />} onClick={onBtnExportDataAsExcel}>
+          <Button type="default" icon={<FileExcelOutlined />} onClick={onBtnExportDataAsExcel} style={{ marginRight: "10px" }}>
             Export to Excel
+          </Button>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => openEntry(null)}>
+            Add New Timesheet
           </Button>
         </GridToolbar>
         <div className="project-grid-wrapper">
