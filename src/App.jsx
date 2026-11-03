@@ -31,6 +31,7 @@ import ProjectDashboard from "./Project/ProjectDashboard";
 import ProjectOnBoardingForm from "./OnBoardingComponent/ProjectOnBoarding";
 import ProjectFullDetails from "./Project/ProjectFullDetails";
 import GenerateInvoiceDetails from "./Invoice/GenerateInvoiceDetails";
+import UnsubmittedInvoices from "./Invoice/UnsubmittedInvoices";
 import { AuthProvider } from "./Authentication/Context/AuthContext";
 import Login from "./Authentication/pages/Login";
 import ProtectedRoute from "./Authentication/routes/ProtectedRoute";
@@ -45,6 +46,8 @@ import PayrollSummary from "./Payroll/PayrollSummary";
 import PayrollEligibility from "./Payroll/PayrollEligibility";
 import HealthInsuranceSummary from "./HealthInsurance/HealthInsuranceSummary";
 import TimesheetEntry from "./Timesheet/TimesheetEntry";
+import TimesheetsGrid from "./Timesheet/TimesheetsGrid";
+import UnsubmittedTimesheets from "./Timesheet/UnsubmittedTimesheets";
 import MonthlyTimesheets from "./Timesheet/MonthlyTimesheets";
 import MasterDataLoad from "./MasterDataLoad/MasterDataLoad";
 import HoursReport from "./HoursReport/HoursReport";
@@ -103,13 +106,16 @@ const App = () => {
               <Route path="/payrollsummary" element={<PayrollSummary />} />
               <Route path="/payrolleligibility" element={<PayrollEligibility />} />
               <Route path="/healthinsurance" element={<HealthInsuranceSummary />} />
-              <Route path="/timesheets" element={<TimesheetEntry />} />
+              <Route path="/timesheets" element={<TimesheetsGrid />} />
+              <Route path="/unsubmittedTimesheets" element={<UnsubmittedTimesheets />} />
+              <Route path="/timesheets/entry" element={<TimesheetEntry />} />
               <Route path="/monthlytimesheets" element={<MonthlyTimesheets />} />
               <Route path="/hoursreport" element={<HoursReport />} />
               <Route path="/projectInvoiceSummary" element={<ProjectInvoiceSummary />} />
               <Route path="/immigrationIntake" element={<ImmigrationIntake />} />
               <Route path="/allBills" element={<AllBills />} />
               <Route path="/billingIntegrityReport" element={<BillingIntegrityReport />} />
+              <Route path="/unsubmittedInvoices" element={<UnsubmittedInvoices />} />
               <Route path="/i9TasksReport" element={<I9TasksReport />} />
               <Route
                 path="/employeeFullDetails"

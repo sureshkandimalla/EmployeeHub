@@ -132,13 +132,37 @@ const ACCOUNTING_MENU = [
       { label: "All Bills", to: "/allBills" },
     ],
   },
+  // Invoice/Timesheet links also live in Create, Team, and Reports — kept
+  // there too (not moved) — this just gives Accounting its own one-stop
+  // copy so both sets of users (whichever rail icon they reach for) land
+  // on the same pages.
+  {
+    title: "Invoices",
+    items: [
+      { label: "Invoices", to: "/invoicedetails" },
+      { label: "Generate Invoice", to: "/generateInvoice" },
+      { label: "Unsubmitted Invoices", to: "/unsubmittedInvoices" },
+      { label: "Project Invoice Summary", to: "/projectInvoiceSummary" },
+    ],
+  },
+  {
+    title: "Timesheets",
+    items: [
+      { label: "Timesheets", to: "/timesheets" },
+      { label: "Monthly Timesheets", to: "/monthlytimesheets" },
+      { label: "Hours Report", to: "/hoursreport" },
+      { label: "Unsubmitted Timesheets", to: "/unsubmittedTimesheets" },
+    ],
+  },
 ];
 
-// Two columns — Customers alone in column 1, Vendors+Adjustments stacked
-// in column 2 — same column-grouping pattern as CREATE_MENU_COLUMNS.
+// Three columns — Customers alone in column 1, Vendors+Adjustments
+// stacked in column 2, Invoices+Timesheets stacked in column 3 — same
+// column-grouping pattern as CREATE_MENU_COLUMNS.
 const ACCOUNTING_MENU_COLUMNS = [
   ["Customers"],
   ["Vendors", "Adjustments"],
+  ["Invoices", "Timesheets"],
 ];
 
 // The rail's own "Customers"/"Vendors" icons reuse the exact same
@@ -214,6 +238,8 @@ const REPORTS_MENU = [
       { label: "Customer Dashboard", to: "/customerDashboard" },
       { label: "Vendor Dashboard", to: "/vendorDashboard" },
       { label: "Billing Integrity Report", to: "/billingIntegrityReport" },
+      { label: "Unsubmitted Invoices", to: "/unsubmittedInvoices" },
+      { label: "Unsubmitted Timesheets", to: "/unsubmittedTimesheets" },
     ],
   },
 ];

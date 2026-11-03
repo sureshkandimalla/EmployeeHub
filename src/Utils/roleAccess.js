@@ -48,6 +48,8 @@ export const ROUTE_ROLES = {
   "/payrollsummary": [ROLES.ACCOUNTING],
   "/payrolleligibility": [ROLES.ACCOUNTING],
   "/timesheets": [ROLES.ACCOUNTING],
+  "/timesheets/entry": [ROLES.ACCOUNTING],
+  "/unsubmittedTimesheets": [ROLES.ACCOUNTING],
   "/monthlytimesheets": [ROLES.ACCOUNTING],
   "/hoursreport": [ROLES.ACCOUNTING],
   "/projectInvoiceSummary": [ROLES.ACCOUNTING],
@@ -57,6 +59,7 @@ export const ROUTE_ROLES = {
   "/adjustmentDetails": [ROLES.ACCOUNTING],
   "/allBills": [ROLES.ACCOUNTING],
   "/billingIntegrityReport": [ROLES.ACCOUNTING],
+  "/unsubmittedInvoices": [ROLES.ACCOUNTING],
   "/i9TasksReport": [ROLES.HR, ROLES.IMMIGRATION],
 
   "/masterdataload": [], // Admin only

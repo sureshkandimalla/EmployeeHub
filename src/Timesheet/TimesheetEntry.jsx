@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Card, Select, DatePicker, InputNumber, Button, Table, Tag, message, Row, Col } from "antd";
-import { SaveOutlined, SendOutlined, CheckCircleOutlined, UnlockOutlined, PlusOutlined } from "@ant-design/icons";
+import {
+  SaveOutlined,
+  SendOutlined,
+  CheckCircleOutlined,
+  UnlockOutlined,
+  PlusOutlined,
+  ArrowLeftOutlined,
+} from "@ant-design/icons";
 import axios from "axios";
 import dayjs from "dayjs";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -425,6 +432,10 @@ const TimesheetEntry = () => {
 
   return (
     <div style={{ padding: 16 }}>
+      <Button icon={<ArrowLeftOutlined />} style={{ marginBottom: 16 }} onClick={() => navigate("/timesheets")}>
+        Back to Timesheets
+      </Button>
+
       <Card
         style={{ marginBottom: 16 }}
         extra={

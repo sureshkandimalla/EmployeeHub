@@ -122,6 +122,8 @@ export const API_ENDPOINTS = {
   rejectTimesheetRange: (assignmentId, startDate, endDate) => `${API_BASE_URL}/timesheets/rejectRange?assignmentId=${assignmentId}&startDate=${startDate}&endDate=${endDate}`,
   reopenTimesheetRange: (assignmentId, startDate, endDate) => `${API_BASE_URL}/timesheets/reopenRange?assignmentId=${assignmentId}&startDate=${startDate}&endDate=${endDate}`,
   getTimesheetsByRange: (startDate, endDate) => `${API_BASE_URL}/timesheets/getByRange?startDate=${startDate}&endDate=${endDate}`,
+  getTimesheetSummary: `${API_BASE_URL}/timesheets/summary`,
+  getMissingTimesheets: `${API_BASE_URL}/timesheets/missing`,
   getPayPeriods: `${API_BASE_URL}/payrollsummary/getPayPeriods`,
   getAssignmentsEligibleForPeriod: (startDate, endDate) => `${API_BASE_URL}/assignmentsEligibleForPeriod?startDate=${startDate}&endDate=${endDate}`,
   getPayrollSummaryByPayPeriod: (payPeriodId) => `${API_BASE_URL}/payrollsummary/getByPayPeriod?payPeriodId=${payPeriodId}`,

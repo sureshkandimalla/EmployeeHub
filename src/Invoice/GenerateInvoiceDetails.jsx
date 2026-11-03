@@ -244,7 +244,7 @@ const GenerateInvoiceDetails = ({ url: propUrl, employeeIds: propEmployeeIds, mo
   // that employee/project/month.
   const handleOpenTimesheet = (row) => {
     if (!row.employeeId || !row.startDate) return;
-    navigate("/timesheets", {
+    navigate("/timesheets/entry", {
       state: { employeeId: row.employeeId, projectId: row.projectId, yearMonth: row.startDate.substring(0, 7) },
     });
   };
