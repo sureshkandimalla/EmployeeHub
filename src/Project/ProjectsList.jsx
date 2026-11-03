@@ -342,6 +342,23 @@ const ProjectList = ({ projectsList, isCollapsed, onRefresh, onEditProject }) =>
         },
       },
       {
+        headerName: "Invoice Frequency",
+        field: "invoiceTerm",
+        sortable: isSortable,
+        editable: true,
+        filter: "agSetColumnFilter",
+        // Backend stores/edits a numeric code; grid always shows/edits the text label.
+        valueGetter: (params) => invoiceTermLabel(params.data?.invoiceTerm),
+        valueSetter: (params) => {
+          params.data.invoiceTerm = invoiceTermCode(params.newValue);
+          return true;
+        },
+        cellEditor: "agSelectCellEditor",
+        cellEditorParams: {
+          values: INVOICE_TERM_OPTIONS.map((option) => option.label),
+        },
+      },
+      {
         headerName: "Bill Rate",
         field: "billRate",
         sortable: isSortable,
@@ -421,23 +438,6 @@ const ProjectList = ({ projectsList, isCollapsed, onRefresh, onEditProject }) =>
         editable: true,
         filter: "agSetColumnFilter",
         valueFormatter: (params) => formatDateMDY(params.value),
-      },
-      {
-        headerName: "Invoice Terms",
-        field: "invoiceTerm",
-        sortable: isSortable,
-        editable: true,
-        filter: "agSetColumnFilter",
-        // Backend stores/edits a numeric code; grid always shows/edits the text label.
-        valueGetter: (params) => invoiceTermLabel(params.data?.invoiceTerm),
-        valueSetter: (params) => {
-          params.data.invoiceTerm = invoiceTermCode(params.newValue);
-          return true;
-        },
-        cellEditor: "agSelectCellEditor",
-        cellEditorParams: {
-          values: INVOICE_TERM_OPTIONS.map((option) => option.label),
-        },
       },
       {
         headerName: "Company",
