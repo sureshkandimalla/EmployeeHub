@@ -11,6 +11,7 @@ import { useFilteredTotalsRow } from "../Utils/useFilteredTotalsRow";
 import "ag-grid-enterprise";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
+import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
 
 const { Option } = Select;
 
@@ -320,6 +321,7 @@ const PayrollEligibility = () => {
 
       <div className="ag-theme-alpine" style={{ flex: 1, minHeight: 0 }}>
         <AgGridReact
+          getContextMenuItems={getCellCopyContextMenuItems}
           enableCellTextSelection={true}
           ensureDomOrder={true}
           ref={gridRef}

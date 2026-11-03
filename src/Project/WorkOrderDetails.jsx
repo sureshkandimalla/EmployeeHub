@@ -15,6 +15,7 @@ import "./WorkOrderDetails.css";
 import DocumentsPanel from "../Documents/DocumentsPanel";
 import { openDocumentInNewTab } from "../Documents/openDocument";
 import GridToolbar from "../Utils/GridToolbar";
+import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
 const WorkOrderDetails = ({ rowData, isCollapsed, onRefresh }) => {
   console.log(rowData);
   //  const [rowData, setRowData] = useState();
@@ -243,6 +244,7 @@ const WorkOrderDetails = ({ rowData, isCollapsed, onRefresh }) => {
         </GridToolbar>
         <div  className={`workOrder-grid-wrapper ${!isCollapsed ? "ag-grid-collapsed" : "ag-grid-expanded"}`}>
         <AgGridReact
+          getContextMenuItems={getCellCopyContextMenuItems}
           enableCellTextSelection={true}
           ensureDomOrder={true}
           onCellValueChanged={onCellValueChanged}

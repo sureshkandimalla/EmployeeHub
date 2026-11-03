@@ -12,6 +12,7 @@ import { formatCurrency } from "../Utils/CurrencyFormatter";
 import { sizeColumnsForHeader } from "../Utils/agGridColumnSizing";
 import { useFilteredTotalsRow } from "../Utils/useFilteredTotalsRow";
 import GridToolbar from "../Utils/GridToolbar";
+import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
 
 // Accounting-style negative display: (1,234.56) instead of -1,234.56, in red.
 const formatSignedCurrency = (value) => {
@@ -406,6 +407,7 @@ export default function CompanyFinalReportDetails() {
         </GridToolbar>
         <div className="project-grid-wrapper">
           <AgGridReact
+            getContextMenuItems={getCellCopyContextMenuItems}
             enableCellTextSelection={true}
             ensureDomOrder={true}
             ref={gridRef}

@@ -11,6 +11,7 @@ import { formatDateMDY } from "../Utils/dateFormat";
 import { sizeColumnsForHeader } from "../Utils/agGridColumnSizing";
 import { openDocumentInNewTab } from "./openDocument";
 import FormI9Modal, { I9_SUBTYPE_OPTIONS } from "./FormI9Modal";
+import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
 
 const SUBTYPE_LABEL = Object.fromEntries(I9_SUBTYPE_OPTIONS.map((o) => [o.value, o.label]));
 
@@ -175,6 +176,7 @@ export default function FormI9Panel({ entityId, visaCategory }) {
 
       <div className="ag-theme-alpine" style={{ height: "60vh", minHeight: 360 }}>
         <AgGridReact
+          getContextMenuItems={getCellCopyContextMenuItems}
           rowData={rowData}
           columnDefs={sizeColumnsForHeader(masterColumnDefs)}
           defaultColDef={{ minWidth: 100, resizable: true, filter: "agSetColumnFilter" }}

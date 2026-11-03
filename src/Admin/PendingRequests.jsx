@@ -10,6 +10,7 @@ import API_ENDPOINTS from "../config";
 import { ACTION_REQUEST_CONFIG } from "../Notes/actionRequestConfig";
 import GridToolbar from "../Utils/GridToolbar";
 import { formatDateMDY } from "../Utils/dateFormat";
+import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
 
 const getLoggedInUserName = () => {
   try {
@@ -188,6 +189,7 @@ const PendingRequests = () => {
           </GridToolbar>
           <div style={{ height: "calc(100vh - 220px)" }}>
             <AgGridReact
+              getContextMenuItems={getCellCopyContextMenuItems}
               enableCellTextSelection={true}
               ensureDomOrder={true}
               ref={gridRef}

@@ -16,6 +16,7 @@ import NotesActionButton from "../Notes/NotesActionButton";
 import NotesModal from "../Notes/NotesModal";
 import { buildRowActions } from "../Notes/rowActions";
 import GridToolbar from "../Utils/GridToolbar";
+import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
 
 const employmentTypeOptions = ["Full-Time", "Part-Time", "Hourly", "W2", "C2C", "1099"];
 const i9EverifyStatusOptions = ["Completed", "In Progress", "Failed"];
@@ -501,6 +502,7 @@ const WorkForceList = ({ employees, isCollapsed, onRefresh }) => {
 
       <div  className={`workforce-grid-wrapper ${!isCollapsed ? "ag-grid-collapsed" : "ag-grid-expanded"}`} style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         <AgGridReact
+          getContextMenuItems={getCellCopyContextMenuItems}
           enableCellTextSelection={true}
           ensureDomOrder={true}
           ref={gridRef}

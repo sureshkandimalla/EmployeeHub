@@ -11,6 +11,7 @@ import API_ENDPOINTS from "../config";
 import { sizeColumnsForHeader } from "../Utils/agGridColumnSizing";
 import { formatDateMDY } from "../Utils/dateFormat";
 import CoiGrid from "../Coi/CoiGrid";
+import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
 
 const cellClassRules = {
   darkGreyBackground: (params) => params.node?.rowIndex !== undefined && params.node.rowIndex % 2 === 1,
@@ -73,6 +74,7 @@ const EmployeesTab = ({ vendorId }) => {
   return (
     <div className="ag-theme-alpine" style={{ height: 420 }}>
       <AgGridReact
+        getContextMenuItems={getCellCopyContextMenuItems}
         rowData={rowData}
         columnDefs={sizeColumnsForHeader(columnDefs)}
         loading={loading}

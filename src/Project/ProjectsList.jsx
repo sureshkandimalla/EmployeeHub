@@ -29,6 +29,7 @@ import NotesModal from "../Notes/NotesModal";
 import { buildRowActions } from "../Notes/rowActions";
 import GridToolbar from "../Utils/GridToolbar";
 import { formatDateMDY } from "../Utils/dateFormat";
+import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
 
 const ProjectList = ({ projectsList, isCollapsed, onRefresh, onEditProject }) => {
   console.log(projectsList);
@@ -554,6 +555,7 @@ const ProjectList = ({ projectsList, isCollapsed, onRefresh, onEditProject }) =>
       </GridToolbar>
       <div className={`project-grid-wrapper ${!isCollapsed ? "ag-grid-collapsed" : "ag-grid-expanded"}`}>
         <AgGridReact
+          getContextMenuItems={getCellCopyContextMenuItems}
           ref={gridRef}
           enableCellTextSelection={true}
           ensureDomOrder={true}

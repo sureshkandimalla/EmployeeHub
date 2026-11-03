@@ -9,6 +9,7 @@ import API_ENDPOINTS from "../config";
 import "ag-grid-enterprise";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
+import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
 
 const STATUS_COLOR = { Draft: "default", Submitted: "gold", Approved: "green", Rejected: "red" };
 const STATUS_ICON_COLOR = { Draft: "#595959", Submitted: "#d48806", Approved: "#389e0d", Rejected: "#cf1322" };
@@ -213,6 +214,7 @@ const EmployeeTimesheetSummary = ({ employeeId, isCollapsed, gridHeight = "calc(
     >
       <div style={{ height: gridHeight, minHeight: 300, width: "100%" }}>
         <AgGridReact
+          getContextMenuItems={getCellCopyContextMenuItems}
           enableCellTextSelection={true}
           ensureDomOrder={true}
           rowData={rowData}

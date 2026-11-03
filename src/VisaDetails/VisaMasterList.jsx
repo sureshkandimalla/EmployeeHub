@@ -24,6 +24,7 @@ import NotesActionButton from "../Notes/NotesActionButton";
 import NotesModal from "../Notes/NotesModal";
 import { buildRowActions } from "../Notes/rowActions";
 import GridToolbar from "../Utils/GridToolbar";
+import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
 
 // Mirrors the exact predicates ImmigrationDashboard.jsx uses to compute its
 // feed card counts, so "Review all" always lands on a grid whose row count
@@ -465,6 +466,7 @@ const VisaMasterList = () => {
           </GridToolbar>
           <div className="workforce-grid-wrapper" style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
             <AgGridReact
+              getContextMenuItems={getCellCopyContextMenuItems}
               enableCellTextSelection={true}
               ensureDomOrder={true}
               ref={gridRef}

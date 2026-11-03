@@ -10,6 +10,7 @@ import "ag-grid-enterprise";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import "./MonthlyTimesheets.css";
+import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
 
 const pad = (n) => String(n).padStart(2, "0");
 
@@ -1187,6 +1188,7 @@ const MonthlyTimesheets = () => {
       {selectedMonth ? (
         <div className="ag-theme-alpine" style={{ flex: 1, minHeight: 0 }}>
           <AgGridReact
+            getContextMenuItems={getCellCopyContextMenuItems}
             enableCellTextSelection={true}
             ensureDomOrder={true}
             ref={gridRef}
@@ -1205,6 +1207,7 @@ const MonthlyTimesheets = () => {
       ) : selectedEmployeeId ? (
         <div className="ag-theme-alpine" style={{ flex: 1, minHeight: 0 }}>
           <AgGridReact
+            getContextMenuItems={getCellCopyContextMenuItems}
             enableCellTextSelection={true}
             ensureDomOrder={true}
             rowData={summaryRows}

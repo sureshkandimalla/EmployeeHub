@@ -14,6 +14,7 @@ import NotesActionButton from "../Notes/NotesActionButton";
 import NotesModal from "../Notes/NotesModal";
 import { buildRowActions } from "../Notes/rowActions";
 import GridToolbar from "../Utils/GridToolbar";
+import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
 
 const MODAL_HEADER_COLOR = "#1677ff";
 
@@ -387,6 +388,7 @@ export default function ImmigrationIntake() {
         </GridToolbar>
         <div className="workforce-grid-wrapper ag-grid-expanded" style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
           <AgGridReact
+            getContextMenuItems={getCellCopyContextMenuItems}
             enableCellTextSelection={true}
             ensureDomOrder={true}
             ref={gridRef}

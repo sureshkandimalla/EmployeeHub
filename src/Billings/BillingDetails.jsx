@@ -15,6 +15,7 @@ import { formatCurrency } from "../Utils/CurrencyFormatter";
 import { useFilteredTotalsRow } from "../Utils/useFilteredTotalsRow";
 import GridToolbar from "../Utils/GridToolbar";
 import "./BillingDetails.css"
+import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
 
 const BillingDetails = ({ url, isCollapsed, onRefresh }) => {
   const gridRef = useRef(null);
@@ -219,6 +220,7 @@ const BillingDetails = ({ url, isCollapsed, onRefresh }) => {
       }`}
     >
       <AgGridReact
+        getContextMenuItems={getCellCopyContextMenuItems}
         enableCellTextSelection={true}
         ensureDomOrder={true}
         ref={gridRef}

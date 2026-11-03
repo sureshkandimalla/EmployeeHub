@@ -11,6 +11,7 @@ import "./WorkForceList.css";
 import { formatCurrency } from "../Utils/CurrencyFormatter";
 import { formatDateMDY } from "../Utils/dateFormat";
 import GridToolbar from "../Utils/GridToolbar";
+import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
 
 const WorkForceReconcileList = ({ employees, isCollapsed, onRefresh }) => {
   const gridRef = useRef(null);
@@ -197,6 +198,7 @@ const WorkForceReconcileList = ({ employees, isCollapsed, onRefresh }) => {
       </GridToolbar>
       <div  className={`ag-workforce-grid-wrapper ${!isCollapsed ? "ag-grid-collapsed" : "ag-grid-expanded"}`}>
         <AgGridReact
+          getContextMenuItems={getCellCopyContextMenuItems}
           enableCellTextSelection={true}
           ensureDomOrder={true}
           ref={gridRef}

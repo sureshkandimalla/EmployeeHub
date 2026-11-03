@@ -10,6 +10,7 @@ import "ag-grid-community/styles/ag-theme-alpine.css";
 import API_ENDPOINTS from "../config";
 import { formatDateMDY } from "../Utils/dateFormat";
 import { sizeColumnsForHeader } from "../Utils/agGridColumnSizing";
+import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
 import GridToolbar from "../Utils/GridToolbar";
 
 const STATUS_COLOR = { Draft: "default", Submitted: "gold", Rejected: "red", Approved: "green" };
@@ -106,6 +107,7 @@ export default function TimesheetsGrid() {
             loading={loading}
             onRowClicked={(e) => openEntry(e.data)}
             rowStyle={{ cursor: "pointer" }}
+            getContextMenuItems={getCellCopyContextMenuItems}
             overlayNoRowsTemplate="No timesheets entered yet"
           />
         </div>

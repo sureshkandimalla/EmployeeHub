@@ -9,6 +9,7 @@ import "ag-grid-community/styles/ag-theme-alpine.css";
 import API_ENDPOINTS from "../config";
 import { ROLES } from "../Utils/roleAccess";
 import { formatDateMDY } from "../Utils/dateFormat";
+import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
 
 const ROLE_OPTIONS = Object.values(ROLES);
 
@@ -136,6 +137,7 @@ const UserRoles = () => {
 
       <div className="ag-theme-alpine" style={{ flex: 1, minHeight: 0 }}>
         <AgGridReact
+          getContextMenuItems={getCellCopyContextMenuItems}
           ref={gridRef}
           enableCellTextSelection={true}
           ensureDomOrder={true}

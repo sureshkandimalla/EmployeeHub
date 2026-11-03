@@ -19,6 +19,7 @@ import { computeInvoicePeriod } from "../Utils/invoiceTerm";
 import API_ENDPOINTS from "../config";
 import { sizeColumnsForHeader } from "../Utils/agGridColumnSizing";
 import GridToolbar from "../Utils/GridToolbar";
+import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
 
 const GenerateInvoiceDetails = ({ url: propUrl, employeeIds: propEmployeeIds, month: propMonth, selectedMonth: propSelectedMonth, onBack } = {}) => {
   const location = useLocation();
@@ -622,6 +623,7 @@ const GenerateInvoiceDetails = ({ url: propUrl, employeeIds: propEmployeeIds, mo
               />
             ) : (
               <AgGridReact
+                getContextMenuItems={getCellCopyContextMenuItems}
                 enableCellTextSelection={true}
                 ensureDomOrder={true}
                 ref={gridRef}

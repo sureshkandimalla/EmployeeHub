@@ -15,6 +15,7 @@ import { formatCurrency } from "../Utils/CurrencyFormatter";
 import { formatDateMDY } from "../Utils/dateFormat";
 import { useFilteredTotalsRow } from "../Utils/useFilteredTotalsRow";
 import GridToolbar from "../Utils/GridToolbar";
+import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
 
 const AdjustementDetails = ({ employeeId, isCollapsed }) => {
   const gridRef = useRef(null);
@@ -202,6 +203,7 @@ const AdjustementDetails = ({ employeeId, isCollapsed }) => {
       </GridToolbar>
       <div  className={`assignment-grid-wrapper ${!isCollapsed ? "ag-grid-collapsed" : "ag-grid-expanded"}`}>
       <AgGridReact
+        getContextMenuItems={getCellCopyContextMenuItems}
         enableCellTextSelection={true}
         ensureDomOrder={true}
         ref={gridRef}

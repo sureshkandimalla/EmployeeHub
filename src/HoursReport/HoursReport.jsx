@@ -9,6 +9,7 @@ import { sizeColumnsForHeader } from "../Utils/agGridColumnSizing";
 import "ag-grid-enterprise";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
+import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
 
 // Cross-references the three places this app records an employee's hours
 // independently for a given payroll pay period — PayrollSummary (what they
@@ -195,6 +196,7 @@ const HoursReport = () => {
           </Card>
         ) : (
           <AgGridReact
+            getContextMenuItems={getCellCopyContextMenuItems}
             enableCellTextSelection={true}
             ensureDomOrder={true}
             ref={gridRef}

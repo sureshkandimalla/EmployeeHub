@@ -29,6 +29,7 @@ import { GLOBAL_CHARTS } from "../Charts/globalChartRegistry";
 import AuthContext from "../Authentication/Context/AuthContext";
 import { canAccessEntity } from "../Utils/roleAccess";
 import { useFilteredTotalsRow } from "../Utils/useFilteredTotalsRow";
+import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
 
 // employeeId/projectId/customerId are optional — when provided (e.g.
 // embedded in the Employee Full Details "INVOICES" tab, the Project Full
@@ -876,6 +877,7 @@ const InvoiceDetails = ({ employeeId, projectId, customerId, statusFilter, isCol
         style={gridHeight ? { height: gridHeight, maxHeight: gridHeight } : undefined}
       >
       <AgGridReact
+        getContextMenuItems={getCellCopyContextMenuItems}
         enableCellTextSelection={true}
         ensureDomOrder={true}
         ref={gridRef}

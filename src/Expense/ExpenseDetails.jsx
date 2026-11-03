@@ -17,6 +17,7 @@ import NotesActionButton from "../Notes/NotesActionButton";
 import NotesModal from "../Notes/NotesModal";
 import { buildRowActions } from "../Notes/rowActions";
 import GridToolbar from "../Utils/GridToolbar";
+import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
 
 const editableUnlessReimbursed = (params) => params.data?.status !== "Reimbursed";
 
@@ -329,6 +330,7 @@ const ExpenseDetails = ({ employeeId, statusFilter, gridHeight } = {}) => {
             style={gridHeight ? { height: gridHeight, maxHeight: gridHeight } : undefined}
           >
             <AgGridReact
+              getContextMenuItems={getCellCopyContextMenuItems}
               enableCellTextSelection={true}
               ensureDomOrder={true}
               ref={gridRef}

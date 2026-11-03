@@ -13,6 +13,7 @@ import { sizeColumnsForHeader } from "../Utils/agGridColumnSizing";
 import { useFilteredTotalsRow } from "../Utils/useFilteredTotalsRow";
 import GridToolbar from "../Utils/GridToolbar";
 import "./ReconciliationDetails.css"
+import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
 
 export default function ReconciliationDetails({ employeeId }) {
   const gridRef = useRef(null);
@@ -195,6 +196,7 @@ export default function ReconciliationDetails({ employeeId }) {
       </GridToolbar>
       <div className= "project-grid-wrapper">
       <AgGridReact
+        getContextMenuItems={getCellCopyContextMenuItems}
         enableCellTextSelection={true}
         ensureDomOrder={true}
         ref={gridRef}

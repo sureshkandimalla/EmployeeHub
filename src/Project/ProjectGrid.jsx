@@ -12,6 +12,7 @@ import { formatDateMDY } from "../Utils/dateFormat";
 import ProjectOnBoardingForm from "../OnBoardingComponent/ProjectOnBoarding";
 import NewCustomer from "../Customer/NewCustomer";
 import GridToolbar from "../Utils/GridToolbar";
+import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
 
 const ProjectGrid = ({ employeeId, customerId, isCollapsed }) => {
   const [searchText, setSearchText] = useState("");
@@ -217,6 +218,7 @@ const ProjectGrid = ({ employeeId, customerId, isCollapsed }) => {
       </GridToolbar>
       <div  className={`project-grid-wrapper ${!isCollapsed ? "ag-grid-collapsed" : "ag-grid-expanded"}`}>
       <AgGridReact
+        getContextMenuItems={getCellCopyContextMenuItems}
         enableCellTextSelection={true}
         ensureDomOrder={true}
         onFirstDataRendered={(params) => {

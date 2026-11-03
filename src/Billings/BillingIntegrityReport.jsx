@@ -11,6 +11,7 @@ import { formatCurrency } from "../Utils/CurrencyFormatter";
 import { formatDateMDY, formatMonthYear } from "../Utils/dateFormat";
 import { sizeColumnsForHeader } from "../Utils/agGridColumnSizing";
 import GridToolbar from "../Utils/GridToolbar";
+import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
 
 // Three independent checks on how Bills stay in sync with the Invoice they
 // were generated from (see InvoiceService's bill-sync logic): a bill whose
@@ -37,6 +38,7 @@ function ReportSection({ title, emptyLabel, rowData, columnDefs }) {
       ) : (
         <div className="ag-theme-alpine">
           <AgGridReact
+            getContextMenuItems={getCellCopyContextMenuItems}
             {...gridDefaults}
             rowData={rowData}
             columnDefs={sizeColumnsForHeader(columnDefs)}

@@ -11,6 +11,7 @@ import "ag-grid-community/styles/ag-theme-alpine.css";
 import { formatCurrency } from "../Utils/CurrencyFormatter";
 import { formatDate } from "../Utils/dateFormat";
 import { useFilteredTotalsRow } from "../Utils/useFilteredTotalsRow";
+import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
 
 const HealthInsuranceDetails = ({ rowData: externalRowData, onRefresh, employeeId, gridHeight = "calc(100vh - 500px)" }) => {
   const [searchText, setSearchText] = useState("");
@@ -225,6 +226,7 @@ const HealthInsuranceDetails = ({ rowData: externalRowData, onRefresh, employeeI
           }}
         >
           <AgGridReact
+            getContextMenuItems={getCellCopyContextMenuItems}
             enableCellTextSelection={true}
             ensureDomOrder={true}
             ref={gridRef}

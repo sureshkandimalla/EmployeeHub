@@ -15,6 +15,7 @@ import NotesActionButton from "../Notes/NotesActionButton";
 import NotesModal from "../Notes/NotesModal";
 import { buildRowActions } from "../Notes/rowActions";
 import GridToolbar from "../Utils/GridToolbar";
+import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
 
 const PotentialEmployees = () => {
   const [searchText, setSearchText] = useState("");
@@ -358,6 +359,7 @@ const PotentialEmployees = () => {
       </GridToolbar>
       <div className= "pemployee-grid-wrapper">
       <AgGridReact
+        getContextMenuItems={getCellCopyContextMenuItems}
         enableCellTextSelection={true}
         ensureDomOrder={true}
         ref={gridRef}

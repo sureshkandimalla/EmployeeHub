@@ -14,6 +14,7 @@ import { useFilteredTotalsRow } from "../Utils/useFilteredTotalsRow";
 import NotesActionButton from "../Notes/NotesActionButton";
 import NotesModal from "../Notes/NotesModal";
 import GridToolbar from "../Utils/GridToolbar";
+import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
 
 // Standalone "All Bills" list — every bill across every employee, grouped by
 // Employee Name (AG Grid row grouping, which also gives free per-employee
@@ -203,6 +204,7 @@ export default function AllBills() {
         </GridToolbar>
         <div className="project-grid-wrapper">
           <AgGridReact
+            getContextMenuItems={getCellCopyContextMenuItems}
             enableCellTextSelection={true}
             ensureDomOrder={true}
             ref={gridRef}

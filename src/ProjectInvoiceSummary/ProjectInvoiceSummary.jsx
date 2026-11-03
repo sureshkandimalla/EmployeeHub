@@ -12,6 +12,7 @@ import { formatMonthYear, formatDateMDY } from "../Utils/dateFormat";
 import { sizeColumnsForHeader } from "../Utils/agGridColumnSizing";
 import { useFilteredTotalsRow } from "../Utils/useFilteredTotalsRow";
 import GridToolbar from "../Utils/GridToolbar";
+import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
 
 // One row per Project — Total Invoice/Invoice Paid/Discounts/Pending are
 // aggregated across every invoice billed against that project, and Last
@@ -259,6 +260,7 @@ export default function ProjectInvoiceSummary() {
         </GridToolbar>
         <div className="project-grid-wrapper">
           <AgGridReact
+            getContextMenuItems={getCellCopyContextMenuItems}
             enableCellTextSelection={true}
             ensureDomOrder={true}
             ref={gridRef}

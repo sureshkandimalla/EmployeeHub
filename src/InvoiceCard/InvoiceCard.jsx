@@ -10,6 +10,7 @@ import API_ENDPOINTS from "../config";
 import { sizeColumnsForHeader } from "../Utils/agGridColumnSizing";
 import CustomHeader from "../CustomHeader/CustomHeader";
 import "./InvoiceCard.css";
+import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
 const { Search } = Input;
 
 const InvoiceCard = () => {
@@ -165,6 +166,7 @@ const InvoiceCard = () => {
       </div>
       <div className="ag-theme-alpine employee-List-grid">
         <AgGridReact
+          getContextMenuItems={getCellCopyContextMenuItems}
           enableCellTextSelection={true}
           ensureDomOrder={true}
           ref={gridApi}

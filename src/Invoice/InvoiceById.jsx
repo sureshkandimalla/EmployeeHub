@@ -15,6 +15,7 @@ import { formatCurrency } from "../Utils/CurrencyFormatter";
 import { useFilteredTotalsRow } from "../Utils/useFilteredTotalsRow";
 import GridToolbar from "../Utils/GridToolbar";
 import "./InvoiceById.css";
+import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
 
 const InvoiceById = ({ url, employeeId, isCollapsed }) => {
   const [searchText, setSearchText] = useState("");
@@ -209,6 +210,7 @@ const InvoiceById = ({ url, employeeId, isCollapsed }) => {
       </GridToolbar>
       <div  className={`invoice-grid-wrapper ${!isCollapsed ? "ag-grid-collapsed" : "ag-grid-expanded"}`}>
       <AgGridReact
+        getContextMenuItems={getCellCopyContextMenuItems}
         enableCellTextSelection={true}
         ensureDomOrder={true}
         onSortChanged={(params) => params.api.refreshCells({ force: true })}

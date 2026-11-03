@@ -25,6 +25,7 @@ import {
 import "./VisaDetailsList.css";
 import { sizeColumnsForHeader } from "../Utils/agGridColumnSizing";
 import GridToolbar from "../Utils/GridToolbar";
+import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
 
 export default function VisaDetailsList({ preloadedData }) {
   const [rowData, setRowData] = useState([]);
@@ -778,6 +779,7 @@ export default function VisaDetailsList({ preloadedData }) {
           </GridToolbar>
           <div className="ag-grid-wrapper">
             <AgGridReact
+              getContextMenuItems={getCellCopyContextMenuItems}
               enableCellTextSelection={true}
               ensureDomOrder={true}
               ref={gridRef}

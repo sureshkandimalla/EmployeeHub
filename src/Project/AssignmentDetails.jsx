@@ -14,6 +14,7 @@ import { formatCurrency } from "../Utils/CurrencyFormatter";
 import { formatDateMDY } from "../Utils/dateFormat";
 import GridToolbar from "../Utils/GridToolbar";
 import "./AssignmentDetails.css"
+import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
 
 const AssignmentDetails = ({ projectId, isCollapsed }) => {
   console.log(projectId);
@@ -227,6 +228,7 @@ const AssignmentDetails = ({ projectId, isCollapsed }) => {
         </GridToolbar>
         <div  className={`assignment-grid-wrapper ${!isCollapsed ? "ag-grid-collapsed" : "ag-grid-expanded"}`}>
         <AgGridReact
+          getContextMenuItems={getCellCopyContextMenuItems}
           enableCellTextSelection={true}
           ensureDomOrder={true}
           onCellValueChanged={onCellValueChanged}

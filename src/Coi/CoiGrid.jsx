@@ -15,6 +15,7 @@ import { formatDateMDY } from "../Utils/dateFormat";
 import "ag-grid-enterprise";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
+import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
 
 const STATUS_OPTIONS = ["Active", "Expired", "InActive", "Invalid", "Archived"];
 
@@ -303,6 +304,7 @@ const CoiGrid = ({ customerId, vendorId, isCollapsed }) => {
       </GridToolbar>
       <div className={`project-grid-wrapper ${!isCollapsed ? "ag-grid-collapsed" : "ag-grid-expanded"}`}>
         <AgGridReact
+          getContextMenuItems={getCellCopyContextMenuItems}
           ref={gridRef}
           enableCellTextSelection={true}
           ensureDomOrder={true}

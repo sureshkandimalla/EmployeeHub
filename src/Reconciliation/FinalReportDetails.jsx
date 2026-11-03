@@ -11,6 +11,7 @@ import { formatCurrency } from "../Utils/CurrencyFormatter";
 import { formatMonthYear, formatDate, formatDateMDY } from "../Utils/dateFormat";
 import { sizeColumnsForHeader } from "../Utils/agGridColumnSizing";
 import GridToolbar from "../Utils/GridToolbar";
+import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
 
 // One grid, two categories ("Projects" and "Payments"), grouped/collapsed
 // under a single "Category" column. Not every column applies to every
@@ -633,6 +634,7 @@ export default function FinalReportDetails({ employeeId }) {
         </GridToolbar>
         <div className="project-grid-wrapper">
           <AgGridReact
+            getContextMenuItems={getCellCopyContextMenuItems}
             enableCellTextSelection={true}
             ensureDomOrder={true}
             ref={gridRef}

@@ -19,6 +19,7 @@ import API_ENDPOINTS from "../config";
 import { openDocumentInNewTab } from "./openDocument";
 import { formatDateMDY, parseLocalDateSafe } from "../Utils/dateFormat";
 import { sizeColumnsForHeader } from "../Utils/agGridColumnSizing";
+import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
 
 const { Dragger } = Upload;
 
@@ -503,6 +504,7 @@ const EmployeeDocumentsPanel = ({ entityId, visaCategory }) => {
           clipping the detail content. Same pattern VisaDetailsList uses. */}
       <div className="ag-theme-alpine" style={{ height: "70vh", minHeight: 420 }}>
         <AgGridReact
+          getContextMenuItems={getCellCopyContextMenuItems}
           ref={gridRef}
           rowData={rowData}
           columnDefs={sizeColumnsForHeader(masterColumnDefs)}
