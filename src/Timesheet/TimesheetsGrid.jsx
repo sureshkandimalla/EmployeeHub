@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AgGridReact } from "@ag-grid-community/react";
 import { Button, Tag } from "antd";
-import { PlusOutlined, ReloadOutlined } from "@ant-design/icons";
+import { PlusOutlined, ReloadOutlined, FileExcelOutlined } from "@ant-design/icons";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "ag-grid-enterprise";
@@ -23,9 +23,14 @@ const STATUS_COLOR = { Draft: "default", Submitted: "gold", Rejected: "red", App
 // uses.
 export default function TimesheetsGrid() {
   const navigate = useNavigate();
+  const gridRef = useRef(null);
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
+
+  const onBtnExportDataAsExcel = () => {
+    if (gridRef.current) gridRef.current.exportDataAsExcel({ fileName: "timesheets.xlsx" });
+  };
 
   const fetchData = () => {
     setLoading(true);
@@ -98,12 +103,16 @@ export default function TimesheetsGrid() {
             onChange={(e) => setSearchText(e.target.value)}
             style={{ marginRight: "10px" }}
           />
+          <Button type="default" icon={<FileExcelOutlined />} onClick={onBtnExportDataAsExcel} style={{ marginRight: "10px" }}>
+            Export to Excel
+          </Button>
           <Button type="primary" icon={<PlusOutlined />} onClick={() => openEntry(null)}>
             Add New Timesheet
           </Button>
         </GridToolbar>
         <div className="project-grid-wrapper">
           <AgGridReact
+            ref={gridRef}
             rowData={rows}
             quickFilterText={searchText}
             columnDefs={sizeColumnsForHeader(columnDefs)}

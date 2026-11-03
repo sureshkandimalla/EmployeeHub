@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AgGridReact } from "@ag-grid-community/react";
 import { Button, Tag } from "antd";
-import { ReloadOutlined } from "@ant-design/icons";
+import { ReloadOutlined, FileExcelOutlined } from "@ant-design/icons";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "ag-grid-enterprise";
@@ -25,9 +25,14 @@ const STATUS_COLOR = { "No Timesheet": "default", Draft: "default", Submitted: "
 // can only ever show months that have at least one row already.
 export default function UnsubmittedTimesheets() {
   const navigate = useNavigate();
+  const gridRef = useRef(null);
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
+
+  const onBtnExportDataAsExcel = () => {
+    if (gridRef.current) gridRef.current.exportDataAsExcel({ fileName: "unsubmitted-timesheets.xlsx" });
+  };
 
   const fetchData = () => {
     setLoading(true);
@@ -88,10 +93,15 @@ export default function UnsubmittedTimesheets() {
             placeholder="Search..."
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
+            style={{ marginRight: "10px" }}
           />
+          <Button type="default" icon={<FileExcelOutlined />} onClick={onBtnExportDataAsExcel}>
+            Export to Excel
+          </Button>
         </GridToolbar>
         <div className="project-grid-wrapper">
           <AgGridReact
+            ref={gridRef}
             rowData={rows}
             quickFilterText={searchText}
             columnDefs={sizeColumnsForHeader(columnDefs)}
