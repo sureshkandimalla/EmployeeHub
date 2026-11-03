@@ -445,7 +445,12 @@ const TimesheetEntry = () => {
       <Card
         style={{ marginBottom: 16 }}
         extra={
-          <Button type="primary" disabled={!selectedEmployeeId} onClick={handleGenerateInvoice}>
+          <Button
+            type="primary"
+            disabled={!selectedEmployeeId || monthStatus !== "Approved"}
+            onClick={handleGenerateInvoice}
+            title={monthStatus !== "Approved" ? "Approve this month's timesheet before generating an invoice" : undefined}
+          >
             <PlusOutlined /> Generate Invoice
           </Button>
         }
