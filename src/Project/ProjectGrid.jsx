@@ -64,7 +64,7 @@ const ProjectGrid = ({ employeeId, customerId, isCollapsed }) => {
       filter: "agSetColumnFilter",
     },
     {
-      headerName: "Invoice Term",
+      headerName: "Invoice Frequency",
       field: "invoiceTerm",
       valueFormatter: (params) => invoiceTermLabel(params.value),
       filter: "agSetColumnFilter",
