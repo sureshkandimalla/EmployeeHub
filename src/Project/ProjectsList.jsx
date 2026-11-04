@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import { sizeColumnsForHeader } from "../Utils/agGridColumnSizing";
 import { AgGridReact } from "@ag-grid-community/react";
 import { Button, Modal, message } from "antd";
@@ -30,9 +30,18 @@ import { buildRowActions } from "../Notes/rowActions";
 import GridToolbar from "../Utils/GridToolbar";
 import { formatDateMDY } from "../Utils/dateFormat";
 import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
+import AuthContext from "../Authentication/Context/AuthContext";
+import { ROLES } from "../Utils/roleAccess";
+
+// Bean Net Internal / Employee pay Rate / External / Taxes expose internal
+// margin — only ADMIN/HR see them; every other role that can reach this
+// grid gets the same columns minus these four.
+const FINANCIAL_ONLY_FIELDS = new Set(["net", "employeePay", "expenseExternal", "expenseInternal"]);
 
 const ProjectList = ({ projectsList, isCollapsed, onRefresh, onEditProject }) => {
   console.log(projectsList);
+  const { user } = useContext(AuthContext);
+  const canViewFinancials = user?.role === ROLES.ADMIN || user?.role === ROLES.HR;
   const gridRef = useRef(null);
   const [searchText, setSearchText] = useState("");
   const [rowData, setRowData] = useState([]);
@@ -497,7 +506,7 @@ const ProjectList = ({ projectsList, isCollapsed, onRefresh, onEditProject }) =>
         },
       },
     ];
-    return columns;
+    return canViewFinancials ? columns : columns.filter((col) => !FINANCIAL_ONLY_FIELDS.has(col.field));
   };
 
   const handleSearchInputChange = (event) => {
