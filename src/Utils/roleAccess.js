@@ -57,7 +57,7 @@ export const ROUTE_ROLES = {
   "/projectFullDetails": [ROLES.ACCOUNTING],
   "/generateInvoice": [ROLES.ACCOUNTING],
   "/adjustmentDetails": [ROLES.ACCOUNTING],
-  "/allBills": [ROLES.ACCOUNTING],
+  "/allBills": [ROLES.ACCOUNTING, ROLES.HR],
   "/billingIntegrityReport": [ROLES.ACCOUNTING],
   "/unsubmittedInvoices": [ROLES.ACCOUNTING],
   "/i9TasksReport": [ROLES.HR, ROLES.IMMIGRATION],

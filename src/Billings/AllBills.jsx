@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { AgGridReact } from "@ag-grid-community/react";
-import { Button } from "antd";
+import { Button, message } from "antd";
 import { ReloadOutlined, FileExcelOutlined } from "@ant-design/icons";
 import axios from "axios";
 import "ag-grid-enterprise";
@@ -15,6 +15,10 @@ import NotesActionButton from "../Notes/NotesActionButton";
 import NotesModal from "../Notes/NotesModal";
 import GridToolbar from "../Utils/GridToolbar";
 import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
+import AuthContext from "../Authentication/Context/AuthContext";
+import { ROLES } from "../Utils/roleAccess";
+
+const BILL_STATUS_OPTIONS = ["Unpaid", "Partial", "Paid"];
 
 // Standalone "All Bills" list — every bill across every employee, grouped by
 // Employee Name (AG Grid row grouping, which also gives free per-employee
@@ -24,6 +28,8 @@ import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
 // shown for C2C employees since vendorId is only meaningful there.
 export default function AllBills() {
   const gridRef = useRef(null);
+  const { user } = useContext(AuthContext);
+  const canEditBills = [ROLES.ADMIN, ROLES.HR, ROLES.ACCOUNTING].includes(user?.role);
   const [bills, setBills] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [vendors, setVendors] = useState([]);
@@ -70,6 +76,10 @@ export default function AllBills() {
           ...bill,
           employeeName: employeeName || "Unassigned",
           vendorName: isC2C ? vendorNameById[employee.vendorId] || "" : "",
+          // What's still owed on this bill — plain field (not a column
+          // valueGetter) so the Total/Filtered Total rows can sum it the
+          // same way as every other numeric column.
+          balance: (bill.total || 0) - (bill.billPaidAmount || 0) - (bill.discount || 0),
         };
       }),
     [bills, employeesById, vendorNameById],
@@ -89,6 +99,8 @@ export default function AllBills() {
     hours: rows.reduce((sum, row) => sum + (row.hours || 0), 0),
     total: rows.reduce((sum, row) => sum + (row.total || 0), 0),
     billPaidAmount: rows.reduce((sum, row) => sum + (row.billPaidAmount || 0), 0),
+    discount: rows.reduce((sum, row) => sum + (row.discount || 0), 0),
+    balance: rows.reduce((sum, row) => sum + (row.balance || 0), 0),
   });
 
   // Bottom row: grand total across every bill, regardless of the search box
@@ -106,6 +118,48 @@ export default function AllBills() {
 
   const onBtnExportDataAsExcel = () => {
     if (gridRef.current) gridRef.current.exportDataAsExcel({ fileName: "all_bills.xlsx" });
+  };
+
+  // Status/Bill PaidAmount/Discount/Comments are the only editable
+  // columns (gated by canEditBills below) — this fires only for those.
+  // updateBill is a full-replace PUT (see BillsService#updateBill), so the
+  // whole row goes back, not just the changed field; the server's own
+  // response (not the locally-edited value) is what gets written back into
+  // state, since e.g. setting Status to "Paid" server-side auto-fills
+  // Bill PaidAmount to the bill's Total if it was still 0.
+  const handleCellValueChanged = (params) => {
+    const { data } = params;
+    const payload = {
+      billId: data.billId,
+      invoiceId: data.invoiceId,
+      projectId: data.projectId,
+      assignmentId: data.assignmentId,
+      invoiceMonth: data.invoiceMonth,
+      billing: data.billing,
+      employeeId: data.employeeId,
+      hours: data.hours,
+      total: data.total,
+      billPaidAmount: data.billPaidAmount,
+      billDate: data.billDate,
+      startDate: data.startDate,
+      endDate: data.endDate,
+      paymentDate: data.paymentDate,
+      status: data.status,
+      billType: data.billType,
+      discount: data.discount,
+      comments: data.comments,
+    };
+    axios
+      .put(API_ENDPOINTS.updateBill(data.billId), payload)
+      .then((response) => {
+        const updated = response.data;
+        setBills((prev) => prev.map((b) => (b.billId === updated.billId ? updated : b)));
+        message.success("Bill updated.");
+      })
+      .catch((error) => {
+        message.error("Update failed: " + (error.response?.data?.message || error.message));
+        fetchData();
+      });
   };
 
   const cellClassRules = {
@@ -155,12 +209,50 @@ export default function AllBills() {
         aggFunc: "sum",
         valueFormatter: (params) => formatCurrency(params.value),
         cellClassRules,
+        editable: canEditBills,
+        cellEditor: "agNumberCellEditor",
+      },
+      {
+        headerName: "Discount",
+        field: "discount",
+        filter: "agNumberColumnFilter",
+        aggFunc: "sum",
+        valueFormatter: (params) => formatCurrency(params.value),
+        cellClassRules,
+        editable: canEditBills,
+        cellEditor: "agNumberCellEditor",
+      },
+      {
+        // Not independently editable — it's total minus whatever's already
+        // paid/discounted (computed into rowData, not just a column
+        // valueGetter, so the Total/Filtered Total rows can sum it too).
+        headerName: "Balance",
+        field: "balance",
+        filter: "agNumberColumnFilter",
+        aggFunc: "sum",
+        valueFormatter: (params) => formatCurrency(params.value),
+        cellClassRules,
       },
       { headerName: "Bill Date", field: "billDate", filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
       { headerName: "Start Date", field: "startDate", filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
       { headerName: "End Date", field: "endDate", filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
       { headerName: "Payment Date", field: "paymentDate", filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
-      { headerName: "Status", field: "status", filter: "agSetColumnFilter", cellClassRules },
+      {
+        headerName: "Status",
+        field: "status",
+        filter: "agSetColumnFilter",
+        cellClassRules,
+        editable: canEditBills,
+        cellEditor: "agSelectCellEditor",
+        cellEditorParams: { values: BILL_STATUS_OPTIONS },
+      },
+      {
+        headerName: "Comments",
+        field: "comments",
+        filter: "agTextColumnFilter",
+        cellClassRules,
+        editable: canEditBills,
+      },
       { headerName: "Project Id", field: "projectId", filter: "agSetColumnFilter", cellClassRules },
       {
         colId: "action",
@@ -182,7 +274,7 @@ export default function AllBills() {
         },
       },
     ],
-    [],
+    [canEditBills],
   );
 
   return (
@@ -213,6 +305,7 @@ export default function AllBills() {
             }}
             onSortChanged={(params) => params.api.refreshCells({ force: true })}
             onFilterChanged={(params) => params.api.refreshCells({ force: true })}
+            onCellValueChanged={handleCellValueChanged}
             onModelUpdated={onModelUpdated}
             onFirstDataRendered={(params) => {
               try {

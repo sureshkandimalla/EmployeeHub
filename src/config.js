@@ -141,6 +141,7 @@ export const API_ENDPOINTS = {
   addInvoices: `${API_BASE_URL}/invoice/addInvoices`,
   getAllInvoices: `${API_BASE_URL}/invoice/getAllInvoices`,
   getAllBills: `${API_BASE_URL}/bills/getAllBills`,
+  updateBill: (billId) => `${API_BASE_URL}/bills/${billId}`,
   invoiceById: (invoiceId) => `${API_BASE_URL}/invoice/invoices/${invoiceId}`,
   reconcileRecords: `${API_BASE_URL}/reconcile/getReconcileRecords`,
   billingIntegrityReport: `${API_BASE_URL}/reports/billing-integrity`,
