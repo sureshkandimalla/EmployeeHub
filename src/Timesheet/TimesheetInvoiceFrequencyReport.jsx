@@ -31,8 +31,11 @@ export default function TimesheetInvoiceFrequencyReport() {
   // already use to jump into TimesheetEntry.jsx for one employee/assignment/
   // month at a time.
   const openEntry = (row) => {
+    // No assignmentId on these rows (the report is Project/work-order
+    // scoped, not Assignment-scoped) — TimesheetEntry.jsx falls back to
+    // matching by projectId when assignmentId is absent.
     navigate("/timesheets/entry", {
-      state: { employeeId: row.employeeId, assignmentId: row.assignmentId, yearMonth: row.yearMonth },
+      state: { employeeId: row.employeeId, projectId: row.projectId, yearMonth: row.yearMonth },
     });
   };
 
