@@ -58,7 +58,7 @@ const RAIL_ITEMS_PINNED = [
 // links to the BeanEMS page it actually maps to instead of QB's own demo
 // items. Gated by the same ROUTE_ROLES canAccess() every other route uses,
 // so a role only ever sees links it could already reach.
-const CREATE_MENU = [
+export const CREATE_MENU = [
   {
     title: "Customers",
     items: [
@@ -120,7 +120,7 @@ const CREATE_MENU_COLUMNS = [
 // links was pure clutter, so this now only holds what's NOT already
 // covered elsewhere: Adjustments/All Bills (Accounting-only), plus the
 // Invoices/Timesheets one-stop sections.
-const ACCOUNTING_MENU = [
+export const ACCOUNTING_MENU = [
   {
     title: "Adjustments",
     items: [
@@ -167,7 +167,7 @@ const ACCOUNTING_MENU_COLUMNS = [
 // pattern IMMIGRATION_MENU below uses — plus each icon's own Dashboard
 // link up front, since hovering should surface that destination too, not
 // just reveal it on click.
-const CUSTOMERS_MENU = CREATE_MENU
+export const CUSTOMERS_MENU = CREATE_MENU
   .filter((section) => section.title === "Customers")
   .map((section) => ({
     ...section,
@@ -176,7 +176,7 @@ const CUSTOMERS_MENU = CREATE_MENU
       ...section.items.map((it) => ({ ...it, to: it.to.split("?")[0] })),
     ],
   }));
-const VENDORS_MENU = CREATE_MENU
+export const VENDORS_MENU = CREATE_MENU
   .filter((section) => section.title === "Vendors")
   .map((section) => ({
     ...section,

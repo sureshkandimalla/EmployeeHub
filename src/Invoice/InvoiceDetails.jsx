@@ -2,7 +2,7 @@ import React, { useContext, useState, useEffect, useRef, useMemo } from "react";
 import API_ENDPOINTS from "../config";
 import { sizeColumnsForHeader } from "../Utils/agGridColumnSizing";
 import { AgGridReact } from "@ag-grid-community/react";
-import { Button, Card, Drawer, message, Popover, Badge, List, Empty, Modal, DatePicker as AntDatePicker } from "antd";
+import { Button, Card, Drawer, message, Popover, Badge, List, Empty, Modal, Table, DatePicker as AntDatePicker } from "antd";
 import dayjs from "dayjs";
 
 import { PlusOutlined, ReloadOutlined, FileExcelOutlined, SaveOutlined, CloseOutlined, BellOutlined } from "@ant-design/icons";
@@ -249,12 +249,31 @@ const InvoiceDetails = ({ employeeId, projectId, customerId, statusFilter, isCol
       .filter((key) => Math.round(byMonth[key].invoiced) !== Math.round(byMonth[key].paid))
       .sort()
       .map((key) => ({
+        key,
         month: formatMonthYear(key),
         invoiced: byMonth[key].invoiced,
         paid: byMonth[key].paid,
         outstanding: byMonth[key].invoiced - byMonth[key].paid,
       }));
   }, [enrichedRowData]);
+
+  // Which month's alert the user drilled into (its raw "yyyy-MM" key), or
+  // null when the drill-down report is closed.
+  const [alertDrilldownMonth, setAlertDrilldownMonth] = useState(null);
+  const [monthlyAlertPopoverOpen, setMonthlyAlertPopoverOpen] = useState(false);
+
+  const openAlertDrilldown = (monthKey) => {
+    setAlertDrilldownMonth(monthKey);
+    setMonthlyAlertPopoverOpen(false);
+  };
+
+  // Every invoice behind the selected month's aggregate — same scoped
+  // enrichedRowData the alert totals themselves are computed from, so the
+  // report's own total row always matches the alert line that opened it.
+  const alertDrilldownRows = useMemo(() => {
+    if (!alertDrilldownMonth || !enrichedRowData) return [];
+    return enrichedRowData.filter((row) => (row.invoiceMonth || "").substring(0, 7) === alertDrilldownMonth);
+  }, [alertDrilldownMonth, enrichedRowData]);
 
   const monthlyPaymentAlertContent = (
     <div style={{ maxHeight: 320, overflowY: "auto", minWidth: 320 }}>
@@ -265,9 +284,13 @@ const InvoiceDetails = ({ employeeId, projectId, customerId, statusFilter, isCol
           size="small"
           dataSource={monthlyPaymentAlerts}
           renderItem={(item) => (
-            <List.Item key={item.month}>
+            <List.Item
+              key={item.month}
+              style={{ cursor: "pointer" }}
+              onClick={() => openAlertDrilldown(item.key)}
+            >
               <List.Item.Meta
-                title={item.month}
+                title={<span style={{ color: "#1677ff", textDecoration: "underline" }}>{item.month}</span>}
                 description={`Invoiced ${formatCurrency(item.invoiced)} vs Paid ${formatCurrency(item.paid)} — outstanding ${formatCurrency(item.outstanding)}`}
               />
             </List.Item>
@@ -276,6 +299,34 @@ const InvoiceDetails = ({ employeeId, projectId, customerId, statusFilter, isCol
       )}
     </div>
   );
+
+  const ALERT_DRILLDOWN_COLUMNS = [
+    { title: "Invoice #", dataIndex: "invoiceNumber", key: "invoiceNumber" },
+    { title: "Customer", dataIndex: "customerName", key: "customerName" },
+    { title: "Employee", dataIndex: "employeeName", key: "employeeName" },
+    { title: "Project", dataIndex: "projectName", key: "projectName" },
+    {
+      title: "Invoiced",
+      dataIndex: "total",
+      key: "total",
+      align: "right",
+      render: (value) => formatCurrency(value),
+    },
+    {
+      title: "Paid",
+      dataIndex: "invoicePaidAmount",
+      key: "invoicePaidAmount",
+      align: "right",
+      render: (value) => formatCurrency(value),
+    },
+    {
+      title: "Outstanding",
+      key: "outstanding",
+      align: "right",
+      render: (_, row) => formatCurrency((row.total || 0) - (row.invoicePaidAmount || 0)),
+    },
+    { title: "Status", dataIndex: "status", key: "status" },
+  ];
 
   const INVOICE_CHART_KEYS = ["invoicesByMonth", "totalInvoicedByCustomer", "invoiceCountByMonth", "invoicesByCustomer"];
   const visibleInvoiceOverviewCharts = GLOBAL_CHARTS.filter(
@@ -753,7 +804,14 @@ const InvoiceDetails = ({ employeeId, projectId, customerId, statusFilter, isCol
                 <Button icon={<BellOutlined />} size="small" />
               </Badge>
             </Popover>
-            <Popover content={monthlyPaymentAlertContent} title="Invoiced vs Paid Alerts" trigger="click" placement="bottomRight">
+            <Popover
+              content={monthlyPaymentAlertContent}
+              title="Invoiced vs Paid Alerts"
+              trigger="click"
+              placement="bottomRight"
+              open={monthlyAlertPopoverOpen}
+              onOpenChange={setMonthlyAlertPopoverOpen}
+            >
               <Badge count={monthlyPaymentAlerts.length} size="small">
                 <Button icon={<BellOutlined />} size="small" />
               </Badge>
@@ -788,6 +846,43 @@ const InvoiceDetails = ({ employeeId, projectId, customerId, statusFilter, isCol
           value={promptPaidDate}
           onChange={setPromptPaidDate}
           format="MM/DD/YYYY"
+        />
+      </Modal>
+      <Modal
+        title={`Invoices for ${alertDrilldownMonth ? formatMonthYear(alertDrilldownMonth) : ""} — Paid vs Actual`}
+        open={!!alertDrilldownMonth}
+        onCancel={() => setAlertDrilldownMonth(null)}
+        footer={null}
+        width={900}
+      >
+        <Table
+          size="small"
+          rowKey={(row) => row.id ?? `${row.invoiceNumber}-${row.projectId}`}
+          columns={ALERT_DRILLDOWN_COLUMNS}
+          dataSource={alertDrilldownRows}
+          pagination={false}
+          scroll={{ y: 400 }}
+          summary={(rows) => {
+            const totalInvoiced = rows.reduce((sum, r) => sum + (r.total || 0), 0);
+            const totalPaid = rows.reduce((sum, r) => sum + (r.invoicePaidAmount || 0), 0);
+            return (
+              <Table.Summary.Row>
+                <Table.Summary.Cell index={0} colSpan={4}>
+                  <strong>Total</strong>
+                </Table.Summary.Cell>
+                <Table.Summary.Cell index={1} align="right">
+                  <strong>{formatCurrency(totalInvoiced)}</strong>
+                </Table.Summary.Cell>
+                <Table.Summary.Cell index={2} align="right">
+                  <strong>{formatCurrency(totalPaid)}</strong>
+                </Table.Summary.Cell>
+                <Table.Summary.Cell index={3} align="right">
+                  <strong>{formatCurrency(totalInvoiced - totalPaid)}</strong>
+                </Table.Summary.Cell>
+                <Table.Summary.Cell index={4} />
+              </Table.Summary.Row>
+            );
+          }}
         />
       </Modal>
       <GridToolbar className="workforce-search-container" gap={32}>

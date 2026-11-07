@@ -122,7 +122,7 @@ const STATUS_COLOR = { Draft: "#595959", Submitted: "#d48806", Approved: "#389e0
 // range — used both inside each week's column group (rangeDates = that
 // week) and in the pinned "Monthly Actions" column (rangeDates = the whole
 // month). `rangeDates` and the handlers arrive via cellRendererParams.
-const RangeActionsCell = (params) => {
+export const RangeActionsCell = (params) => {
   const { data: row, rangeDates, scopeLabel, onSave, onSubmit, onApprove, onReject, onReopen, isAdmin } = params;
   const status = getRangeStatus(row, rangeDates);
 
@@ -185,7 +185,7 @@ const getRowCalendarWeeks = (row) => {
 // the real iso date range from the row's own `yearMonth`, either the whole
 // month (weekIdx omitted) or one real Monday-Sunday week of it (weekIdx =
 // index into getRowCalendarWeeks, clipped to that week's in-month days).
-const MonthRowActionsCell = (params) => {
+export const MonthRowActionsCell = (params) => {
   const { data: row, weekIdx, onSave, onSubmit, onApprove, onReject, onReopen, isAdmin } = params;
   const scopeLabel = weekIdx == null ? "Month" : "Week";
   let rangeDates;
