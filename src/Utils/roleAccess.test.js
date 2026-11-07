@@ -83,10 +83,16 @@ describe("canAccess — HR", () => {
     expect(canAccess(ROLES.HR, "/healthinsurance")).toBe(true);
   });
 
+  // HR can edit Bill Status/PaidAmount on /allBills (see AllBills.jsx's
+  // canEditBills), so this is an intentional carve-out, not an oversight —
+  // asserted on its own rather than lumped in with the deny list below.
+  it("allows HR onto Bills, for the status/paid-amount edit workflow", () => {
+    expect(canAccess(ROLES.HR, "/allBills")).toBe(true);
+  });
+
   it("denies HR the accounting screens", () => {
     expect(canAccess(ROLES.HR, "/payrollsummary")).toBe(false);
     expect(canAccess(ROLES.HR, "/invoicedetails")).toBe(false);
-    expect(canAccess(ROLES.HR, "/allBills")).toBe(false);
     expect(canAccess(ROLES.HR, "/adjustmentDetails")).toBe(false);
   });
 

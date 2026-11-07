@@ -46,7 +46,7 @@ import PayrollSummary from "./Payroll/PayrollSummary";
 import PayrollEligibility from "./Payroll/PayrollEligibility";
 import HealthInsuranceSummary from "./HealthInsurance/HealthInsuranceSummary";
 import TimesheetEntry from "./Timesheet/TimesheetEntry";
-import TimesheetsGrid from "./Timesheet/TimesheetsGrid";
+import TimesheetsPage from "./Timesheet/TimesheetsPage";
 import UnsubmittedTimesheets from "./Timesheet/UnsubmittedTimesheets";
 import MonthlyTimesheets from "./Timesheet/MonthlyTimesheets";
 import MasterDataLoad from "./MasterDataLoad/MasterDataLoad";
@@ -106,7 +106,7 @@ const App = () => {
               <Route path="/payrollsummary" element={<PayrollSummary />} />
               <Route path="/payrolleligibility" element={<PayrollEligibility />} />
               <Route path="/healthinsurance" element={<HealthInsuranceSummary />} />
-              <Route path="/timesheets" element={<TimesheetsGrid />} />
+              <Route path="/timesheets" element={<TimesheetsPage />} />
               <Route path="/unsubmittedTimesheets" element={<UnsubmittedTimesheets />} />
               <Route path="/timesheets/entry" element={<TimesheetEntry />} />
               <Route path="/monthlytimesheets" element={<MonthlyTimesheets />} />

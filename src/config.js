@@ -124,6 +124,7 @@ export const API_ENDPOINTS = {
   getTimesheetsByRange: (startDate, endDate) => `${API_BASE_URL}/timesheets/getByRange?startDate=${startDate}&endDate=${endDate}`,
   getTimesheetSummary: `${API_BASE_URL}/timesheets/summary`,
   getMissingTimesheets: `${API_BASE_URL}/timesheets/missing`,
+  getTimesheetsByInvoiceFrequency: `${API_BASE_URL}/timesheets/byInvoiceFrequency`,
   getPayPeriods: `${API_BASE_URL}/payrollsummary/getPayPeriods`,
   getAssignmentsEligibleForPeriod: (startDate, endDate) => `${API_BASE_URL}/assignmentsEligibleForPeriod?startDate=${startDate}&endDate=${endDate}`,
   getPayrollSummaryByPayPeriod: (payPeriodId) => `${API_BASE_URL}/payrollsummary/getByPayPeriod?payPeriodId=${payPeriodId}`,

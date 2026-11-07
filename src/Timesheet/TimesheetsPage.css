@@ -1,0 +1,24 @@
+/* Same full-height flex Tabs pattern as index.css's
+   ".part.right-part .bean-home-tabs" rules, scoped to this page's own class
+   since /timesheets isn't rendered under a ".part.right-part" ancestor. */
+.timesheets-page-tabs {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.timesheets-page-tabs .ant-tabs-content-holder {
+  flex: 1;
+  overflow: hidden;
+}
+
+.timesheets-page-tabs .ant-tabs-content {
+  height: 100%;
+  overflow: hidden;
+}
+
+.timesheets-page-tabs .ant-tabs-tabpane {
+  height: 100%;
+  overflow: hidden;
+}
