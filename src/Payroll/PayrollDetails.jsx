@@ -71,6 +71,12 @@ const PayrollDetails = ({ rowData: externalRowData, onRefresh, employeeId, isCol
         field: "checkDate",
         sortable: true,
         valueFormatter: formatDateCell,
+        // Without this, AG Grid's Set Filter auto-detects the raw ISO date
+        // string and switches to tree mode (Year > Month > Day) — which
+        // silently fails to toggle checkboxes for this column's data shape.
+        // treeList: false keeps it a plain flat list, same as every other
+        // working Set Filter column in this grid.
+        filterParams: { treeList: false },
       },
       { headerName: "Hours", field: "hours", sortable: true, aggFunc: "sum" },
       {
@@ -115,12 +121,14 @@ const PayrollDetails = ({ rowData: externalRowData, onRefresh, employeeId, isCol
         field: "payPeriodStartDate",
         sortable: true,
         valueFormatter: formatDateCell,
+        filterParams: { treeList: false },
       },
       {
         headerName: "Pay Cycle End",
         field: "payPeriodEndDate",
         sortable: true,
         valueFormatter: formatDateCell,
+        filterParams: { treeList: false },
       },
       { headerName: "Status", field: "status", sortable: true, enableRowGroup: true },
     ],
