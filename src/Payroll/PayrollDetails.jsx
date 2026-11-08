@@ -81,6 +81,10 @@ const PayrollDetails = ({ rowData: externalRowData, onRefresh, employeeId, isCol
         colId: "payCheckDate",
         sortable: true,
         valueFormatter: formatDateCell,
+        // Explicit valueGetter (even though it returns the same thing
+        // field: "checkDate" would) — the Year column, whose filter
+        // reliably works, also has one; this one didn't.
+        valueGetter: (params) => params.data?.checkDate,
         // Without this, AG Grid's Set Filter auto-detects the raw ISO date
         // string and switches to tree mode (Year > Month > Day) — which
         // silently fails to toggle checkboxes for this column's data shape.
