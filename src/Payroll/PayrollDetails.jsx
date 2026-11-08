@@ -69,28 +69,33 @@ const PayrollDetails = ({ rowData: externalRowData, onRefresh, employeeId, isCol
       {
         headerName: "Pay Check Date",
         field: "checkDate",
-        // Without an explicit colId, this defaults to "checkDate" — the
-        // exact same string the Year column's own field (also "checkDate")
-        // resolves to. Two Set Filter columns sharing one field, one of
-        // them implicitly colId'd to that same field string, appears to
-        // confuse AG Grid's per-column filter instance tracking enough
-        // that this column's checkboxes stop responding to clicks
-        // entirely (confirmed live: Year's filter works, this one didn't,
-        // even via a direct element-ref click bypassing coordinates).
-        // A distinct, explicit colId removes the ambiguity.
+        // Distinct from the Year column's own colId ("checkYear") even
+        // though both read the "checkDate" field — cheap to keep, no
+        // downside.
         colId: "payCheckDate",
         sortable: true,
         valueFormatter: formatDateCell,
-        // Explicit valueGetter (even though it returns the same thing
-        // field: "checkDate" would) — the Year column, whose filter
-        // reliably works, also has one; this one didn't.
+        // The actual fix, confirmed live by toggling checkboxes before and
+        // after: a plain `field` with no valueGetter left this column's
+        // Set Filter checkboxes completely inert — clicking one (even via
+        // a direct element-ref click, bypassing screen coordinates
+        // entirely) never changed the filter or the grid's totals. Adding
+        // this valueGetter — even though it returns the exact same value
+        // `field: "checkDate"` already would — is what made the checkboxes
+        // start working. The Year column, whose filter always worked,
+        // also has a valueGetter; this one didn't.
         valueGetter: (params) => params.data?.checkDate,
-        // Without this, AG Grid's Set Filter auto-detects the raw ISO date
-        // string and switches to tree mode (Year > Month > Day) — which
-        // silently fails to toggle checkboxes for this column's data shape.
-        // treeList: false keeps it a plain flat list, same as every other
-        // working Set Filter column in this grid.
-        filterParams: { treeList: false },
+        filterParams: {
+          // Set Filter auto-detects a raw ISO date string and switches to
+          // tree mode (Year > Month > Day) by default; this keeps it a
+          // plain flat list instead, matching Year's own filter.
+          treeList: false,
+          // The valueGetter above means the filter list no longer applies
+          // this column's own cellRenderer-side valueFormatter
+          // automatically — restate it here so the list still shows
+          // "Apr 15, 2025" instead of the raw "2025-04-15".
+          valueFormatter: formatDateCell,
+        },
       },
       { headerName: "Hours", field: "hours", sortable: true, aggFunc: "sum" },
       {
@@ -135,14 +140,20 @@ const PayrollDetails = ({ rowData: externalRowData, onRefresh, employeeId, isCol
         field: "payPeriodStartDate",
         sortable: true,
         valueFormatter: formatDateCell,
-        filterParams: { treeList: false },
+        // See the matching comment on Pay Check Date above — the
+        // valueGetter is the actual fix for inert Set Filter checkboxes
+        // on a bare date-string field; filterParams just keeps the list
+        // flat and nicely formatted.
+        valueGetter: (params) => params.data?.payPeriodStartDate,
+        filterParams: { treeList: false, valueFormatter: formatDateCell },
       },
       {
         headerName: "Pay Cycle End",
         field: "payPeriodEndDate",
         sortable: true,
         valueFormatter: formatDateCell,
-        filterParams: { treeList: false },
+        valueGetter: (params) => params.data?.payPeriodEndDate,
+        filterParams: { treeList: false, valueFormatter: formatDateCell },
       },
       { headerName: "Status", field: "status", sortable: true, enableRowGroup: true },
     ],
