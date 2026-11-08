@@ -69,6 +69,16 @@ const PayrollDetails = ({ rowData: externalRowData, onRefresh, employeeId, isCol
       {
         headerName: "Pay Check Date",
         field: "checkDate",
+        // Without an explicit colId, this defaults to "checkDate" — the
+        // exact same string the Year column's own field (also "checkDate")
+        // resolves to. Two Set Filter columns sharing one field, one of
+        // them implicitly colId'd to that same field string, appears to
+        // confuse AG Grid's per-column filter instance tracking enough
+        // that this column's checkboxes stop responding to clicks
+        // entirely (confirmed live: Year's filter works, this one didn't,
+        // even via a direct element-ref click bypassing coordinates).
+        // A distinct, explicit colId removes the ambiguity.
+        colId: "payCheckDate",
         sortable: true,
         valueFormatter: formatDateCell,
         // Without this, AG Grid's Set Filter auto-detects the raw ISO date
