@@ -1,4 +1,4 @@
-import React, { useState, useEffect,useCallback, useRef } from "react";
+import React, { useState, useEffect,useCallback, useRef, useMemo } from "react";
 import { AgGridReact } from "@ag-grid-community/react";
 import { Button, Drawer, Card, Modal, message, notification } from "antd";
 import { PlusOutlined, SaveOutlined, FileExcelOutlined, ReloadOutlined  } from "@ant-design/icons";
@@ -95,18 +95,28 @@ const PotentialEmployees = () => {
   // Define editable columns
   const getColumnsDefList = () => {
     var columns = [
-      { 
-        headerName: "First Name", 
-        field: "firstName", 
+      {
+        headerName: "First Name",
+        field: "firstName",
         editable: true,
-        filter: "agSetColumnFilter",      
-        floatingFilter: false
+        filter: "agSetColumnFilter",
+        floatingFilter: false,
+        valueGetter: (params) => params.data?.firstName,
+        valueSetter: (params) => {
+          params.data.firstName = params.newValue;
+          return true;
+        },
       },
-      { 
-        headerName: "Last Name", 
-        field: "lastName", 
-        editable: true, 
-        filter: "agSetColumnFilter"
+      {
+        headerName: "Last Name",
+        field: "lastName",
+        editable: true,
+        filter: "agSetColumnFilter",
+        valueGetter: (params) => params.data?.lastName,
+        valueSetter: (params) => {
+          params.data.lastName = params.newValue;
+          return true;
+        },
       },
       { 
         headerName: "Gender", 
@@ -117,31 +127,46 @@ const PotentialEmployees = () => {
           values: ["Male", "Female"] // Dropdown options
         }
       },
-      { 
-        headerName: "Company", 
-        field: "company", 
-        editable: true, 
+      {
+        headerName: "Company",
+        field: "company",
+        editable: true,
         filter: "agSetColumnFilter",
         cellEditor: "agSelectCellEditor", // Enables dropdown selection
         cellEditorParams: {
           values: ["Bean", "Code9", "IDA"] // Dropdown options
-        }
+        },
+        valueGetter: (params) => params.data?.company,
+        valueSetter: (params) => {
+          params.data.company = params.newValue;
+          return true;
+        },
       },
-      { 
-        headerName: "Visa Type", 
-        field: "visaType", 
-        editable: true, 
+      {
+        headerName: "Visa Type",
+        field: "visaType",
+        editable: true,
         filter: "agSetColumnFilter",
         cellEditor: "agSelectCellEditor", // Enables dropdown selection
         cellEditorParams: {
           values: ["Cap", "H1B-Transfer"] // Dropdown options
-        }
+        },
+        valueGetter: (params) => params.data?.visaType,
+        valueSetter: (params) => {
+          params.data.visaType = params.newValue;
+          return true;
+        },
       },
-      { 
-        headerName: "Year", 
-        field: "year", 
-        editable: true, 
-        filter: "agSetColumnFilter"
+      {
+        headerName: "Year",
+        field: "year",
+        editable: true,
+        filter: "agSetColumnFilter",
+        valueGetter: (params) => params.data?.year,
+        valueSetter: (params) => {
+          params.data.year = params.newValue;
+          return true;
+        },
       },
       { 
         headerName: "Status", 
@@ -162,26 +187,41 @@ const PotentialEmployees = () => {
           values: ["UK", "India", "NZ", "USA"] // Dropdown options
         }
       },
-      { 
-        headerName: "Referred By", 
-        field: "referredBy", 
-        editable: true, 
-        filter: "agSetColumnFilter" 
+      {
+        headerName: "Referred By",
+        field: "referredBy",
+        editable: true,
+        filter: "agSetColumnFilter",
+        valueGetter: (params) => params.data?.referredBy,
+        valueSetter: (params) => {
+          params.data.referredBy = params.newValue;
+          return true;
+        },
       },
-      { 
-        headerName: "Email", 
-        field: "emailId", 
-        editable: true, 
+      {
+        headerName: "Email",
+        field: "emailId",
+        editable: true,
         filter: "agSetColumnFilter" ,
         cellClassRules: {
           blueUnderline: (params) => params.colDef.field === "emailId"
-        }
+        },
+        valueGetter: (params) => params.data?.emailId,
+        valueSetter: (params) => {
+          params.data.emailId = params.newValue;
+          return true;
+        },
       },
-      { 
-        headerName: "Phone", 
-        field: "phone", 
-        editable: true, 
-        filter: "agSetColumnFilter" 
+      {
+        headerName: "Phone",
+        field: "phone",
+        editable: true,
+        filter: "agSetColumnFilter",
+        valueGetter: (params) => params.data?.phone,
+        valueSetter: (params) => {
+          params.data.phone = params.newValue;
+          return true;
+        },
       },
       {
         headerName: "DOB",
@@ -189,24 +229,45 @@ const PotentialEmployees = () => {
         editable: true,
         filter: "agSetColumnFilter",
         valueFormatter: (params) => formatDateMDY(params.value),
+        valueGetter: (params) => params.data?.dob,
+        valueSetter: (params) => {
+          params.data.dob = params.newValue;
+          return true;
+        },
+        filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
       },
-      { 
-        headerName: "Primary Skills", 
-        field: "primarySkills", 
-        editable: true, 
-        filter: "agSetColumnFilter" 
+      {
+        headerName: "Primary Skills",
+        field: "primarySkills",
+        editable: true,
+        filter: "agSetColumnFilter",
+        valueGetter: (params) => params.data?.primarySkills,
+        valueSetter: (params) => {
+          params.data.primarySkills = params.newValue;
+          return true;
+        },
       },
-      { 
-        headerName: "Secondary Skills", 
-        field: "secondarySkills", 
-        editable: true, 
-        filter: "agSetColumnFilter" 
+      {
+        headerName: "Secondary Skills",
+        field: "secondarySkills",
+        editable: true,
+        filter: "agSetColumnFilter",
+        valueGetter: (params) => params.data?.secondarySkills,
+        valueSetter: (params) => {
+          params.data.secondarySkills = params.newValue;
+          return true;
+        },
       },
-      { 
-        headerName: "Work Country", 
-        field: "workCountry", 
-        editable: true, 
-        filter: "agSetColumnFilter" 
+      {
+        headerName: "Work Country",
+        field: "workCountry",
+        editable: true,
+        filter: "agSetColumnFilter",
+        valueGetter: (params) => params.data?.workCountry,
+        valueSetter: (params) => {
+          params.data.workCountry = params.newValue;
+          return true;
+        },
       },
       {
         headerName: "Start Date",
@@ -214,6 +275,12 @@ const PotentialEmployees = () => {
         editable: true,
         filter: "agSetColumnFilter",
         valueFormatter: (params) => formatDateMDY(params.value),
+        valueGetter: (params) => params.data?.startDate,
+        valueSetter: (params) => {
+          params.data.startDate = params.newValue;
+          return true;
+        },
+        filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
       },
       {
         headerName: "End Date",
@@ -221,6 +288,12 @@ const PotentialEmployees = () => {
         editable: true,
         filter: "agSetColumnFilter",
         valueFormatter: (params) => formatDateMDY(params.value),
+        valueGetter: (params) => params.data?.endDate,
+        valueSetter: (params) => {
+          params.data.endDate = params.newValue;
+          return true;
+        },
+        filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
       },
       {
         colId: "action",
@@ -310,6 +383,11 @@ const PotentialEmployees = () => {
     if (action === "submit") fetchPotentialEmployees();
   };
 
+  // sizeColumnsForHeader returns a brand-new array/objects every call; memoize
+  // it so AG Grid doesn't see a new columnDefs reference (and reset each
+  // column's applied filter) on every re-render.
+  const sizedColumnDefs = useMemo(() => sizeColumnsForHeader(getColumnsDefList()), []);
+
   return (
     <div
         style={{
@@ -374,7 +452,7 @@ const PotentialEmployees = () => {
         autoSizeStrategy={{ type: "fitCellContents" }}
         rowHeight={48}
         rowData={filterData()}
-        columnDefs={sizeColumnsForHeader(getColumnsDefList())}
+        columnDefs={sizedColumnDefs}
         domLayout="normal"
         pagination={true}
         paginationPageSize={100}

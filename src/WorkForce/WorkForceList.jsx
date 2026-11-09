@@ -211,6 +211,14 @@ const WorkForceList = ({ employees, isCollapsed, onRefresh }) => {
         cellEditorParams = { values: i9EverifyStatusOptions };
       }
 
+      // A bare date-string field under the Set Filter defaults into AG
+      // Grid's tree-list mode (Year›Month›Day), whose checkboxes don't
+      // respond to clicks in this app's AG Grid version — see the same
+      // fix applied to Payroll/PayrollDetails.jsx.
+      const isDateField = ["startDate", "endDate", "dob", "payrollStart", "lastUpdated"].includes(fieldValue);
+      const isCurrencyField = fieldValue === "annualPay" || fieldValue === "lcaWage";
+      const isEditableField = fieldValue !== "lcaWage";
+
       return {
         colId: fieldValue,
         headerName: updatedColumn,
@@ -219,11 +227,27 @@ const WorkForceList = ({ employees, isCollapsed, onRefresh }) => {
         // Derived from the employee's latest Visa/LCA, not an Employee
         // column — saveChanges() PUTs the whole row to updateEmployee, which
         // has no lcaWage field to persist an edit into, so don't offer one.
-        editable: fieldValue !== "lcaWage",
+        editable: isEditableField,
         cellEditor,
         cellEditorParams,
         headerClass: column === "Employee Id" ? "ag-center-cols" : "ag-header-cell",
         filter: columnFilter,
+        // Every Set-Filter column needs an explicit valueGetter or its
+        // checkboxes are completely inert in this app's AG Grid setup —
+        // confirmed across text/number/date columns alike. Editable columns
+        // pair it with a valueSetter so edits still persist.
+        valueGetter: (params) => params.data?.[fieldValue],
+        valueSetter: isEditableField
+          ? (params) => {
+              params.data[fieldValue] = params.newValue;
+              return true;
+            }
+          : undefined,
+        filterParams: isDateField
+          ? { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) }
+          : isCurrencyField
+          ? { valueFormatter: (params) => formatCurrency(params.value) }
+          : undefined,
         minWidth: autoWidth,
         pinned: isPinnedColumn ? "left" : undefined,
         lockPinned: isPinnedColumn,
@@ -421,6 +445,7 @@ const WorkForceList = ({ employees, isCollapsed, onRefresh }) => {
         field: k,
         sortable: true,
         filter: "agSetColumnFilter",
+        valueGetter: (params) => params.data?.[k],
         resizable: true,
         minWidth: 120,
         cellClassRules: {
@@ -460,6 +485,11 @@ const WorkForceList = ({ employees, isCollapsed, onRefresh }) => {
       }
     } catch (e) {}
   }, [rowData, combinedColumnDefs]);
+
+  // sizeColumnsForHeader returns a brand-new array/objects every call; memoize
+  // it so AG Grid doesn't see a new columnDefs reference (and reset each
+  // column's applied filter) on every re-render.
+  const sizedColumnDefs = useMemo(() => sizeColumnsForHeader(combinedColumnDefs), [combinedColumnDefs]);
 
   return (
     <div className="ag-theme-alpine workforce-container">
@@ -520,7 +550,7 @@ const WorkForceList = ({ employees, isCollapsed, onRefresh }) => {
           getRowId={(params) => String(params.data.employeeId)}
           onCellValueChanged={onCellValueChanged}
           frameworkComponents={{ customTooltip: CustomTooltip }}
-          columnDefs={sizeColumnsForHeader(combinedColumnDefs)}
+          columnDefs={sizedColumnDefs}
            defaultColDef={{
              resizable: true,
              filter: "agSetColumnFilter" ,

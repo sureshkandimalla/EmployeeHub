@@ -115,29 +115,53 @@ export default function FormI9Panel({ entityId, visaCategory }) {
     [summary.records, attachmentsByRecordId],
   );
 
-  const masterColumnDefs = [
+  // Wrapped in useMemo (rather than a plain array literal recreated every
+  // render) so it has a stable reference for the sizedColumnDefs memo below
+  // to key off.
+  const masterColumnDefs = useMemo(() => [
     {
       field: "record.subtype",
       headerName: "Sub type",
       cellRenderer: "agGroupCellRenderer",
       valueGetter: (p) => SUBTYPE_LABEL[p.data?.record?.subtype] || p.data?.record?.subtype,
     },
-    { field: "recordId", headerName: "Record ID" },
-    { field: "record.validFrom", headerName: "Valid From", valueFormatter: (p) => formatDateMDY(p.value) },
-    { field: "section2Due", headerName: "Section 2 Due", valueFormatter: (p) => formatDateMDY(p.value) },
+    { field: "recordId", headerName: "Record ID", valueGetter: (p) => p.data?.recordId },
+    {
+      field: "record.validFrom",
+      headerName: "Valid From",
+      valueFormatter: (p) => formatDateMDY(p.value),
+      valueGetter: (p) => p.data?.record?.validFrom,
+      filterParams: { treeList: false, valueFormatter: (p) => formatDateMDY(p.value) },
+    },
+    {
+      field: "section2Due",
+      headerName: "Section 2 Due",
+      valueFormatter: (p) => formatDateMDY(p.value),
+      valueGetter: (p) => p.data?.section2Due,
+      filterParams: { treeList: false, valueFormatter: (p) => formatDateMDY(p.value) },
+    },
     {
       headerName: "Reverify By",
       valueGetter: (p) => (p.data?.reverifyNotRequired ? "Not required" : p.data?.reverifyBy),
       valueFormatter: (p) => (p.value === "Not required" ? p.value : formatDateMDY(p.value)),
+      filterParams: {
+        treeList: false,
+        valueFormatter: (p) => (p.value === "Not required" ? p.value : formatDateMDY(p.value)),
+      },
     },
     { headerName: "Status", cellRenderer: (p) => statusTag(p.data?.record?.completedOn ? "Completed" : "In Process") },
-  ];
+  ], []);
+
+  // sizeColumnsForHeader returns a brand-new array/objects every call; memoize
+  // it so AG Grid doesn't see a new columnDefs reference (and reset each
+  // column's applied filter) on every re-render.
+  const sizedColumnDefs = useMemo(() => sizeColumnsForHeader(masterColumnDefs), [masterColumnDefs]);
 
   const detailCellRendererParams = {
     detailGridOptions: {
       domLayout: "autoHeight",
       columnDefs: [
-        { field: "subType", headerName: "File role", filter: "agSetColumnFilter" },
+        { field: "subType", headerName: "File role", filter: "agSetColumnFilter", valueGetter: (p) => p.data?.subType },
         {
           headerName: "File",
           minWidth: 220,
@@ -179,7 +203,7 @@ export default function FormI9Panel({ entityId, visaCategory }) {
           getContextMenuItems={getCellCopyContextMenuItems}
           popupParent={gridPopupParent}
           rowData={rowData}
-          columnDefs={sizeColumnsForHeader(masterColumnDefs)}
+          columnDefs={sizedColumnDefs}
           defaultColDef={{ minWidth: 100, resizable: true, filter: "agSetColumnFilter" }}
           domLayout="normal"
           masterDetail={true}

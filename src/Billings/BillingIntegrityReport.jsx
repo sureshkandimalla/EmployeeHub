@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AgGridReact } from "@ag-grid-community/react";
 import { Button } from "antd";
 import { ReloadOutlined } from "@ant-design/icons";
@@ -28,6 +28,11 @@ const gridDefaults = {
 };
 
 function ReportSection({ title, emptyLabel, rowData, columnDefs }) {
+  // sizeColumnsForHeader returns a brand-new array/objects every call; memoize
+  // it so AG Grid doesn't see a new columnDefs reference (and reset each
+  // column's applied filter) on every re-render.
+  const sizedColumnDefs = useMemo(() => sizeColumnsForHeader(columnDefs), [columnDefs]);
+
   return (
     <div style={{ marginBottom: 32 }}>
       <h3 style={{ marginBottom: 8 }}>
@@ -42,7 +47,7 @@ function ReportSection({ title, emptyLabel, rowData, columnDefs }) {
             popupParent={gridPopupParent}
             {...gridDefaults}
             rowData={rowData}
-            columnDefs={sizeColumnsForHeader(columnDefs)}
+            columnDefs={sizedColumnDefs}
             onFirstDataRendered={(params) => {
               try {
                 params.api.autoSizeAllColumns();
@@ -75,39 +80,73 @@ export default function BillingIntegrityReport() {
     fetchData();
   }, []);
 
-  const billsWithoutInvoiceColumns = [
-    { field: "billId", headerName: "Bill Id" },
-    { field: "employeeId", headerName: "Employee Id" },
-    { field: "projectId", headerName: "Project Id" },
-    { field: "invoiceId", headerName: "Invoice Id (dangling)" },
-    { field: "hours", headerName: "Hours" },
-    { field: "total", headerName: "Total", valueFormatter: (p) => formatCurrency(p.value) },
-    { field: "billDate", headerName: "Bill Date", valueFormatter: (p) => formatDateMDY(p.value) },
-    { field: "status", headerName: "Status" },
-  ];
+  const billsWithoutInvoiceColumns = useMemo(
+    () => [
+    { field: "billId", headerName: "Bill Id", valueGetter: (params) => params.data?.billId },
+    { field: "employeeId", headerName: "Employee Id", valueGetter: (params) => params.data?.employeeId },
+    { field: "projectId", headerName: "Project Id", valueGetter: (params) => params.data?.projectId },
+    { field: "invoiceId", headerName: "Invoice Id (dangling)", valueGetter: (params) => params.data?.invoiceId },
+    { field: "hours", headerName: "Hours", valueGetter: (params) => params.data?.hours },
+    {
+      field: "total",
+      headerName: "Total",
+      valueFormatter: (p) => formatCurrency(p.value),
+      valueGetter: (params) => params.data?.total,
+      filterParams: { valueFormatter: (p) => formatCurrency(p.value) },
+    },
+    {
+      field: "billDate",
+      headerName: "Bill Date",
+      valueFormatter: (p) => formatDateMDY(p.value),
+      valueGetter: (params) => params.data?.billDate,
+      filterParams: { treeList: false, valueFormatter: (p) => formatDateMDY(p.value) },
+    },
+    { field: "status", headerName: "Status", valueGetter: (params) => params.data?.status },
+    ],
+    [],
+  );
 
-  const invoicesWithoutBillsColumns = [
-    { field: "id", headerName: "Invoice Id" },
-    { field: "invoiceNumber", headerName: "Invoice Number" },
-    { field: "projectId", headerName: "Project Id" },
-    { field: "invoiceMonth", headerName: "Invoice Month", valueFormatter: (p) => formatMonthYear(p.value) },
-    { field: "hours", headerName: "Hours" },
-    { field: "total", headerName: "Total", valueFormatter: (p) => formatCurrency(p.value) },
-    { field: "status", headerName: "Status" },
-  ];
+  const invoicesWithoutBillsColumns = useMemo(
+    () => [
+    { field: "id", headerName: "Invoice Id", valueGetter: (params) => params.data?.id },
+    { field: "invoiceNumber", headerName: "Invoice Number", valueGetter: (params) => params.data?.invoiceNumber },
+    { field: "projectId", headerName: "Project Id", valueGetter: (params) => params.data?.projectId },
+    {
+      field: "invoiceMonth",
+      headerName: "Invoice Month",
+      valueFormatter: (p) => formatMonthYear(p.value),
+      valueGetter: (params) => params.data?.invoiceMonth,
+      filterParams: { valueFormatter: (p) => formatMonthYear(p.value) },
+    },
+    { field: "hours", headerName: "Hours", valueGetter: (params) => params.data?.hours },
+    {
+      field: "total",
+      headerName: "Total",
+      valueFormatter: (p) => formatCurrency(p.value),
+      valueGetter: (params) => params.data?.total,
+      filterParams: { valueFormatter: (p) => formatCurrency(p.value) },
+    },
+    { field: "status", headerName: "Status", valueGetter: (params) => params.data?.status },
+    ],
+    [],
+  );
 
-  const hoursDiscrepancyColumns = [
-    { field: "invoiceId", headerName: "Invoice Id" },
-    { field: "invoiceNumber", headerName: "Invoice Number" },
-    { field: "projectId", headerName: "Project Id" },
-    { field: "invoiceHours", headerName: "Invoice Hours" },
-    { field: "billedHours", headerName: "Billed Hours (sum of bills)" },
+  const hoursDiscrepancyColumns = useMemo(
+    () => [
+    { field: "invoiceId", headerName: "Invoice Id", valueGetter: (params) => params.data?.invoiceId },
+    { field: "invoiceNumber", headerName: "Invoice Number", valueGetter: (params) => params.data?.invoiceNumber },
+    { field: "projectId", headerName: "Project Id", valueGetter: (params) => params.data?.projectId },
+    { field: "invoiceHours", headerName: "Invoice Hours", valueGetter: (params) => params.data?.invoiceHours },
+    { field: "billedHours", headerName: "Billed Hours (sum of bills)", valueGetter: (params) => params.data?.billedHours },
     {
       field: "difference",
       headerName: "Difference (Invoice - Billed)",
       cellStyle: (p) => (Math.abs(p.value) > 0.01 ? { color: "#c0392b", fontWeight: "bold" } : null),
+      valueGetter: (params) => params.data?.difference,
     },
-  ];
+    ],
+    [],
+  );
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "auto", padding: "0 4px" }}>

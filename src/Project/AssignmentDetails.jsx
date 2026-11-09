@@ -1,5 +1,5 @@
 import API_ENDPOINTS from "../config";
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { sizeColumnsForHeader } from "../Utils/agGridColumnSizing";
 import { AgGridReact } from "@ag-grid-community/react";
 import "@ag-grid-community/styles/ag-grid.css";
@@ -117,6 +117,7 @@ const AssignmentDetails = ({ projectId, isCollapsed }) => {
         sortable: isSortable,
         editable: false,
         filter: "agSetColumnFilter",
+        valueGetter: (params) => params.data?.assignmentType,
       },
       {
         headerName: "Employee Name",
@@ -131,6 +132,12 @@ const AssignmentDetails = ({ projectId, isCollapsed }) => {
         editable: true,
         filter: "agSetColumnFilter",
         valueFormatter: (params) => formatCurrency(params.value),
+        valueGetter: (params) => params.data?.wage,
+        valueSetter: (params) => {
+          params.data.wage = params.newValue;
+          return true;
+        },
+        filterParams: { valueFormatter: (params) => formatCurrency(params.value) },
       },
       {
         headerName: "Status",
@@ -138,6 +145,11 @@ const AssignmentDetails = ({ projectId, isCollapsed }) => {
         sortable: isSortable,
         editable: true,
         filter: "agSetColumnFilter",
+        valueGetter: (params) => params.data?.status,
+        valueSetter: (params) => {
+          params.data.status = params.newValue;
+          return true;
+        },
       },
       //{ headerName: 'Client', field: 'clientName',sortable: isSortable, editable: true, filter: 'agTextColumnFilter' },
       //{ headerName: 'Customer', field: 'customerName', sortable: isSortable, editable: true, filter: 'agTextColumnFilter' },
@@ -149,6 +161,12 @@ const AssignmentDetails = ({ projectId, isCollapsed }) => {
         editable: true,
         filter: "agSetColumnFilter",
         valueFormatter: (params) => formatDateMDY(params.value),
+        valueGetter: (params) => params.data?.startDate,
+        valueSetter: (params) => {
+          params.data.startDate = params.newValue;
+          return true;
+        },
+        filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
       },
       {
         headerName: "Project End Date",
@@ -157,10 +175,21 @@ const AssignmentDetails = ({ projectId, isCollapsed }) => {
         editable: true,
         filter: "agSetColumnFilter",
         valueFormatter: (params) => formatDateMDY(params.value),
+        valueGetter: (params) => params.data?.endDate,
+        valueSetter: (params) => {
+          params.data.endDate = params.newValue;
+          return true;
+        },
+        filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
       },
     ];
     return columns;
   };
+
+  // sizeColumnsForHeader returns a brand-new array/objects every call; memoize
+  // it so AG Grid doesn't see a new columnDefs reference (and reset each
+  // column's applied filter) on every re-render.
+  const sizedColumnDefs = useMemo(() => sizeColumnsForHeader(getColumnsDefList(true, false)), []);
 
   return (
     <>
@@ -239,7 +268,7 @@ const AssignmentDetails = ({ projectId, isCollapsed }) => {
           }}
           autoSizeStrategy={{ type: "fitCellContents" }}
           rowData={filterData()}
-          columnDefs={sizeColumnsForHeader(getColumnsDefList(true, false))}
+          columnDefs={sizedColumnDefs}
           defaultColDef={{
             minWidth: 100,
             maxWidth: 220,

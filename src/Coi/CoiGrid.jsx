@@ -149,7 +149,8 @@ const CoiGrid = ({ customerId, vendorId, isCollapsed }) => {
     axios.delete(API_ENDPOINTS.coiById(row.id)).then(fetchData);
   };
 
-  const columnDefs = [
+  const columnDefs = useMemo(
+    () => [
     {
       headerName: "Vendor",
       field: "vendorId",
@@ -185,6 +186,12 @@ const CoiGrid = ({ customerId, vendorId, isCollapsed }) => {
       filter: "agSetColumnFilter",
       cellEditor: "agDateStringCellEditor",
       valueFormatter: (params) => formatDateMDY(params.value),
+      valueGetter: (params) => params.data?.startDate,
+      valueSetter: (params) => {
+        params.data.startDate = params.newValue;
+        return true;
+      },
+      filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
     },
     {
       headerName: "End Date",
@@ -193,6 +200,12 @@ const CoiGrid = ({ customerId, vendorId, isCollapsed }) => {
       filter: "agSetColumnFilter",
       cellEditor: "agDateStringCellEditor",
       valueFormatter: (params) => formatDateMDY(params.value),
+      valueGetter: (params) => params.data?.endDate,
+      valueSetter: (params) => {
+        params.data.endDate = params.newValue;
+        return true;
+      },
+      filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
     },
     {
       headerName: "Status",
@@ -201,6 +214,11 @@ const CoiGrid = ({ customerId, vendorId, isCollapsed }) => {
       filter: "agSetColumnFilter",
       cellEditor: "agSelectCellEditor",
       cellEditorParams: { values: STATUS_OPTIONS },
+      valueGetter: (params) => params.data?.status,
+      valueSetter: (params) => {
+        params.data.status = params.newValue;
+        return true;
+      },
     },
     {
       headerName: "Limits",
@@ -209,6 +227,11 @@ const CoiGrid = ({ customerId, vendorId, isCollapsed }) => {
       filter: "agSetColumnFilter",
       cellEditor: "agLargeTextCellEditor",
       cellEditorPopup: true,
+      valueGetter: (params) => params.data?.limits,
+      valueSetter: (params) => {
+        params.data.limits = params.newValue;
+        return true;
+      },
     },
     {
       colId: "actions",
@@ -280,7 +303,14 @@ const CoiGrid = ({ customerId, vendorId, isCollapsed }) => {
         );
       },
     },
-  ];
+    ],
+    [vendorNameById, customerNameById, vendors, customers, docsByEntityId, handleDelete, handleArchive],
+  );
+
+  // sizeColumnsForHeader returns a brand-new array/objects every call; memoize
+  // it so AG Grid doesn't see a new columnDefs reference (and reset each
+  // column's applied filter) on every re-render.
+  const sizedColumnDefs = useMemo(() => sizeColumnsForHeader(columnDefs), [columnDefs]);
 
   return (
     <div className="ag-theme-alpine">
@@ -320,7 +350,7 @@ const CoiGrid = ({ customerId, vendorId, isCollapsed }) => {
           rowData={rowData}
           getRowId={(params) => String(params.data.rowKey)}
           loading={loading}
-          columnDefs={sizeColumnsForHeader(columnDefs)}
+          columnDefs={sizedColumnDefs}
           defaultColDef={{
             minWidth: 100,
             maxWidth: 260,

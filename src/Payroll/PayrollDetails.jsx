@@ -44,8 +44,15 @@ const PayrollDetails = ({ rowData: externalRowData, onRefresh, employeeId, isCol
         minWidth: 160,
         hide: true,
         valueFormatter: (params) => params.value,
+        valueGetter: (params) => params.data?.payrollSummaryId,
       },
-      { headerName: "Employee Id", field: "employeeId", sortable: true, hide: true },
+      {
+        headerName: "Employee Id",
+        field: "employeeId",
+        sortable: true,
+        hide: true,
+        valueGetter: (params) => params.data?.employeeId,
+      },
       {
         headerName: "Employee Name",
         field: "employeeName",
@@ -53,6 +60,7 @@ const PayrollDetails = ({ rowData: externalRowData, onRefresh, employeeId, isCol
         minWidth: 180,
         pinned: "left",
         enableRowGroup: true,
+        valueGetter: (params) => params.data?.employeeName,
       },
       {
         headerName: "Year",
@@ -97,13 +105,21 @@ const PayrollDetails = ({ rowData: externalRowData, onRefresh, employeeId, isCol
           valueFormatter: formatDateCell,
         },
       },
-      { headerName: "Hours", field: "hours", sortable: true, aggFunc: "sum" },
+      {
+        headerName: "Hours",
+        field: "hours",
+        sortable: true,
+        aggFunc: "sum",
+        valueGetter: (params) => params.data?.hours,
+      },
       {
         headerName: "Total Paid",
         field: "totalPaid",
         sortable: true,
         aggFunc: "sum",
         valueFormatter: (params) => formatCurrency(params.value),
+        valueGetter: (params) => params.data?.totalPaid,
+        filterParams: { valueFormatter: (params) => formatCurrency(params.value) },
       },
       {
         headerName: "Net Pay",
@@ -111,6 +127,8 @@ const PayrollDetails = ({ rowData: externalRowData, onRefresh, employeeId, isCol
         sortable: true,
         aggFunc: "sum",
         valueFormatter: (params) => formatCurrency(params.value),
+        valueGetter: (params) => params.data?.netPay,
+        filterParams: { valueFormatter: (params) => formatCurrency(params.value) },
       },
       {
         headerName: "Tax Withheld",
@@ -118,6 +136,8 @@ const PayrollDetails = ({ rowData: externalRowData, onRefresh, employeeId, isCol
         sortable: true,
         aggFunc: "sum",
         valueFormatter: (params) => formatCurrency(params.value),
+        valueGetter: (params) => params.data?.taxWithheld,
+        filterParams: { valueFormatter: (params) => formatCurrency(params.value) },
       },
       {
         headerName: "Deductions",
@@ -125,6 +145,8 @@ const PayrollDetails = ({ rowData: externalRowData, onRefresh, employeeId, isCol
         sortable: true,
         aggFunc: "sum",
         valueFormatter: (params) => formatCurrency(params.value),
+        valueGetter: (params) => params.data?.deductions,
+        filterParams: { valueFormatter: (params) => formatCurrency(params.value) },
       },
       {
         headerName: "Employer Liability",
@@ -132,9 +154,23 @@ const PayrollDetails = ({ rowData: externalRowData, onRefresh, employeeId, isCol
         sortable: true,
         aggFunc: "sum",
         valueFormatter: (params) => formatCurrency(params.value),
+        valueGetter: (params) => params.data?.employerLiability,
+        filterParams: { valueFormatter: (params) => formatCurrency(params.value) },
       },
-      { headerName: "Pay Period", field: "payPeriodId", sortable: true, hide: true },
-      { headerName: "Department", field: "department", sortable: true, enableRowGroup: true },
+      {
+        headerName: "Pay Period",
+        field: "payPeriodId",
+        sortable: true,
+        hide: true,
+        valueGetter: (params) => params.data?.payPeriodId,
+      },
+      {
+        headerName: "Department",
+        field: "department",
+        sortable: true,
+        enableRowGroup: true,
+        valueGetter: (params) => params.data?.department,
+      },
       {
         headerName: "Pay Cycle Start",
         field: "payPeriodStartDate",
@@ -155,10 +191,24 @@ const PayrollDetails = ({ rowData: externalRowData, onRefresh, employeeId, isCol
         valueGetter: (params) => params.data?.payPeriodEndDate,
         filterParams: { treeList: false, valueFormatter: formatDateCell },
       },
-      { headerName: "Status", field: "status", sortable: true, enableRowGroup: true },
+      {
+        headerName: "Status",
+        field: "status",
+        sortable: true,
+        enableRowGroup: true,
+        valueGetter: (params) => params.data?.status,
+      },
     ],
     [employeeId],
   );
+
+  // sizeColumnsForHeader returns a brand-new array (and brand-new column
+  // objects) on every call. Without memoizing it here, AG Grid sees a new
+  // columnDefs reference on every re-render of this component — including
+  // the re-render that setPinnedTopRowData below triggers on every filter
+  // change — and resets each column's applied filter state right after the
+  // user sets it, making Set Filter unselects look like they don't work.
+  const sizedColumnDefs = useMemo(() => sizeColumnsForHeader(columnDefs), [columnDefs]);
 
   const sumPayrollRows = (rows, label) => ({
     payrollSummaryId: label,
@@ -263,7 +313,7 @@ const PayrollDetails = ({ rowData: externalRowData, onRefresh, employeeId, isCol
             rowHeight={48}
             rowData={rowData}
             quickFilterText={searchText}
-            columnDefs={sizeColumnsForHeader(columnDefs)}
+            columnDefs={sizedColumnDefs}
             pinnedTopRowData={pinnedTopRowData}
             pinnedBottomRowData={pinnedBottomRowData}
             defaultColDef={{

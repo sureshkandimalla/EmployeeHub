@@ -85,6 +85,13 @@ const WorkForceReconcileList = ({ employees, isCollapsed, onRefresh }) => {
 
       const isPinnedColumn = column === "First Name" || column === "Last Name";
 
+      // A bare date-string field under the Set Filter defaults into AG
+      // Grid's tree-list mode (Year›Month›Day), whose checkboxes don't
+      // respond to clicks in this app's AG Grid version — see the same
+      // fix applied to Payroll/PayrollDetails.jsx.
+      const isDateField = ["startDate", "endDate", "dob"].includes(fieldValue);
+      const isCurrencyField = ["annualPay", "income", "expense"].includes(fieldValue);
+
       return {
         headerName: updatedColumn,
         field: fieldValue,
@@ -92,6 +99,20 @@ const WorkForceReconcileList = ({ employees, isCollapsed, onRefresh }) => {
         editable: true,
         headerClass: "ag-header-cell",
         filter: columnFilter,
+        // Every Set-Filter column needs an explicit valueGetter or its
+        // checkboxes are completely inert in this app's AG Grid setup —
+        // confirmed across text/number/date columns alike. Paired with a
+        // valueSetter since every column here is editable.
+        valueGetter: (params) => params.data?.[fieldValue],
+        valueSetter: (params) => {
+          params.data[fieldValue] = params.newValue;
+          return true;
+        },
+        filterParams: isDateField
+          ? { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) }
+          : isCurrencyField
+          ? { valueFormatter: (params) => formatCurrency(params.value) }
+          : undefined,
         minWidth: autoWidth,
         pinned: isPinnedColumn ? "left" : undefined,
         lockPinned: isPinnedColumn,
@@ -178,6 +199,11 @@ const WorkForceReconcileList = ({ employees, isCollapsed, onRefresh }) => {
     ];
   }, [rowData]);
 
+  // sizeColumnsForHeader returns a brand-new array/objects every call; memoize
+  // it so AG Grid doesn't see a new columnDefs reference (and reset each
+  // column's applied filter) on every re-render.
+  const sizedColumnDefs = useMemo(() => sizeColumnsForHeader(reconcileColumnDefs), [reconcileColumnDefs]);
+
   return (
     <div className="ag-theme-alpine workforce-container">
       <GridToolbar className="workforce-search-container">
@@ -214,7 +240,7 @@ const WorkForceReconcileList = ({ employees, isCollapsed, onRefresh }) => {
           rowHeight={48}
           rowData={filterData()}
           frameworkComponents={{ customTooltip: CustomTooltip }}
-          columnDefs={sizeColumnsForHeader(reconcileColumnDefs)}
+          columnDefs={sizedColumnDefs}
           defaultColDef={{
             minWidth: 100,
             maxWidth: 220,

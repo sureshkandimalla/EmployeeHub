@@ -60,6 +60,11 @@ const Grid = () => {
         sortable: isSortable,
         editable: true,
         filter: "agSetColumnFilter",
+        valueGetter: (params) => params.data?.projectName,
+        valueSetter: (params) => {
+          params.data.projectName = params.newValue;
+          return true;
+        },
       },
       {
         headerName: "Project Id",
@@ -76,6 +81,7 @@ const Grid = () => {
         sortable: isSortable,
         editable: false,
         filter: "agSetColumnFilter",
+        valueGetter: (params) => params.data?.projectId,
       },
       //  { headerName: 'Employee Id', field: 'employeeId', sortable: isSortable, editable: true, filter: 'agTextColumnFilter' },
       {
@@ -95,6 +101,7 @@ const Grid = () => {
         sortable: isSortable,
         editable: false,
         filter: "agSetColumnFilter",
+        valueGetter: (params) => params.data?.employeeName,
       },
       //{ headerName: 'Employee Name', field: 'employeeName', valueGetter(params) { return  params.data.firstName + ' ' + params.data.lastName ;},sortable: isSortable, editable: false, filter: 'agTextColumnFilter' },
       {
@@ -103,6 +110,11 @@ const Grid = () => {
         sortable: isSortable,
         editable: true,
         filter: "agSetColumnFilter",
+        valueGetter: (params) => params.data?.clientName,
+        valueSetter: (params) => {
+          params.data.clientName = params.newValue;
+          return true;
+        },
       },
       {
         headerName: "Customer",
@@ -110,6 +122,11 @@ const Grid = () => {
         sortable: isSortable,
         editable: true,
         filter: "agSetColumnFilter",
+        valueGetter: (params) => params.data?.customerName,
+        valueSetter: (params) => {
+          params.data.customerName = params.newValue;
+          return true;
+        },
       },
       {
         headerName: "Bill Rate",
@@ -117,6 +134,11 @@ const Grid = () => {
         sortable: isSortable,
         editable: true,
         filter: "agSetColumnFilter",
+        valueGetter: (params) => params.data?.billRate,
+        valueSetter: (params) => {
+          params.data.billRate = params.newValue;
+          return true;
+        },
       },
       {
         headerName: "Project Start Date",
@@ -124,6 +146,12 @@ const Grid = () => {
         sortable: isSortable,
         editable: true,
         filter: "agSetColumnFilter",
+        valueGetter: (params) => params.data?.startDate,
+        valueSetter: (params) => {
+          params.data.startDate = params.newValue;
+          return true;
+        },
+        filterParams: { treeList: false },
       },
       {
         headerName: "Project End Date",
@@ -131,6 +159,12 @@ const Grid = () => {
         sortable: isSortable,
         editable: true,
         filter: "agSetColumnFilter",
+        valueGetter: (params) => params.data?.endDate,
+        valueSetter: (params) => {
+          params.data.endDate = params.newValue;
+          return true;
+        },
+        filterParams: { treeList: false },
       },
       {
         headerName: "Status",
@@ -138,6 +172,11 @@ const Grid = () => {
         sortable: isSortable,
         editable: true,
         filter: "agSetColumnFilter",
+        valueGetter: (params) => params.data?.status,
+        valueSetter: (params) => {
+          params.data.status = params.newValue;
+          return true;
+        },
       },
       {
         headerName: "Invoice Terms",
@@ -145,6 +184,11 @@ const Grid = () => {
         sortable: isSortable,
         editable: true,
         filter: "agSetColumnFilter",
+        valueGetter: (params) => params.data?.invoiceTerm,
+        valueSetter: (params) => {
+          params.data.invoiceTerm = params.newValue;
+          return true;
+        },
       },
       {
         headerName: "Invoice Terms",
@@ -152,6 +196,11 @@ const Grid = () => {
         sortable: isSortable,
         editable: true,
         filter: "agSetColumnFilter",
+        valueGetter: (params) => params.data?.invoiceTerm,
+        valueSetter: (params) => {
+          params.data.invoiceTerm = params.newValue;
+          return true;
+        },
       },
       //{ headerName: 'Employee Pay', field: 'projectName', sortable: isSortable, editable: true, filter: 'agTextColumnFilter' },
       //{ headerName: 'Expenses', field: 'client', sortable: isSortable, editable: true, filter: 'agTextColumnFilter' },

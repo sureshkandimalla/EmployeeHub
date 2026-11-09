@@ -1,5 +1,5 @@
 // InvoiceCard.js
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Row, Input, Space, Radio, Button } from "antd";
 import { SearchOutlined, ReloadOutlined } from "@ant-design/icons";
 import { AgGridReact } from "@ag-grid-community/react";
@@ -13,22 +13,26 @@ import "./InvoiceCard.css";
 import { getCellCopyContextMenuItems } from "../Utils/agGridCellCopy";
 const { Search } = Input;
 
+// Hoisted to module scope (rather than recreated inside the component on
+// every render) so it has a stable reference for the sizedColumnDefs memo
+// below to key off.
+const columnsList = [
+  "Invoice Id",
+  "Project Id",
+  "InvoiceMonth",
+  "Billing",
+  "Hours",
+  "Total",
+  "Invoice PaidAmount",
+  "Invoice Date",
+  "status",
+];
+
 const InvoiceCard = () => {
   const gridApi = useRef(null);
   const [rowData, setRowData] = useState([]);
   const [invoiceStatus, setInvoiceStatus] = useState("viewAll");
   const [searchText, setSearchText] = useState("");
-  const columnsList = [
-    "Invoice Id",
-    "Project Id",
-    "InvoiceMonth",
-    "Billing",
-    "Hours",
-    "Total",
-    "Invoice PaidAmount",
-    "Invoice Date",
-    "status",
-  ];
 
   // Custom filter function for the search input
   const handleFilterChange = (value) => {
@@ -93,6 +97,15 @@ const InvoiceCard = () => {
       else if(column == 'endDate')
           updatedColumn='Employment End Date';*/
 
+      // The Set Filter's checkboxes are completely inert without an
+      // explicit valueGetter — confirmed live, not just a date-specific
+      // quirk (see the same fix applied to Payroll/PayrollDetails.jsx).
+      // Every column here is editable, so valueSetter has to be paired
+      // with it for edits to keep persisting. Date fields additionally
+      // need filterParams.treeList: false — AG Grid's Set Filter defaults
+      // a bare date-string field into a broken tree-list mode otherwise.
+      const isDateField = fieldValue === "invoiceDate";
+
       return {
         headerName: updatedColumn,
         field: fieldValue,
@@ -103,6 +116,12 @@ const InvoiceCard = () => {
         cellRenderer: (params) => {
           return params.value;
         },
+        valueGetter: (params) => params.data?.[fieldValue],
+        valueSetter: (params) => {
+          params.data[fieldValue] = params.newValue;
+          return true;
+        },
+        filterParams: isDateField ? { treeList: false } : undefined,
         //tooltipComponent: 'customTooltip',
         tooltipShowDelay: 0,
       };
@@ -134,6 +153,14 @@ const InvoiceCard = () => {
     );
   };
   // Grid column definitions
+
+  // sizeColumnsForHeader returns a brand-new array/objects every call; memoize
+  // it so AG Grid doesn't see a new columnDefs reference (and reset each
+  // column's applied filter) on every re-render.
+  const sizedColumnDefs = useMemo(
+    () => sizeColumnsForHeader(getColumnsDefList(columnsList, true, false)),
+    [],
+  );
 
   return (
     <>
@@ -182,7 +209,7 @@ const InvoiceCard = () => {
           rowHeight={48}
           rowData={filterData()}
           frameworkComponents={{ customTooltip: CustomTooltip }}
-          columnDefs={sizeColumnsForHeader(getColumnsDefList(columnsList, true, false))}
+          columnDefs={sizedColumnDefs}
           domLayout="autoHeight"
           defaultColDef={{
             minWidth: 100,

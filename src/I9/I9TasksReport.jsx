@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AgGridReact } from "@ag-grid-community/react";
 import { Button, Tag } from "antd";
 import { ReloadOutlined } from "@ant-design/icons";
@@ -48,18 +48,34 @@ export default function I9TasksReport() {
     };
   });
 
-  const columnDefs = [
-    { field: "employeeName", headerName: "Employee", pinned: "left", filter: "agSetColumnFilter" },
-    { field: "label", headerName: "Task", filter: "agSetColumnFilter" },
-    {
-      field: "priority",
-      headerName: "Priority",
-      filter: "agSetColumnFilter",
-      cellRenderer: (p) => <Tag color={PRIORITY_COLOR[p.value] || "default"}>{p.value}</Tag>,
-    },
-    { field: "due", headerName: "Due", filter: "agSetColumnFilter", valueFormatter: (p) => formatDateMDY(p.value) },
-    { field: "whereToFix", headerName: "Where to fix", filter: "agSetColumnFilter" },
-  ];
+  const columnDefs = useMemo(
+    () => [
+      { field: "employeeName", headerName: "Employee", pinned: "left", filter: "agSetColumnFilter", valueGetter: (p) => p.data?.employeeName },
+      { field: "label", headerName: "Task", filter: "agSetColumnFilter", valueGetter: (p) => p.data?.label },
+      {
+        field: "priority",
+        headerName: "Priority",
+        filter: "agSetColumnFilter",
+        cellRenderer: (p) => <Tag color={PRIORITY_COLOR[p.value] || "default"}>{p.value}</Tag>,
+        valueGetter: (p) => p.data?.priority,
+      },
+      {
+        field: "due",
+        headerName: "Due",
+        filter: "agSetColumnFilter",
+        valueFormatter: (p) => formatDateMDY(p.value),
+        valueGetter: (p) => p.data?.due,
+        filterParams: { treeList: false, valueFormatter: (p) => formatDateMDY(p.value) },
+      },
+      { field: "whereToFix", headerName: "Where to fix", filter: "agSetColumnFilter", valueGetter: (p) => p.data?.whereToFix },
+    ],
+    [],
+  );
+
+  // sizeColumnsForHeader returns a brand-new array/objects every call; memoize
+  // it so AG Grid doesn't see a new columnDefs reference (and reset each
+  // column's applied filter) on every re-render.
+  const sizedColumnDefs = useMemo(() => sizeColumnsForHeader(columnDefs), [columnDefs]);
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -74,7 +90,7 @@ export default function I9TasksReport() {
             getContextMenuItems={getCellCopyContextMenuItems}
             popupParent={gridPopupParent}
             rowData={rowData}
-            columnDefs={sizeColumnsForHeader(columnDefs)}
+            columnDefs={sizedColumnDefs}
             defaultColDef={{ minWidth: 100, resizable: true, filter: "agSetColumnFilter" }}
             domLayout="normal"
             animateRows={true}

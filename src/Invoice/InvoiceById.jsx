@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import API_ENDPOINTS from "../config";
 import { sizeColumnsForHeader } from "../Utils/agGridColumnSizing";
 import { formatMonthYear, formatDateMDY } from "../Utils/dateFormat";
@@ -77,13 +77,16 @@ const InvoiceById = ({ url, employeeId, isCollapsed }) => {
         valueFormatter: (params) => {
           return params.node.rowPinned === "bottom" ? "Total" : params.value;
         },
+        valueGetter: (params) => params.data?.invoiceNumber,
       },
-      { headerName: "Project Id", field: "projectId", sortable: isSortable },
+      { headerName: "Project Id", field: "projectId", sortable: isSortable, valueGetter: (params) => params.data?.projectId },
       {
         headerName: "InvoiceMonth",
         field: "invoiceMonth",
         sortable: isSortable,
         valueFormatter: (params) => formatMonthYear(params.value),
+        valueGetter: (params) => params.data?.invoiceMonth,
+        filterParams: { valueFormatter: (params) => formatMonthYear(params.value) },
       },
       {
         headerName: "Billing",
@@ -99,25 +102,46 @@ const InvoiceById = ({ url, employeeId, isCollapsed }) => {
           // Apply formatting for non-pinned rows
           return formatCurrency(params.value);
         },
+        valueGetter: (params) => params.data?.billing,
+        filterParams: { valueFormatter: (params) => formatCurrency(params.value) },
       },
-      { headerName: "Hours", field: "hours", sortable: isSortable },
+      { headerName: "Hours", field: "hours", sortable: isSortable, valueGetter: (params) => params.data?.hours },
       {
         headerName: "Total",
         field: "total",
         sortable: isSortable,
         valueFormatter: (params) => formatCurrency(params.value), // Format with dollar sign
+        valueGetter: (params) => params.data?.total,
+        filterParams: { valueFormatter: (params) => formatCurrency(params.value) },
       },
       {
         headerName: "Invoice PaidAmount",
         field: "invoicePaidAmount",
         sortable: isSortable,
         valueFormatter: (params) => formatCurrency(params.value), // Format with dollar sign
+        valueGetter: (params) => params.data?.invoicePaidAmount,
+        filterParams: { valueFormatter: (params) => formatCurrency(params.value) },
       },
-      { headerName: "Start Date", field: "startDate", sortable: isSortable, valueFormatter: (params) => formatDateMDY(params.value) },
-      { headerName: "End Date", field: "endDate", sortable: isSortable, valueFormatter: (params) => formatDateMDY(params.value) },
+      {
+        headerName: "Start Date",
+        field: "startDate",
+        sortable: isSortable,
+        valueFormatter: (params) => formatDateMDY(params.value),
+        valueGetter: (params) => params.data?.startDate,
+        filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+      },
+      {
+        headerName: "End Date",
+        field: "endDate",
+        sortable: isSortable,
+        valueFormatter: (params) => formatDateMDY(params.value),
+        valueGetter: (params) => params.data?.endDate,
+        filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+      },
       {
         headerName: "Status",
         field: "status",
+        valueGetter: (params) => params.data?.status,
       },
     ];
     return columns;
@@ -174,6 +198,11 @@ const InvoiceById = ({ url, employeeId, isCollapsed }) => {
     sumInvoiceByIdRows(rows, "Filtered Total"),
   );
 
+  // sizeColumnsForHeader returns a brand-new array/objects every call; memoize
+  // it so AG Grid doesn't see a new columnDefs reference (and reset each
+  // column's applied filter) on every re-render.
+  const sizedColumnDefs = useMemo(() => sizeColumnsForHeader(getColumnsDefList(true)), []);
+
   return (
     <div
         style={{
@@ -221,7 +250,7 @@ const InvoiceById = ({ url, employeeId, isCollapsed }) => {
         }}
         autoSizeStrategy={{ type: "fitCellContents" }}
         rowData={filterData()}
-        columnDefs={sizeColumnsForHeader(getColumnsDefList(true))}
+        columnDefs={sizedColumnDefs}
         gridOptions={gridOptions}
         defaultColDef={{
           minWidth: 100,

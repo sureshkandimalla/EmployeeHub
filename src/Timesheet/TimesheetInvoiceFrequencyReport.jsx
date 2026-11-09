@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AgGridReact } from "@ag-grid-community/react";
 import { Button, Tag } from "antd";
 import { ReloadOutlined, FileExcelOutlined } from "@ant-design/icons";
@@ -54,7 +54,8 @@ export default function TimesheetInvoiceFrequencyReport() {
 
   useEffect(fetchData, []);
 
-  const columnDefs = [
+  const columnDefs = useMemo(
+    () => [
     {
       colId: "rowNum",
       headerName: "#",
@@ -71,9 +72,9 @@ export default function TimesheetInvoiceFrequencyReport() {
       suppressSizeToFit: true,
       cellStyle: { textAlign: "center", fontWeight: 500 },
     },
-    { field: "employeeName", headerName: "Employee", pinned: "left", filter: "agSetColumnFilter" },
-    { field: "projectName", headerName: "Project", filter: "agSetColumnFilter" },
-    { field: "invoiceFrequency", headerName: "Invoice Frequency", filter: "agSetColumnFilter" },
+    { field: "employeeName", headerName: "Employee", pinned: "left", filter: "agSetColumnFilter", valueGetter: (params) => params.data?.employeeName },
+    { field: "projectName", headerName: "Project", filter: "agSetColumnFilter", valueGetter: (params) => params.data?.projectName },
+    { field: "invoiceFrequency", headerName: "Invoice Frequency", filter: "agSetColumnFilter", valueGetter: (params) => params.data?.invoiceFrequency },
     { field: "periodStart", headerName: "Period Start", filter: "agDateColumnFilter" },
     { field: "periodEnd", headerName: "Period End", filter: "agDateColumnFilter" },
     { field: "timesheetHours", headerName: "Timesheet Hours", filter: "agNumberColumnFilter" },
@@ -81,23 +82,32 @@ export default function TimesheetInvoiceFrequencyReport() {
       field: "timesheetStatus",
       headerName: "Timesheet Status",
       filter: "agSetColumnFilter",
+      valueGetter: (params) => params.data?.timesheetStatus,
       cellRenderer: (p) => (
         <Tag color={STATUS_COLOR[p.value]} style={{ cursor: "pointer" }} onClick={() => openEntry(p.data)}>
           {p.value}
         </Tag>
       ),
     },
-    { field: "invoiceNumber", headerName: "Invoice #", filter: "agSetColumnFilter" },
+    { field: "invoiceNumber", headerName: "Invoice #", filter: "agSetColumnFilter", valueGetter: (params) => params.data?.invoiceNumber },
     { field: "invoicedHours", headerName: "Invoiced Hours", filter: "agNumberColumnFilter" },
-    { field: "invoiceStatus", headerName: "Invoice Status", filter: "agSetColumnFilter" },
+    { field: "invoiceStatus", headerName: "Invoice Status", filter: "agSetColumnFilter", valueGetter: (params) => params.data?.invoiceStatus },
     { field: "variance", headerName: "Variance", filter: "agNumberColumnFilter" },
     {
       field: "comparisonStatus",
       headerName: "Comparison",
       filter: "agSetColumnFilter",
+      valueGetter: (params) => params.data?.comparisonStatus,
       cellRenderer: (p) => <Tag color={COMPARISON_COLOR[p.value]}>{p.value}</Tag>,
     },
-  ];
+    ],
+    [openEntry],
+  );
+
+  // sizeColumnsForHeader returns a brand-new array/objects every call; memoize
+  // it so AG Grid doesn't see a new columnDefs reference (and reset each
+  // column's applied filter) on every re-render.
+  const sizedColumnDefs = useMemo(() => sizeColumnsForHeader(columnDefs), [columnDefs]);
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -122,7 +132,7 @@ export default function TimesheetInvoiceFrequencyReport() {
             ref={gridRef}
             rowData={rows}
             quickFilterText={searchText}
-            columnDefs={sizeColumnsForHeader(columnDefs)}
+            columnDefs={sizedColumnDefs}
             defaultColDef={{ minWidth: 100, resizable: true, filter: "agSetColumnFilter" }}
             domLayout="normal"
             animateRows={true}

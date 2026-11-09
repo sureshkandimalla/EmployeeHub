@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { AgGridReact } from "@ag-grid-community/react";
 import "@ag-grid-community/styles/ag-grid.css";
 import "./ProjectGrid.css";
@@ -137,6 +137,12 @@ const WorkOrderDetails = ({ rowData, isCollapsed, onRefresh }) => {
         editable: true,
         filter: "agSetColumnFilter",
         valueFormatter: (params) => formatCurrency(params.value),
+        valueGetter: (params) => params.data?.wage,
+        valueSetter: (params) => {
+          params.data.wage = params.newValue;
+          return true;
+        },
+        filterParams: { valueFormatter: (params) => formatCurrency(params.value) },
       },
       {
         headerName: "Project Start Date",
@@ -145,6 +151,12 @@ const WorkOrderDetails = ({ rowData, isCollapsed, onRefresh }) => {
         editable: true,
         filter: "agSetColumnFilter",
         valueFormatter: (params) => formatDateMDY(params.value),
+        valueGetter: (params) => params.data?.startDate,
+        valueSetter: (params) => {
+          params.data.startDate = params.newValue;
+          return true;
+        },
+        filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
       },
       {
         headerName: "Project End Date",
@@ -153,6 +165,12 @@ const WorkOrderDetails = ({ rowData, isCollapsed, onRefresh }) => {
         editable: true,
         filter: "agSetColumnFilter",
         valueFormatter: (params) => formatDateMDY(params.value),
+        valueGetter: (params) => params.data?.endDate,
+        valueSetter: (params) => {
+          params.data.endDate = params.newValue;
+          return true;
+        },
+        filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
       },
       // { headerName: 'Wage', field: 'wage', sortable: isSortable, editable: true, filter: 'agTextColumnFilter' },
       {
@@ -179,6 +197,16 @@ const WorkOrderDetails = ({ rowData, isCollapsed, onRefresh }) => {
     ];
     return columns;
   };
+
+  // sizeColumnsForHeader returns a brand-new array/objects every call; memoize
+  // it so AG Grid doesn't see a new columnDefs reference (and reset each
+  // column's applied filter) on every re-render. poDocByWageId is read
+  // inside the PO column's cellRenderer closure, so it must be a dep or that
+  // cell would freeze on its first-render value.
+  const sizedColumnDefs = useMemo(
+    () => sizeColumnsForHeader(getColumnsDefList(true, false)),
+    [poDocByWageId],
+  );
 
   return (
     <>
@@ -255,7 +283,7 @@ const WorkOrderDetails = ({ rowData, isCollapsed, onRefresh }) => {
           }}
           autoSizeStrategy={{ type: "fitCellContents" }}
           rowData={filterData()}
-          columnDefs={sizeColumnsForHeader(getColumnsDefList(true, false))}
+          columnDefs={sizedColumnDefs}
           domLayout="normal"
           defaultColDef={{
             minWidth: 100,

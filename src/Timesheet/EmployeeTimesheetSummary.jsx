@@ -135,8 +135,21 @@ const EmployeeTimesheetSummary = ({ employeeId, isCollapsed, gridHeight = "calc(
 
   const columnDefs = useMemo(
     () => [
-      { headerName: "Project", field: "projectName", sortable: true, minWidth: 180, enableRowGroup: true },
-      { headerName: "Month", field: "monthLabel", sortable: true, minWidth: 130 },
+      {
+        headerName: "Project",
+        field: "projectName",
+        sortable: true,
+        minWidth: 180,
+        enableRowGroup: true,
+        valueGetter: (params) => params.data?.projectName,
+      },
+      {
+        headerName: "Month",
+        field: "monthLabel",
+        sortable: true,
+        minWidth: 130,
+        valueGetter: (params) => params.data?.monthLabel,
+      },
       {
         headerName: "Total Hours",
         field: "totalHours",
@@ -144,6 +157,7 @@ const EmployeeTimesheetSummary = ({ employeeId, isCollapsed, gridHeight = "calc(
         aggFunc: "sum",
         minWidth: 130,
         cellStyle: { fontWeight: "bold" },
+        valueGetter: (params) => params.data?.totalHours,
       },
       {
         headerName: "Status",
@@ -152,6 +166,7 @@ const EmployeeTimesheetSummary = ({ employeeId, isCollapsed, gridHeight = "calc(
         minWidth: 130,
         enableRowGroup: true,
         cellRenderer: (params) => (params.value ? <Tag color={STATUS_COLOR[params.value]}>{params.value}</Tag> : null),
+        valueGetter: (params) => params.data?.status,
       },
       {
         headerName: "",

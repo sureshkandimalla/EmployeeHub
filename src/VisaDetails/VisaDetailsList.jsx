@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { AgGridReact } from "@ag-grid-community/react";
 import { Button, Card, Form, message } from "antd";
 import { FileExcelOutlined, ReloadOutlined } from "@ant-design/icons";
@@ -409,7 +409,8 @@ export default function VisaDetailsList({ preloadedData }) {
     return null;
   };
 
-  const columnDefs = [
+  const columnDefs = useMemo(
+    () => [
     {
       headerName: "#",
       valueGetter: (params) => params.node.rowIndex + 1,
@@ -428,25 +429,32 @@ export default function VisaDetailsList({ preloadedData }) {
       filter: "agSetColumnFilter",
       cellRenderer: "agGroupCellRenderer",
       cellClassRules: { ...cellClassRules, blueUnderline: () => false },
+      valueGetter: (params) => params.data?.employeeName,
       onCellClicked: (params) => {
         params.node.setExpanded(!params.node.expanded);
       },
       cellStyle: { cursor: "pointer" },
     },
-    { field: "companyName",         headerName: MASTER_FIELD_LABELS.companyName,        filter: "agSetColumnFilter",  cellClassRules },
+    { field: "companyName",         headerName: MASTER_FIELD_LABELS.companyName,        filter: "agSetColumnFilter",  cellClassRules, valueGetter: (params) => params.data?.companyName },
     // ── Visible columns (per requested order) ──
-    { field: "status",              headerName: MASTER_FIELD_LABELS.status,             filter: "agSetColumnFilter",  cellClassRules, cellStyle: statusCellStyle },
+    { field: "status",              headerName: MASTER_FIELD_LABELS.status,             filter: "agSetColumnFilter",  cellClassRules, cellStyle: statusCellStyle, valueGetter: (params) => params.data?.status },
     { field: "visaCategory",        headerName: MASTER_FIELD_LABELS.visaCategory,       filter: "agSetColumnFilter",  cellClassRules,
       editable: (params) => !!params.data?.visaId,
       cellEditor: "agSelectCellEditor",
       cellEditorParams: { values: VISA_CATEGORY_OPTIONS.map((o) => o.value) },
+      valueGetter: (params) => params.data?.visaCategory,
+      valueSetter: (params) => { params.data.visaCategory = params.newValue; return true; },
     },
-    { field: "employmentType",      headerName: MASTER_FIELD_LABELS.employmentType,     filter: "agSetColumnFilter",  cellClassRules },
+    { field: "employmentType",      headerName: MASTER_FIELD_LABELS.employmentType,     filter: "agSetColumnFilter",  cellClassRules, valueGetter: (params) => params.data?.employmentType },
     { field: "lcaWage",             headerName: MASTER_FIELD_LABELS.lcaWage,            filter: "agSetColumnFilter",  cellClassRules,
       // Derived from the employee's latest Visa/LCA, not its own editable
       // column here — edit it from the expanded row's LCA Wage column instead.
-      valueFormatter: (params) => params.value != null && params.value !== "" ? `$${Number(params.value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "" },
+      valueFormatter: (params) => params.value != null && params.value !== "" ? `$${Number(params.value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "",
+      valueGetter: (params) => params.data?.lcaWage,
+      filterParams: { valueFormatter: (params) => params.value != null && params.value !== "" ? `$${Number(params.value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "" },
+    },
     { field: "receiptNumber",       headerName: MASTER_FIELD_LABELS.receiptNumber,      filter: "agSetColumnFilter",  cellClassRules,
+      valueGetter: (params) => params.data?.receiptNumber,
       cellRenderer: (params) => {
         const receiptNum = params.value;
         if (!receiptNum) return "";
@@ -460,17 +468,20 @@ export default function VisaDetailsList({ preloadedData }) {
         );
       },
     },
-    { field: "employeeType",        headerName: MASTER_FIELD_LABELS.employeeType,       filter: "agSetColumnFilter",  cellClassRules, hide: true },
+    { field: "employeeType",        headerName: MASTER_FIELD_LABELS.employeeType,       filter: "agSetColumnFilter",  cellClassRules, hide: true, valueGetter: (params) => params.data?.employeeType },
     { field: "applicationStatus",   headerName: MASTER_FIELD_LABELS.applicationStatus,  filter: "agSetColumnFilter",  cellClassRules, cellStyle: statusCellStyle,
       editable: (params) => !!params.data?.visaId,
       cellEditor: "agSelectCellEditor",
       cellEditorParams: { values: visaStatusList.map((o) => o.value) },
+      valueGetter: (params) => params.data?.applicationStatus,
+      valueSetter: (params) => { params.data.applicationStatus = params.newValue; return true; },
     },
     {
       field: "paf",
       headerName: MASTER_FIELD_LABELS.paf,
       filter: "agSetColumnFilter",
       cellClassRules,
+      valueGetter: (params) => params.data?.paf,
       cellRenderer: (params) => {
         if (!params.value) return "";
         return (
@@ -481,35 +492,58 @@ export default function VisaDetailsList({ preloadedData }) {
         );
       },
     },
-    { field: "i9",                  headerName: MASTER_FIELD_LABELS.i9,                filter: "agSetColumnFilter",  cellClassRules, cellStyle: statusCellStyle },
-    { field: "everifyStatus",       headerName: MASTER_FIELD_LABELS.everifyStatus,      filter: "agSetColumnFilter",  cellClassRules, cellStyle: statusCellStyle },
+    { field: "i9",                  headerName: MASTER_FIELD_LABELS.i9,                filter: "agSetColumnFilter",  cellClassRules, cellStyle: statusCellStyle, valueGetter: (params) => params.data?.i9 },
+    { field: "everifyStatus",       headerName: MASTER_FIELD_LABELS.everifyStatus,      filter: "agSetColumnFilter",  cellClassRules, cellStyle: statusCellStyle, valueGetter: (params) => params.data?.everifyStatus },
     { field: "startDate",           headerName: MASTER_FIELD_LABELS.startDate,          filter: "agSetColumnFilter", cellClassRules,
       editable: (params) => !!params.data?.visaId,
       valueFormatter: (params) => formatDateMDY(params.value),
+      valueGetter: (params) => params.data?.startDate,
+      valueSetter: (params) => { params.data.startDate = params.newValue; return true; },
+      filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
     },
     { field: "endDate",             headerName: MASTER_FIELD_LABELS.endDate,            filter: "agSetColumnFilter", cellClassRules,
       editable: (params) => !!params.data?.visaId,
       valueFormatter: (params) => formatDateMDY(params.value),
+      valueGetter: (params) => params.data?.endDate,
+      valueSetter: (params) => { params.data.endDate = params.newValue; return true; },
+      filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
     },
-    { field: "employmentStartDate", headerName: MASTER_FIELD_LABELS.employmentStartDate, filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
-    { field: "employmentEndDate",   headerName: MASTER_FIELD_LABELS.employmentEndDate,   filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
+    { field: "employmentStartDate", headerName: MASTER_FIELD_LABELS.employmentStartDate, filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value),
+      valueGetter: (params) => params.data?.employmentStartDate,
+      filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+    },
+    { field: "employmentEndDate",   headerName: MASTER_FIELD_LABELS.employmentEndDate,   filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value),
+      valueGetter: (params) => params.data?.employmentEndDate,
+      filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+    },
     { field: "filingType",          headerName: MASTER_FIELD_LABELS.filingType,         filter: "agSetColumnFilter",  cellClassRules,
       valueFormatter: (p) => FILING_TYPE_LABEL_MAP[p.value] ?? p.value ?? "",
       editable: (params) => !!params.data?.visaId,
       cellEditor: "agSelectCellEditor",
       cellEditorParams: { values: FILING_TYPE_VALUES },
+      valueGetter: (params) => params.data?.filingType,
+      valueSetter: (params) => { params.data.filingType = params.newValue; return true; },
+      filterParams: { valueFormatter: (p) => FILING_TYPE_LABEL_MAP[p.value] ?? p.value ?? "" },
     },
     { field: "visaSubCategory",     headerName: MASTER_FIELD_LABELS.visaSubCategory,    filter: "agSetColumnFilter",  cellClassRules,
       editable: (params) => !!params.data?.visaId,
       cellEditor: "agSelectCellEditor",
       cellEditorParams: { values: VISA_SUB_CATEGORY_VALUES },
+      valueGetter: (params) => params.data?.visaSubCategory,
+      valueSetter: (params) => { params.data.visaSubCategory = params.newValue; return true; },
     },
     { field: "filingYear",          headerName: MASTER_FIELD_LABELS.filingYear,         filter: "agSetColumnFilter",  cellClassRules,
       editable: (params) => !!params.data?.visaId,
+      valueGetter: (params) => params.data?.filingYear,
+      valueSetter: (params) => { params.data.filingYear = params.newValue; return true; },
     },
-    { field: "emailId",             headerName: MASTER_FIELD_LABELS.emailId,            filter: "agSetColumnFilter",  cellClassRules: { ...cellClassRules, blueUnderline: () => true } },
-    { field: "dob",                 headerName: MASTER_FIELD_LABELS.dob,               filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
+    { field: "emailId",             headerName: MASTER_FIELD_LABELS.emailId,            filter: "agSetColumnFilter",  cellClassRules: { ...cellClassRules, blueUnderline: () => true }, valueGetter: (params) => params.data?.emailId },
+    { field: "dob",                 headerName: MASTER_FIELD_LABELS.dob,               filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value),
+      valueGetter: (params) => params.data?.dob,
+      filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+    },
     { field: "passportNumber",      headerName: MASTER_FIELD_LABELS.passportNumber,     filter: "agSetColumnFilter",  cellClassRules,
+      valueGetter: (params) => params.data?.passportNumber,
       cellRenderer: (params) => {
         const passNum = params.value;
         if (!passNum) return "";
@@ -547,6 +581,14 @@ export default function VisaDetailsList({ preloadedData }) {
         const d = parseLocalDateSafe(params.value);
         return d ? d.toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit" }) : (params.value || "");
       },
+      valueGetter: (params) => params.data?.passportExpiryDate,
+      filterParams: {
+        treeList: false,
+        valueFormatter: (params) => {
+          const d = parseLocalDateSafe(params.value);
+          return d ? d.toLocaleDateString("en-US", { year: "numeric", month: "2-digit", day: "2-digit" }) : (params.value || "");
+        },
+      },
       cellStyle: (params) => {
         const expiry = parseLocalDateSafe(params.value);
         if (!expiry) return null;
@@ -557,27 +599,35 @@ export default function VisaDetailsList({ preloadedData }) {
         return null;
       },
     },
-    { field: "location",            headerName: MASTER_FIELD_LABELS.location,           filter: "agSetColumnFilter",  cellClassRules },
-    { field: "approvedDate",        headerName: MASTER_FIELD_LABELS.approvedDate,       filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
-    { field: "arrivalDate",         headerName: MASTER_FIELD_LABELS.arrivalDate,        filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
-    { field: "visaStatus",          headerName: MASTER_FIELD_LABELS.visaStatus,         filter: "agSetColumnFilter",  cellClassRules, cellStyle: statusCellStyle },
-    
+    { field: "location",            headerName: MASTER_FIELD_LABELS.location,           filter: "agSetColumnFilter",  cellClassRules, valueGetter: (params) => params.data?.location },
+    { field: "approvedDate",        headerName: MASTER_FIELD_LABELS.approvedDate,       filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value),
+      valueGetter: (params) => params.data?.approvedDate,
+      filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+    },
+    { field: "arrivalDate",         headerName: MASTER_FIELD_LABELS.arrivalDate,        filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value),
+      valueGetter: (params) => params.data?.arrivalDate,
+      filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+    },
+    { field: "visaStatus",          headerName: MASTER_FIELD_LABELS.visaStatus,         filter: "agSetColumnFilter",  cellClassRules, cellStyle: statusCellStyle, valueGetter: (params) => params.data?.visaStatus },
 
-    { field: "documentStatus",      headerName: MASTER_FIELD_LABELS.documentStatus,     filter: "agSetColumnFilter",  cellClassRules, cellStyle: statusCellStyle },
+
+    { field: "documentStatus",      headerName: MASTER_FIELD_LABELS.documentStatus,     filter: "agSetColumnFilter",  cellClassRules, cellStyle: statusCellStyle, valueGetter: (params) => params.data?.documentStatus },
     { field: "lcaNumber",           headerName: MASTER_FIELD_LABELS.lcaNumber,          filter: "agSetColumnFilter",  cellClassRules,
       editable: (params) => !!params.data?.visaId,
+      valueGetter: (params) => params.data?.lcaNumber,
+      valueSetter: (params) => { params.data.lcaNumber = params.newValue; return true; },
     },
-    { field: "phone",               headerName: MASTER_FIELD_LABELS.phone,              filter: "agSetColumnFilter",  cellClassRules },
+    { field: "phone",               headerName: MASTER_FIELD_LABELS.phone,              filter: "agSetColumnFilter",  cellClassRules, valueGetter: (params) => params.data?.phone },
     // ── Hidden extras (available via Columns panel) ──
-    { field: "ssn",                 headerName: MASTER_FIELD_LABELS.ssn,               filter: "agSetColumnFilter",  cellClassRules, hide: true },
-    { field: "designation",         headerName: MASTER_FIELD_LABELS.designation,        filter: "agSetColumnFilter",  cellClassRules, hide: true },
-    { field: "gender",              headerName: MASTER_FIELD_LABELS.gender,             filter: "agSetColumnFilter",  cellClassRules, hide: true },
-    { field: "referredBy",          headerName: MASTER_FIELD_LABELS.referredBy,         filter: "agSetColumnFilter",  cellClassRules, hide: true },
-    { field: "country",             headerName: MASTER_FIELD_LABELS.country,            filter: "agSetColumnFilter",  cellClassRules, hide: true },
-    { field: "addressLine",         headerName: MASTER_FIELD_LABELS.addressLine,        filter: "agSetColumnFilter",  cellClassRules, hide: true },
-    { field: "city",                headerName: MASTER_FIELD_LABELS.city,               filter: "agSetColumnFilter",  cellClassRules, hide: true },
-    { field: "state",               headerName: MASTER_FIELD_LABELS.state,              filter: "agSetColumnFilter",  cellClassRules, hide: true },
-    { field: "zipCode",             headerName: MASTER_FIELD_LABELS.zipCode,            filter: "agSetColumnFilter",  cellClassRules, hide: true },
+    { field: "ssn",                 headerName: MASTER_FIELD_LABELS.ssn,               filter: "agSetColumnFilter",  cellClassRules, hide: true, valueGetter: (params) => params.data?.ssn },
+    { field: "designation",         headerName: MASTER_FIELD_LABELS.designation,        filter: "agSetColumnFilter",  cellClassRules, hide: true, valueGetter: (params) => params.data?.designation },
+    { field: "gender",              headerName: MASTER_FIELD_LABELS.gender,             filter: "agSetColumnFilter",  cellClassRules, hide: true, valueGetter: (params) => params.data?.gender },
+    { field: "referredBy",          headerName: MASTER_FIELD_LABELS.referredBy,         filter: "agSetColumnFilter",  cellClassRules, hide: true, valueGetter: (params) => params.data?.referredBy },
+    { field: "country",             headerName: MASTER_FIELD_LABELS.country,            filter: "agSetColumnFilter",  cellClassRules, hide: true, valueGetter: (params) => params.data?.country },
+    { field: "addressLine",         headerName: MASTER_FIELD_LABELS.addressLine,        filter: "agSetColumnFilter",  cellClassRules, hide: true, valueGetter: (params) => params.data?.addressLine },
+    { field: "city",                headerName: MASTER_FIELD_LABELS.city,               filter: "agSetColumnFilter",  cellClassRules, hide: true, valueGetter: (params) => params.data?.city },
+    { field: "state",               headerName: MASTER_FIELD_LABELS.state,              filter: "agSetColumnFilter",  cellClassRules, hide: true, valueGetter: (params) => params.data?.state },
+    { field: "zipCode",             headerName: MASTER_FIELD_LABELS.zipCode,            filter: "agSetColumnFilter",  cellClassRules, hide: true, valueGetter: (params) => params.data?.zipCode },
     {
       field: "immigrationTypes",
       headerName: MASTER_FIELD_LABELS.immigrationTypes,
@@ -588,8 +638,22 @@ export default function VisaDetailsList({ preloadedData }) {
         Array.isArray(params.value) && params.value.length > 0
           ? params.value.join(", ")
           : "",
+      valueGetter: (params) => params.data?.immigrationTypes,
+      filterParams: {
+        valueFormatter: (params) =>
+          Array.isArray(params.value) && params.value.length > 0
+            ? params.value.join(", ")
+            : "",
+      },
     },
-  ];
+    ],
+    [],
+  );
+
+  // sizeColumnsForHeader returns a brand-new array/objects every call; memoize
+  // it so AG Grid doesn't see a new columnDefs reference (and reset each
+  // column's applied filter) on every re-render.
+  const sizedColumnDefs = useMemo(() => sizeColumnsForHeader(columnDefs), [columnDefs]);
 
   const detailCellRendererParams = {
     template: `
@@ -614,18 +678,29 @@ export default function VisaDetailsList({ preloadedData }) {
         { field: "visaCategory",    headerName: DETAIL_FIELD_LABELS.visaCategory,    filter: "agSetColumnFilter", editable: true,  cellClassRules,
           cellEditor: "agSelectCellEditor",
           cellEditorParams: { values: VISA_CATEGORY_OPTIONS.map((o) => o.value) },
+          valueGetter: (params) => params.data?.visaCategory,
+          valueSetter: (params) => { params.data.visaCategory = params.newValue; return true; },
         },
         { field: "visaSubCategory", headerName: DETAIL_FIELD_LABELS.visaSubCategory, filter: "agSetColumnFilter", editable: true,  cellClassRules,
           cellEditor: "agSelectCellEditor",
           cellEditorParams: { values: VISA_SUB_CATEGORY_VALUES },
+          valueGetter: (params) => params.data?.visaSubCategory,
+          valueSetter: (params) => { params.data.visaSubCategory = params.newValue; return true; },
         },
         { field: "filingType",      headerName: DETAIL_FIELD_LABELS.filingType,      filter: "agSetColumnFilter", editable: true,  cellClassRules,
           valueFormatter: (p) => FILING_TYPE_LABEL_MAP[p.value] ?? p.value ?? "",
           cellEditor: "agSelectCellEditor",
           cellEditorParams: { values: FILING_TYPE_VALUES },
+          valueGetter: (params) => params.data?.filingType,
+          valueSetter: (params) => { params.data.filingType = params.newValue; return true; },
+          filterParams: { valueFormatter: (p) => FILING_TYPE_LABEL_MAP[p.value] ?? p.value ?? "" },
         },
-        { field: "filingYear",      headerName: DETAIL_FIELD_LABELS.filingYear,      filter: "agSetColumnFilter", editable: true,  cellClassRules },
+        { field: "filingYear",      headerName: DETAIL_FIELD_LABELS.filingYear,      filter: "agSetColumnFilter", editable: true,  cellClassRules,
+          valueGetter: (params) => params.data?.filingYear,
+          valueSetter: (params) => { params.data.filingYear = params.newValue; return true; },
+        },
         { field: "receiptNumber",   headerName: DETAIL_FIELD_LABELS.receiptNumber,   filter: "agSetColumnFilter", editable: false, cellClassRules,
+          valueGetter: (params) => params.data?.receiptNumber,
           cellRenderer: (params) => {
             const receiptNum = params.value;
             if (!receiptNum) return "";
@@ -639,8 +714,13 @@ export default function VisaDetailsList({ preloadedData }) {
             );
           },
         },
-        { field: "jobTitle",      headerName: DETAIL_FIELD_LABELS.jobTitle,      filter: "agSetColumnFilter", editable: true, cellClassRules },
+        { field: "jobTitle",      headerName: DETAIL_FIELD_LABELS.jobTitle,      filter: "agSetColumnFilter", editable: true, cellClassRules,
+          valueGetter: (params) => params.data?.jobTitle,
+          valueSetter: (params) => { params.data.jobTitle = params.newValue; return true; },
+        },
         { field: "lcaNumber",     headerName: DETAIL_FIELD_LABELS.lcaNumber,     filter: "agSetColumnFilter", editable: true, cellClassRules,
+          valueGetter: (params) => params.data?.lcaNumber,
+          valueSetter: (params) => { params.data.lcaNumber = params.newValue; return true; },
           cellRenderer: (params) => {
             const lca = params.data?.lca;
             const lcaNum = params.value;
@@ -655,23 +735,58 @@ export default function VisaDetailsList({ preloadedData }) {
             );
           },
         },
-        { field: "lcaCaseNumber", headerName: DETAIL_FIELD_LABELS.lcaCaseNumber, filter: "agSetColumnFilter", editable: true,  cellClassRules },
-        { field: "socCode",       headerName: DETAIL_FIELD_LABELS.socCode,       filter: "agSetColumnFilter", editable: true,  cellClassRules },
+        { field: "lcaCaseNumber", headerName: DETAIL_FIELD_LABELS.lcaCaseNumber, filter: "agSetColumnFilter", editable: true,  cellClassRules,
+          valueGetter: (params) => params.data?.lcaCaseNumber,
+          valueSetter: (params) => { params.data.lcaCaseNumber = params.newValue; return true; },
+        },
+        { field: "socCode",       headerName: DETAIL_FIELD_LABELS.socCode,       filter: "agSetColumnFilter", editable: true,  cellClassRules,
+          valueGetter: (params) => params.data?.socCode,
+          valueSetter: (params) => { params.data.socCode = params.newValue; return true; },
+        },
         { field: "lcaWage",       headerName: DETAIL_FIELD_LABELS.lcaWage,       filter: "agSetColumnFilter", editable: true,  cellClassRules,
-          valueFormatter: (params) => params.value != null && params.value !== "" ? `$${Number(params.value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "" },
-        { field: "client",       headerName: DETAIL_FIELD_LABELS.client,       filter: "agSetColumnFilter", editable: true, cellClassRules },
-        { field: "customer",       headerName: DETAIL_FIELD_LABELS.customer,       filter: "agSetColumnFilter", editable: true, cellClassRules },
-        { field: "jobLocation",  headerName: DETAIL_FIELD_LABELS.jobLocation,  filter: "agSetColumnFilter", editable: true, cellClassRules },
-        { field: "jobLocation2", headerName: DETAIL_FIELD_LABELS.jobLocation2, filter: "agSetColumnFilter", editable: true, cellClassRules },
+          valueFormatter: (params) => params.value != null && params.value !== "" ? `$${Number(params.value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "",
+          valueGetter: (params) => params.data?.lcaWage,
+          valueSetter: (params) => { params.data.lcaWage = params.newValue; return true; },
+          filterParams: { valueFormatter: (params) => params.value != null && params.value !== "" ? `$${Number(params.value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "" },
+        },
+        { field: "client",       headerName: DETAIL_FIELD_LABELS.client,       filter: "agSetColumnFilter", editable: true, cellClassRules,
+          valueGetter: (params) => params.data?.client,
+          valueSetter: (params) => { params.data.client = params.newValue; return true; },
+        },
+        { field: "customer",       headerName: DETAIL_FIELD_LABELS.customer,       filter: "agSetColumnFilter", editable: true, cellClassRules,
+          valueGetter: (params) => params.data?.customer,
+          valueSetter: (params) => { params.data.customer = params.newValue; return true; },
+        },
+        { field: "jobLocation",  headerName: DETAIL_FIELD_LABELS.jobLocation,  filter: "agSetColumnFilter", editable: true, cellClassRules,
+          valueGetter: (params) => params.data?.jobLocation,
+          valueSetter: (params) => { params.data.jobLocation = params.newValue; return true; },
+        },
+        { field: "jobLocation2", headerName: DETAIL_FIELD_LABELS.jobLocation2, filter: "agSetColumnFilter", editable: true, cellClassRules,
+          valueGetter: (params) => params.data?.jobLocation2,
+          valueSetter: (params) => { params.data.jobLocation2 = params.newValue; return true; },
+        },
         { field: "status",       headerName: DETAIL_FIELD_LABELS.status,       filter: "agSetColumnFilter", editable: true, cellClassRules, cellStyle: statusCellStyle,
           cellEditor: "agSelectCellEditor",
           cellEditorParams: { values: visaStatusList.map((o) => o.value) },
+          valueGetter: (params) => params.data?.status,
+          valueSetter: (params) => { params.data.status = params.newValue; return true; },
         },
-        { field: "startDate",    headerName: DETAIL_FIELD_LABELS.startDate,    filter: "agSetColumnFilter", editable: true, cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
-        { field: "endDate",      headerName: DETAIL_FIELD_LABELS.endDate,      filter: "agSetColumnFilter", editable: true, cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
+        { field: "startDate",    headerName: DETAIL_FIELD_LABELS.startDate,    filter: "agSetColumnFilter", editable: true, cellClassRules, valueFormatter: (params) => formatDateMDY(params.value),
+          valueGetter: (params) => params.data?.startDate,
+          valueSetter: (params) => { params.data.startDate = params.newValue; return true; },
+          filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+        },
+        { field: "endDate",      headerName: DETAIL_FIELD_LABELS.endDate,      filter: "agSetColumnFilter", editable: true, cellClassRules, valueFormatter: (params) => formatDateMDY(params.value),
+          valueGetter: (params) => params.data?.endDate,
+          valueSetter: (params) => { params.data.endDate = params.newValue; return true; },
+          filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+        },
         { field: "lastUpdated",  headerName: DETAIL_FIELD_LABELS.lastUpdated,  filter: "agSetColumnFilter", editable: false, cellClassRules,
           cellStyle: { backgroundColor: "#f5f5f5", color: "#999", fontStyle: "italic" },
-          valueFormatter: (params) => formatDateMDY(params.value) },
+          valueFormatter: (params) => formatDateMDY(params.value),
+          valueGetter: (params) => params.data?.lastUpdated,
+          filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+        },
       ],
       domLayout: "autoHeight",
       defaultColDef: { minWidth: 100, resizable: true },
@@ -794,7 +909,7 @@ export default function VisaDetailsList({ preloadedData }) {
               autoSizeStrategy={{ type: "fitCellContents" }}
               rowHeight={48}
               rowData={filterData()}
-              columnDefs={sizeColumnsForHeader(columnDefs)}
+              columnDefs={sizedColumnDefs}
               stopEditingWhenCellsLoseFocus={true}
               onCellValueChanged={handleMasterCellValueChanged}
               domLayout="normal"

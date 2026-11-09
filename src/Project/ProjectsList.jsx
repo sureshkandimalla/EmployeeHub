@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useContext } from "react";
+import React, { useState, useEffect, useRef, useContext, useMemo } from "react";
 import { sizeColumnsForHeader } from "../Utils/agGridColumnSizing";
 import { AgGridReact } from "@ag-grid-community/react";
 import { Button, Modal, message } from "antd";
@@ -264,6 +264,7 @@ const ProjectList = ({ projectsList, isCollapsed, onRefresh, onEditProject }) =>
         sortable: isSortable,
         editable: false,
         filter: "agSetColumnFilter",
+        valueGetter: (params) => params.data?.projectId,
         cellRenderer: (params) => {
           if (!params.data || params.node.rowPinned) return params.value ?? "";
           return (
@@ -294,6 +295,7 @@ const ProjectList = ({ projectsList, isCollapsed, onRefresh, onEditProject }) =>
         sortable: isSortable,
         editable: false,
         filter: "agSetColumnFilter",
+        valueGetter: (params) => params.data?.employeeName,
       },
       {
         headerName: "Project Name",
@@ -313,6 +315,11 @@ const ProjectList = ({ projectsList, isCollapsed, onRefresh, onEditProject }) =>
         sortable: isSortable,
         editable: true,
         filter: "agSetColumnFilter",
+        valueGetter: (params) => params.data?.projectName,
+        valueSetter: (params) => {
+          params.data.projectName = params.newValue;
+          return true;
+        },
       },
       {
         headerName: "Employee Email",
@@ -320,6 +327,7 @@ const ProjectList = ({ projectsList, isCollapsed, onRefresh, onEditProject }) =>
         sortable: isSortable,
         editable: false,
         filter: "agSetColumnFilter",
+        valueGetter: (params) => params.data?.employeeEmail,
       },
       {
         headerName: "Customer Name",
@@ -327,6 +335,7 @@ const ProjectList = ({ projectsList, isCollapsed, onRefresh, onEditProject }) =>
         sortable: isSortable,
         editable: false,
         filter: "agSetColumnFilter",
+        valueGetter: (params) => params.data?.customerName,
       },
       {
         headerName: "Status",
@@ -334,6 +343,11 @@ const ProjectList = ({ projectsList, isCollapsed, onRefresh, onEditProject }) =>
         sortable: isSortable,
         editable: true,
         filter: "agSetColumnFilter",
+        valueGetter: (params) => params.data?.status,
+        valueSetter: (params) => {
+          params.data.status = params.newValue;
+          return true;
+        },
         cellEditor: "agSelectCellEditor",
         cellEditorParams: {
           values: ["Active", "Yet to Start", "Closed", "Inactive", "Archived"],
@@ -345,6 +359,11 @@ const ProjectList = ({ projectsList, isCollapsed, onRefresh, onEditProject }) =>
         sortable: isSortable,
         editable: true,
         filter: "agSetColumnFilter",
+        valueGetter: (params) => params.data?.paymentTerm,
+        valueSetter: (params) => {
+          params.data.paymentTerm = params.newValue;
+          return true;
+        },
         cellEditor: "agSelectCellEditor",
         cellEditorParams: {
           values: paymentTermsList.map((option) => option.value),
@@ -376,6 +395,15 @@ const ProjectList = ({ projectsList, isCollapsed, onRefresh, onEditProject }) =>
         aggFunc: "sum",
         valueFormatter: (params) =>
           `$${params.value ? params.value.toFixed(2) : "0.00"}`,
+        valueGetter: (params) => params.data?.billRate,
+        valueSetter: (params) => {
+          params.data.billRate = params.newValue;
+          return true;
+        },
+        filterParams: {
+          valueFormatter: (params) =>
+            `$${params.value ? params.value.toFixed(2) : "0.00"}`,
+        },
       },
       {
         headerName: "Bean Net Internal",
@@ -386,6 +414,11 @@ const ProjectList = ({ projectsList, isCollapsed, onRefresh, onEditProject }) =>
         aggFunc: "sum",
         valueFormatter: (params) =>
           `$${params.value ? params.value.toFixed(2) : "0.00"}`,
+        valueGetter: (params) => params.data?.net,
+        filterParams: {
+          valueFormatter: (params) =>
+            `$${params.value ? params.value.toFixed(2) : "0.00"}`,
+        },
       },
       {
         headerName: "Employee pay Rate",
@@ -396,6 +429,11 @@ const ProjectList = ({ projectsList, isCollapsed, onRefresh, onEditProject }) =>
         aggFunc: "sum",
         valueFormatter: (params) =>
           `$${params.value ? params.value.toFixed(2) : "0.00"}`,
+        valueGetter: (params) => params.data?.employeePay,
+        filterParams: {
+          valueFormatter: (params) =>
+            `$${params.value ? params.value.toFixed(2) : "0.00"}`,
+        },
       },
       {
         headerName: "External",
@@ -406,6 +444,11 @@ const ProjectList = ({ projectsList, isCollapsed, onRefresh, onEditProject }) =>
         aggFunc: "sum",
         valueFormatter: (params) =>
           `$${params.value ? params.value.toFixed(2) : "0.00"}`,
+        valueGetter: (params) => params.data?.expenseExternal,
+        filterParams: {
+          valueFormatter: (params) =>
+            `$${params.value ? params.value.toFixed(2) : "0.00"}`,
+        },
       },
       {
         headerName: "Taxes",
@@ -416,6 +459,11 @@ const ProjectList = ({ projectsList, isCollapsed, onRefresh, onEditProject }) =>
         aggFunc: "sum",
         valueFormatter: (params) =>
           `$${params.value ? params.value.toFixed(2) : "0.00"}`,
+        valueGetter: (params) => params.data?.expenseInternal,
+        filterParams: {
+          valueFormatter: (params) =>
+            `$${params.value ? params.value.toFixed(2) : "0.00"}`,
+        },
       },
       {
         headerName: "Client",
@@ -423,6 +471,7 @@ const ProjectList = ({ projectsList, isCollapsed, onRefresh, onEditProject }) =>
         sortable: isSortable,
         editable: true,
         filter: "agSetColumnFilter",
+        valueGetter: (params) => params.data?.clientName,
         // Backend entity field is "client" (see ProjectController#updateProject),
         // grid/domain field is "clientName" — keep both in sync on edit so the
         // PUT payload (the whole row) carries the key the backend reads.
@@ -439,6 +488,12 @@ const ProjectList = ({ projectsList, isCollapsed, onRefresh, onEditProject }) =>
         editable: true,
         filter: "agSetColumnFilter",
         valueFormatter: (params) => formatDateMDY(params.value),
+        valueGetter: (params) => params.data?.startDate,
+        valueSetter: (params) => {
+          params.data.startDate = params.newValue;
+          return true;
+        },
+        filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
       },
       {
         headerName: "Project End Date",
@@ -447,6 +502,12 @@ const ProjectList = ({ projectsList, isCollapsed, onRefresh, onEditProject }) =>
         editable: true,
         filter: "agSetColumnFilter",
         valueFormatter: (params) => formatDateMDY(params.value),
+        valueGetter: (params) => params.data?.endDate,
+        valueSetter: (params) => {
+          params.data.endDate = params.newValue;
+          return true;
+        },
+        filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
       },
       {
         headerName: "Company",
@@ -454,6 +515,7 @@ const ProjectList = ({ projectsList, isCollapsed, onRefresh, onEditProject }) =>
         sortable: isSortable,
         editable: false,
         filter: "agSetColumnFilter",
+        valueGetter: (params) => params.data?.companyName,
       },
       {
         headerName: "Action",
@@ -525,6 +587,18 @@ const ProjectList = ({ projectsList, isCollapsed, onRefresh, onEditProject }) =>
       )
     );
   };
+
+  // sizeColumnsForHeader returns a brand-new array/objects every call; memoize
+  // it so AG Grid doesn't see a new columnDefs reference (and reset each
+  // column's applied filter) on every re-render. Deps include canViewFinancials
+  // (changes which columns are even included) and latestWageIdByProject/
+  // poDocByWageId (read inside the PO column's cellRenderer closure, so a
+  // stale memo would freeze that cell on its first-render values).
+  const sizedColumnDefs = useMemo(
+    () => sizeColumnsForHeader(getColumnsDefList(true)),
+    [canViewFinancials, latestWageIdByProject, poDocByWageId],
+  );
+
   return (
     <div className="ag-theme-alpine project-List-grid">
       <GridToolbar className="workforce-search-container">
@@ -582,7 +656,7 @@ const ProjectList = ({ projectsList, isCollapsed, onRefresh, onEditProject }) =>
           rowHeight={48}
           rowData={filterData()}
           enableFilter={true}
-          columnDefs={sizeColumnsForHeader(getColumnsDefList(true))}
+          columnDefs={sizedColumnDefs}
           defaultColDef={{
             minWidth: 100,
             // No maxWidth — a 220px ceiling here was silently blocking the

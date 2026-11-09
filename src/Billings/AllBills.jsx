@@ -175,15 +175,18 @@ export default function AllBills() {
         enableRowGroup: true,
         filter: "agSetColumnFilter",
         cellClassRules,
+        valueGetter: (params) => params.data?.employeeName,
       },
-      { headerName: "Vendor Name", field: "vendorName", filter: "agSetColumnFilter", cellClassRules },
-      { headerName: "Description", field: "billType", filter: "agSetColumnFilter", cellClassRules },
+      { headerName: "Vendor Name", field: "vendorName", filter: "agSetColumnFilter", cellClassRules, valueGetter: (params) => params.data?.vendorName },
+      { headerName: "Description", field: "billType", filter: "agSetColumnFilter", cellClassRules, valueGetter: (params) => params.data?.billType },
       {
         headerName: "Invoice Month",
         field: "invoiceMonth",
         filter: "agSetColumnFilter",
         valueFormatter: (params) => formatMonthYear(params.value),
         cellClassRules,
+        valueGetter: (params) => params.data?.invoiceMonth,
+        filterParams: { valueFormatter: (params) => formatMonthYear(params.value) },
       },
       {
         headerName: "Billing",
@@ -233,10 +236,42 @@ export default function AllBills() {
         valueFormatter: (params) => formatCurrency(params.value),
         cellClassRules,
       },
-      { headerName: "Bill Date", field: "billDate", filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
-      { headerName: "Start Date", field: "startDate", filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
-      { headerName: "End Date", field: "endDate", filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
-      { headerName: "Payment Date", field: "paymentDate", filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
+      {
+        headerName: "Bill Date",
+        field: "billDate",
+        filter: "agSetColumnFilter",
+        cellClassRules,
+        valueFormatter: (params) => formatDateMDY(params.value),
+        valueGetter: (params) => params.data?.billDate,
+        filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+      },
+      {
+        headerName: "Start Date",
+        field: "startDate",
+        filter: "agSetColumnFilter",
+        cellClassRules,
+        valueFormatter: (params) => formatDateMDY(params.value),
+        valueGetter: (params) => params.data?.startDate,
+        filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+      },
+      {
+        headerName: "End Date",
+        field: "endDate",
+        filter: "agSetColumnFilter",
+        cellClassRules,
+        valueFormatter: (params) => formatDateMDY(params.value),
+        valueGetter: (params) => params.data?.endDate,
+        filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+      },
+      {
+        headerName: "Payment Date",
+        field: "paymentDate",
+        filter: "agSetColumnFilter",
+        cellClassRules,
+        valueFormatter: (params) => formatDateMDY(params.value),
+        valueGetter: (params) => params.data?.paymentDate,
+        filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+      },
       {
         headerName: "Status",
         field: "status",
@@ -245,6 +280,11 @@ export default function AllBills() {
         editable: canEditBills,
         cellEditor: "agSelectCellEditor",
         cellEditorParams: { values: BILL_STATUS_OPTIONS },
+        valueGetter: (params) => params.data?.status,
+        valueSetter: (params) => {
+          params.data.status = params.newValue;
+          return true;
+        },
       },
       {
         headerName: "Comments",
@@ -253,7 +293,7 @@ export default function AllBills() {
         cellClassRules,
         editable: canEditBills,
       },
-      { headerName: "Project Id", field: "projectId", filter: "agSetColumnFilter", cellClassRules },
+      { headerName: "Project Id", field: "projectId", filter: "agSetColumnFilter", cellClassRules, valueGetter: (params) => params.data?.projectId },
       {
         colId: "action",
         headerName: "Action",
@@ -276,6 +316,12 @@ export default function AllBills() {
     ],
     [canEditBills],
   );
+
+  // sizeColumnsForHeader returns a brand-new array/objects every call; memoize
+  // it so AG Grid doesn't see a new columnDefs reference (and reset each
+  // column's applied filter) on every re-render — including the one
+  // setPinnedTopRowData triggers on every filter change via onModelUpdated.
+  const sizedColumnDefs = useMemo(() => sizeColumnsForHeader(columnDefs), [columnDefs]);
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -315,7 +361,7 @@ export default function AllBills() {
             autoSizeStrategy={{ type: "fitCellContents" }}
             rowHeight={48}
             rowData={filteredRowData}
-            columnDefs={sizeColumnsForHeader(columnDefs)}
+            columnDefs={sizedColumnDefs}
             groupDefaultExpanded={0}
             suppressAggFuncInHeader={true}
             pinnedTopRowData={pinnedTopRowData}

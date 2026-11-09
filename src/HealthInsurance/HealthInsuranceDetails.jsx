@@ -61,7 +61,13 @@ const HealthInsuranceDetails = ({ rowData: externalRowData, onRefresh, employeeI
 
   const columnDefs = useMemo(
     () => [
-      { headerName: "Health Insurance Id", field: "healthInsuranceId", sortable: true, hide: true },
+      {
+        headerName: "Health Insurance Id",
+        field: "healthInsuranceId",
+        sortable: true,
+        hide: true,
+        valueGetter: (params) => params.data?.healthInsuranceId,
+      },
       {
         headerName: "Employee Name",
         field: "employeeName",
@@ -69,28 +75,47 @@ const HealthInsuranceDetails = ({ rowData: externalRowData, onRefresh, employeeI
         minWidth: 180,
         pinned: "left",
         enableRowGroup: true,
+        valueGetter: (params) => params.data?.employeeName,
       },
-      { headerName: "Employee Id", field: "employeeId", sortable: true, enableRowGroup: true },
-      { headerName: "Group Id", field: "groupId", sortable: true, enableRowGroup: true },
+      {
+        headerName: "Employee Id",
+        field: "employeeId",
+        sortable: true,
+        enableRowGroup: true,
+        valueGetter: (params) => params.data?.employeeId,
+      },
+      {
+        headerName: "Group Id",
+        field: "groupId",
+        sortable: true,
+        enableRowGroup: true,
+        valueGetter: (params) => params.data?.groupId,
+      },
       {
         headerName: "Date of Bill",
         field: "dateOfBill",
         sortable: true,
         valueFormatter: formatDateCell,
+        valueGetter: (params) => params.data?.dateOfBill,
+        filterParams: { treeList: false, valueFormatter: formatDateCell },
       },
       {
         headerName: "Due Date",
         field: "dueDate",
         sortable: true,
         valueFormatter: formatDateCell,
+        valueGetter: (params) => params.data?.dueDate,
+        filterParams: { treeList: false, valueFormatter: formatDateCell },
       },
-      { headerName: "UMI", field: "umi", sortable: true },
+      { headerName: "UMI", field: "umi", sortable: true, valueGetter: (params) => params.data?.umi },
       {
         headerName: "Claim Prefund",
         field: "claimPrefund",
         sortable: true,
         aggFunc: "sum",
         valueFormatter: (params) => formatCurrency(params.value),
+        valueGetter: (params) => params.data?.claimPrefund,
+        filterParams: { valueFormatter: (params) => formatCurrency(params.value) },
       },
       {
         headerName: "Specific Stop Loss",
@@ -98,6 +123,8 @@ const HealthInsuranceDetails = ({ rowData: externalRowData, onRefresh, employeeI
         sortable: true,
         aggFunc: "sum",
         valueFormatter: (params) => formatCurrency(params.value),
+        valueGetter: (params) => params.data?.specificStopLoss,
+        filterParams: { valueFormatter: (params) => formatCurrency(params.value) },
       },
       {
         headerName: "Aggregate Stop Loss",
@@ -105,6 +132,8 @@ const HealthInsuranceDetails = ({ rowData: externalRowData, onRefresh, employeeI
         sortable: true,
         aggFunc: "sum",
         valueFormatter: (params) => formatCurrency(params.value),
+        valueGetter: (params) => params.data?.aggregateStopLoss,
+        filterParams: { valueFormatter: (params) => formatCurrency(params.value) },
       },
       {
         headerName: "Admin Fee",
@@ -112,6 +141,8 @@ const HealthInsuranceDetails = ({ rowData: externalRowData, onRefresh, employeeI
         sortable: true,
         aggFunc: "sum",
         valueFormatter: (params) => formatCurrency(params.value),
+        valueGetter: (params) => params.data?.adminFee,
+        filterParams: { valueFormatter: (params) => formatCurrency(params.value) },
       },
       {
         headerName: "Total",
@@ -119,8 +150,10 @@ const HealthInsuranceDetails = ({ rowData: externalRowData, onRefresh, employeeI
         sortable: true,
         aggFunc: "sum",
         valueFormatter: (params) => formatCurrency(params.value),
+        valueGetter: (params) => params.data?.total,
+        filterParams: { valueFormatter: (params) => formatCurrency(params.value) },
       },
-      { headerName: "Comment", field: "comment", sortable: true },
+      { headerName: "Comment", field: "comment", sortable: true, valueGetter: (params) => params.data?.comment },
     ],
     [employeeId],
   );
@@ -146,6 +179,12 @@ const HealthInsuranceDetails = ({ rowData: externalRowData, onRefresh, employeeI
   const { pinnedTopRowData, onModelUpdated } = useFilteredTotalsRow((rows) =>
     sumHealthInsuranceRows(rows, "Filtered Total"),
   );
+
+  // sizeColumnsForHeader returns a brand-new array/objects every call; memoize
+  // it so AG Grid doesn't see a new columnDefs reference (and reset each
+  // column's applied filter) on every re-render — including the one
+  // setPinnedTopRowData triggers on every filter change via onModelUpdated.
+  const sizedColumnDefs = useMemo(() => sizeColumnsForHeader(columnDefs), [columnDefs]);
 
   const handleExport = () => {
     if (gridRef.current?.api) {
@@ -240,7 +279,7 @@ const HealthInsuranceDetails = ({ rowData: externalRowData, onRefresh, employeeI
             rowHeight={48}
             rowData={rowData}
             quickFilterText={searchText}
-            columnDefs={sizeColumnsForHeader(columnDefs)}
+            columnDefs={sizedColumnDefs}
             pinnedTopRowData={pinnedTopRowData}
             pinnedBottomRowData={pinnedBottomRowData}
             defaultColDef={{

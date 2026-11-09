@@ -126,12 +126,14 @@ const HoursReport = () => {
   const columnDefs = useMemo(
     () =>
       sizeColumnsForHeader([
-        { headerName: "Employee", field: "employeeName", minWidth: 180 },
+        { headerName: "Employee", field: "employeeName", minWidth: 180, valueGetter: (params) => params.data?.employeeName },
         ...HOURS_FIELDS.map(({ field, headerName }) => ({
           headerName,
           field,
           valueFormatter: (params) => round1(params.value),
           cellStyle: { textAlign: "right" },
+          valueGetter: (params) => params.data?.[field],
+          filterParams: { valueFormatter: (params) => round1(params.value) },
         })),
         {
           headerName: "Discrepancy",

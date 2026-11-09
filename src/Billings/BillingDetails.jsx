@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import API_ENDPOINTS from "../config";
 import { sizeColumnsForHeader } from "../Utils/agGridColumnSizing";
 import { formatMonthYear, formatDateMDY } from "../Utils/dateFormat";
@@ -71,12 +71,15 @@ const BillingDetails = ({ url, isCollapsed, onRefresh }) => {
         field: "billType",
         sortable: isSortable,
         width: 250,
+        valueGetter: (params) => params.data?.billType,
       },
       {
         headerName: "InvoiceMonth",
         field: "invoiceMonth",
         sortable: isSortable,
         valueFormatter: (params) => formatMonthYear(params.value),
+        valueGetter: (params) => params.data?.invoiceMonth,
+        filterParams: { valueFormatter: (params) => formatMonthYear(params.value) },
       },
       {
         headerName: "Billing",
@@ -91,30 +94,59 @@ const BillingDetails = ({ url, isCollapsed, onRefresh }) => {
           // Apply formatting for non-pinned rows
           return formatCurrency(params.value);
         },
+        valueGetter: (params) => params.data?.billing,
+        filterParams: { valueFormatter: (params) => formatCurrency(params.value) },
       },
-      { headerName: "Hours", field: "hours", sortable: isSortable },
+      { headerName: "Hours", field: "hours", sortable: isSortable, valueGetter: (params) => params.data?.hours },
       {
         headerName: "Total",
         field: "total",
         sortable: isSortable,
         valueFormatter: (params) => formatCurrency(params.value), // Format with dollar sign
+        valueGetter: (params) => params.data?.total,
+        filterParams: { valueFormatter: (params) => formatCurrency(params.value) },
       },
       {
         headerName: "Bill PaidAmount",
         field: "billPaidAmount",
         sortable: isSortable,
         valueFormatter: (params) => formatCurrency(params.value), // Format with dollar sign
+        valueGetter: (params) => params.data?.billPaidAmount,
+        filterParams: { valueFormatter: (params) => formatCurrency(params.value) },
       },
-      { headerName: "BillDate", field: "billDate", sortable: isSortable, valueFormatter: (params) => formatDateMDY(params.value) },
-      { headerName: "Start Date", field: "startDate", sortable: isSortable, valueFormatter: (params) => formatDateMDY(params.value) },
-      { headerName: "End Date", field: "endDate", sortable: isSortable, valueFormatter: (params) => formatDateMDY(params.value) },
+      {
+        headerName: "BillDate",
+        field: "billDate",
+        sortable: isSortable,
+        valueFormatter: (params) => formatDateMDY(params.value),
+        valueGetter: (params) => params.data?.billDate,
+        filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+      },
+      {
+        headerName: "Start Date",
+        field: "startDate",
+        sortable: isSortable,
+        valueFormatter: (params) => formatDateMDY(params.value),
+        valueGetter: (params) => params.data?.startDate,
+        filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+      },
+      {
+        headerName: "End Date",
+        field: "endDate",
+        sortable: isSortable,
+        valueFormatter: (params) => formatDateMDY(params.value),
+        valueGetter: (params) => params.data?.endDate,
+        filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+      },
       {
         headerName: "Payment Date",
         field: "paymentDate",
         sortable: isSortable,
         valueFormatter: (params) => formatDateMDY(params.value),
+        valueGetter: (params) => params.data?.paymentDate,
+        filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
       },
-      { headerName: "Status", field: "status", sortable: isSortable },
+      { headerName: "Status", field: "status", sortable: isSortable, valueGetter: (params) => params.data?.status },
     ];
     return columns;
   };
@@ -172,6 +204,11 @@ const BillingDetails = ({ url, isCollapsed, onRefresh }) => {
     }
     return null;
   };
+
+  // sizeColumnsForHeader returns a brand-new array/objects every call; memoize
+  // it so AG Grid doesn't see a new columnDefs reference (and reset each
+  // column's applied filter) on every re-render.
+  const sizedColumnDefs = useMemo(() => sizeColumnsForHeader(getColumnsDefList(true)), []);
 
   return (
     <div
@@ -236,7 +273,7 @@ const BillingDetails = ({ url, isCollapsed, onRefresh }) => {
         autoSizeStrategy={{ type: "fitCellContents" }}
         rowHeight={48}
         rowData={filterData()}
-        columnDefs={sizeColumnsForHeader(getColumnsDefList(true))}
+        columnDefs={sizedColumnDefs}
         gridOptions={gridOptions}
         defaultColDef={{
           minWidth: 100,

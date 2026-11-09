@@ -344,20 +344,26 @@ const EmployeeDocumentsPanel = ({ entityId, visaCategory }) => {
     );
   };
 
-  const masterColumnDefs = [
+  // Wrapped in useMemo (rather than a plain array literal recreated every
+  // render) so it has a stable reference for the sizedColumnDefs memo below
+  // to key off.
+  const masterColumnDefs = useMemo(() => [
     {
       field: "documentType",
       headerName: "Document Type",
       cellRenderer: "agGroupCellRenderer",
       onCellClicked: (params) => params.node.setExpanded(!params.node.expanded),
       cellStyle: { cursor: "pointer" },
+      valueGetter: (params) => params.data?.documentType,
     },
     { headerName: "Status", cellRenderer: statusCellRenderer },
-    { field: "uploadedCount", headerName: "Documents" },
+    { field: "uploadedCount", headerName: "Documents", valueGetter: (params) => params.data?.uploadedCount },
     {
       field: "lastUpdated",
       headerName: "Last updated Date",
       valueFormatter: (p) => formatDateMDY(p.value),
+      valueGetter: (params) => params.data?.lastUpdated,
+      filterParams: { treeList: false, valueFormatter: (p) => formatDateMDY(p.value) },
     },
     {
       headerName: "Actions",
@@ -409,7 +415,12 @@ const EmployeeDocumentsPanel = ({ entityId, visaCategory }) => {
         );
       },
     },
-  ];
+  ], []);
+
+  // sizeColumnsForHeader returns a brand-new array/objects every call; memoize
+  // it so AG Grid doesn't see a new columnDefs reference (and reset each
+  // column's applied filter) on every re-render.
+  const sizedColumnDefs = useMemo(() => sizeColumnsForHeader(masterColumnDefs), [masterColumnDefs]);
 
   const detailCellRendererParams = {
     detailGridOptions: {
@@ -508,7 +519,7 @@ const EmployeeDocumentsPanel = ({ entityId, visaCategory }) => {
           popupParent={gridPopupParent}
           ref={gridRef}
           rowData={rowData}
-          columnDefs={sizeColumnsForHeader(masterColumnDefs)}
+          columnDefs={sizedColumnDefs}
           defaultColDef={{ minWidth: 100, resizable: true, filter: "agSetColumnFilter" }}
           domLayout="normal"
           masterDetail={true}

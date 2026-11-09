@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AgGridReact } from "@ag-grid-community/react";
 import { Button, Tag } from "antd";
 import { ReloadOutlined, FileExcelOutlined, PlusOutlined } from "@ant-design/icons";
@@ -53,7 +53,8 @@ export default function UnsubmittedTimesheets() {
     });
   };
 
-  const columnDefs = [
+  const columnDefs = useMemo(
+    () => [
     {
       colId: "rowNum",
       headerName: "#",
@@ -70,18 +71,26 @@ export default function UnsubmittedTimesheets() {
       suppressSizeToFit: true,
       cellStyle: { textAlign: "center", fontWeight: 500 },
     },
-    { field: "employeeName", headerName: "Employee", pinned: "left", filter: "agSetColumnFilter" },
-    { field: "employeeId", headerName: "Employee ID", filter: "agSetColumnFilter" },
-    { field: "employeeEmail", headerName: "Employee Email", filter: "agSetColumnFilter" },
-    { field: "projectName", headerName: "Project", filter: "agSetColumnFilter" },
-    { field: "yearMonth", headerName: "Month", filter: "agSetColumnFilter", sort: "desc" },
+    { field: "employeeName", headerName: "Employee", pinned: "left", filter: "agSetColumnFilter", valueGetter: (params) => params.data?.employeeName },
+    { field: "employeeId", headerName: "Employee ID", filter: "agSetColumnFilter", valueGetter: (params) => params.data?.employeeId },
+    { field: "employeeEmail", headerName: "Employee Email", filter: "agSetColumnFilter", valueGetter: (params) => params.data?.employeeEmail },
+    { field: "projectName", headerName: "Project", filter: "agSetColumnFilter", valueGetter: (params) => params.data?.projectName },
+    { field: "yearMonth", headerName: "Month", filter: "agSetColumnFilter", sort: "desc", valueGetter: (params) => params.data?.yearMonth },
     {
       field: "status",
       headerName: "Status",
       filter: "agSetColumnFilter",
+      valueGetter: (params) => params.data?.status,
       cellRenderer: (p) => <Tag color={STATUS_COLOR[p.value]}>{p.value}</Tag>,
     },
-  ];
+    ],
+    [],
+  );
+
+  // sizeColumnsForHeader returns a brand-new array/objects every call; memoize
+  // it so AG Grid doesn't see a new columnDefs reference (and reset each
+  // column's applied filter) on every re-render.
+  const sizedColumnDefs = useMemo(() => sizeColumnsForHeader(columnDefs), [columnDefs]);
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -109,7 +118,7 @@ export default function UnsubmittedTimesheets() {
             ref={gridRef}
             rowData={rows}
             quickFilterText={searchText}
-            columnDefs={sizeColumnsForHeader(columnDefs)}
+            columnDefs={sizedColumnDefs}
             defaultColDef={{ minWidth: 100, resizable: true, filter: "agSetColumnFilter" }}
             domLayout="normal"
             animateRows={true}

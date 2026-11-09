@@ -131,11 +131,22 @@ const PendingRequests = () => {
   };
 
   const columnDefs = [
-    { headerName: "Type", field: "type", filter: "agSetColumnFilter", cellClassRules },
-    { headerName: "Record", field: "entityLabel", filter: "agSetColumnFilter", cellClassRules },
-    { headerName: "Action", field: "action", filter: "agSetColumnFilter", cellClassRules },
-    { headerName: "Requested By", field: "requestedBy", filter: "agSetColumnFilter", cellClassRules },
-    { headerName: "Requested Date", field: "requestedDate", filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
+    { headerName: "Type", field: "type", filter: "agSetColumnFilter", cellClassRules, valueGetter: (params) => params.data?.type },
+    { headerName: "Record", field: "entityLabel", filter: "agSetColumnFilter", cellClassRules, valueGetter: (params) => params.data?.entityLabel },
+    { headerName: "Action", field: "action", filter: "agSetColumnFilter", cellClassRules, valueGetter: (params) => params.data?.action },
+    { headerName: "Requested By", field: "requestedBy", filter: "agSetColumnFilter", cellClassRules, valueGetter: (params) => params.data?.requestedBy },
+    {
+      headerName: "Requested Date",
+      field: "requestedDate",
+      filter: "agSetColumnFilter",
+      cellClassRules,
+      valueFormatter: (params) => formatDateMDY(params.value),
+      valueGetter: (params) => params.data?.requestedDate,
+      filterParams: {
+        treeList: false,
+        valueFormatter: (params) => formatDateMDY(params.value),
+      },
+    },
     {
       headerName: "Review",
       sortable: false,

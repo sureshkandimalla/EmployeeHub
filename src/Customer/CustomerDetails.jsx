@@ -217,6 +217,23 @@ const CustomerDetails = () => {
         cellClass: isIdColumn ? "ag-center-cols" : undefined,
         cellStyle: isIdColumn ? { textAlign: "center" } : undefined,
         valueFormatter: type === "date" ? (params) => formatDateMDY(params.value) : undefined,
+        // Every column here is editable, and the Set Filter's checkboxes
+        // are completely inert without an explicit valueGetter — confirmed
+        // live, not just a date-specific quirk (see the same fix applied
+        // to Payroll/PayrollDetails.jsx). Since every column is also
+        // editable, valueSetter has to be paired with it so edits still
+        // persist. For date fields specifically, the Set Filter also
+        // defaults into AG Grid's broken tree-list mode without
+        // filterParams.treeList: false.
+        valueGetter: (params) => params.data?.[field],
+        valueSetter: (params) => {
+          params.data[field] = params.newValue;
+          return true;
+        },
+        filterParams:
+          type === "date"
+            ? { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) }
+            : undefined,
         cellRenderer:
           field === "customerCompanyName"
             ? (params) => (
@@ -346,6 +363,7 @@ const CustomerDetails = () => {
         filter: "agSetColumnFilter",
         resizable: true,
         minWidth: 120,
+        valueGetter: (params) => params.data?.[k],
         cellClassRules: {
           darkGreyBackground: (params) =>
             params.node?.rowIndex !== undefined && params.node.rowIndex % 2 === 1,
@@ -356,6 +374,11 @@ const CustomerDetails = () => {
       return customerColumnDefs;
     }
   }, [customerColumnDefs, rowData]);
+
+  // sizeColumnsForHeader returns a brand-new array/objects every call; memoize
+  // it so AG Grid doesn't see a new columnDefs reference (and reset each
+  // column's applied filter) on every re-render.
+  const sizedColumnDefs = useMemo(() => sizeColumnsForHeader(combinedColumnDefs), [combinedColumnDefs]);
 
   return (
     <div
@@ -464,7 +487,7 @@ const CustomerDetails = () => {
             autoSizeStrategy={{ type: "fitCellContents" }}
             rowHeight={48}
             rowData={filterData()}
-            columnDefs={sizeColumnsForHeader(combinedColumnDefs)}
+            columnDefs={sizedColumnDefs}
             defaultColDef={{
               resizable: true,
               filter: "agSetColumnFilter",

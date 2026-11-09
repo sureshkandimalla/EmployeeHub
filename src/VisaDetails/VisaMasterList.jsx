@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { AgGridReact } from "@ag-grid-community/react";
 import { Button, Card, Form, Modal, message } from "antd";
 import { PlusOutlined, FileExcelOutlined, ReloadOutlined, SaveOutlined, CloseOutlined } from "@ant-design/icons";
@@ -301,7 +301,8 @@ const VisaMasterList = () => {
     darkGreyBackground: (params) => params.node?.rowIndex !== undefined && params.node.rowIndex % 2 === 1,
   };
 
-  const columnDefs = [
+  const columnDefs = useMemo(
+    () => [
     {
       colId: "rowNum",
       headerName: "#",
@@ -320,6 +321,8 @@ const VisaMasterList = () => {
       pinned: "left",
       filter: "agSetColumnFilter",
       cellClassRules: { ...cellClassRules, blueUnderline: () => true },
+      valueGetter: (params) => params.data?.receiptNumber,
+      valueSetter: (params) => { params.data.receiptNumber = params.newValue; return true; },
       cellRenderer: (params) => {
         if (!params.value) return "";
         return (
@@ -329,40 +332,99 @@ const VisaMasterList = () => {
         );
       },
     },
-    { colId: "employeeName", field: "employeeName", headerName: "Employee Name", filter: "agSetColumnFilter", cellClassRules, editable: false },
+    { colId: "employeeName", field: "employeeName", headerName: "Employee Name", filter: "agSetColumnFilter", cellClassRules, editable: false, valueGetter: (params) => params.data?.employeeName },
     { colId: "visaCategory", field: "visaCategory", headerName: DETAIL_FIELD_LABELS.visaCategory, filter: "agSetColumnFilter", cellClassRules,
       cellEditor: "agSelectCellEditor",
       cellEditorParams: { values: VISA_CATEGORY_OPTIONS.map((o) => o.value) },
+      valueGetter: (params) => params.data?.visaCategory,
+      valueSetter: (params) => { params.data.visaCategory = params.newValue; return true; },
     },
     { colId: "visaSubCategory", field: "visaSubCategory", headerName: DETAIL_FIELD_LABELS.visaSubCategory, filter: "agSetColumnFilter", cellClassRules,
       cellEditor: "agSelectCellEditor",
       cellEditorParams: { values: VISA_SUB_CATEGORY_VALUES },
+      valueGetter: (params) => params.data?.visaSubCategory,
+      valueSetter: (params) => { params.data.visaSubCategory = params.newValue; return true; },
     },
     { colId: "filingType", field: "filingType", headerName: DETAIL_FIELD_LABELS.filingType, filter: "agSetColumnFilter", cellClassRules,
       valueFormatter: (p) => FILING_TYPE_LABEL_MAP[p.value] ?? p.value ?? "",
       cellEditor: "agSelectCellEditor",
       cellEditorParams: { values: FILING_TYPE_VALUES },
+      valueGetter: (params) => params.data?.filingType,
+      valueSetter: (params) => { params.data.filingType = params.newValue; return true; },
+      filterParams: { valueFormatter: (p) => FILING_TYPE_LABEL_MAP[p.value] ?? p.value ?? "" },
     },
-    { colId: "filingYear", field: "filingYear", headerName: DETAIL_FIELD_LABELS.filingYear, filter: "agSetColumnFilter", cellClassRules },
+    { colId: "filingYear", field: "filingYear", headerName: DETAIL_FIELD_LABELS.filingYear, filter: "agSetColumnFilter", cellClassRules,
+      valueGetter: (params) => params.data?.filingYear,
+      valueSetter: (params) => { params.data.filingYear = params.newValue; return true; },
+    },
     { colId: "status", field: "status", headerName: DETAIL_FIELD_LABELS.status, filter: "agSetColumnFilter", cellClassRules,
       cellEditor: "agSelectCellEditor",
       cellEditorParams: { values: visaStatusList.map((o) => o.value) },
+      valueGetter: (params) => params.data?.status,
+      valueSetter: (params) => { params.data.status = params.newValue; return true; },
     },
-    { colId: "jobTitle", field: "jobTitle", headerName: DETAIL_FIELD_LABELS.jobTitle, filter: "agSetColumnFilter", cellClassRules },
-    { colId: "lcaNumber", field: "lcaNumber", headerName: DETAIL_FIELD_LABELS.lcaNumber, filter: "agSetColumnFilter", cellClassRules },
-    { colId: "socCode", field: "socCode", headerName: DETAIL_FIELD_LABELS.socCode, filter: "agSetColumnFilter", cellClassRules },
+    { colId: "jobTitle", field: "jobTitle", headerName: DETAIL_FIELD_LABELS.jobTitle, filter: "agSetColumnFilter", cellClassRules,
+      valueGetter: (params) => params.data?.jobTitle,
+      valueSetter: (params) => { params.data.jobTitle = params.newValue; return true; },
+    },
+    { colId: "lcaNumber", field: "lcaNumber", headerName: DETAIL_FIELD_LABELS.lcaNumber, filter: "agSetColumnFilter", cellClassRules,
+      valueGetter: (params) => params.data?.lcaNumber,
+      valueSetter: (params) => { params.data.lcaNumber = params.newValue; return true; },
+    },
+    { colId: "socCode", field: "socCode", headerName: DETAIL_FIELD_LABELS.socCode, filter: "agSetColumnFilter", cellClassRules,
+      valueGetter: (params) => params.data?.socCode,
+      valueSetter: (params) => { params.data.socCode = params.newValue; return true; },
+    },
     {
       colId: "lcaWage", field: "lcaWage", headerName: DETAIL_FIELD_LABELS.lcaWage, filter: "agSetColumnFilter", cellClassRules,
       valueFormatter: (params) => params.value != null ? formatCurrency(params.value) : "",
+      valueGetter: (params) => params.data?.lcaWage,
+      valueSetter: (params) => { params.data.lcaWage = params.newValue; return true; },
+      filterParams: { valueFormatter: (params) => params.value != null ? formatCurrency(params.value) : "" },
     },
-    { colId: "client", field: "client", headerName: DETAIL_FIELD_LABELS.client, filter: "agSetColumnFilter", cellClassRules },
-    { colId: "customer", field: "customer", headerName: DETAIL_FIELD_LABELS.customer, filter: "agSetColumnFilter", cellClassRules },
-    { colId: "jobLocation", field: "jobLocation", headerName: DETAIL_FIELD_LABELS.jobLocation, filter: "agSetColumnFilter", cellClassRules },
-    { colId: "jobLocation2", field: "jobLocation2", headerName: DETAIL_FIELD_LABELS.jobLocation2, filter: "agSetColumnFilter", cellClassRules, hide: true },
-    { colId: "startDate", field: "startDate", headerName: DETAIL_FIELD_LABELS.startDate, filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
-    { colId: "endDate", field: "endDate", headerName: DETAIL_FIELD_LABELS.endDate, filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
-    { colId: "approvedDate", field: "approvedDate", headerName: DETAIL_FIELD_LABELS.approvedDate, filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
-    { colId: "lastUpdated", field: "lastUpdated", headerName: DETAIL_FIELD_LABELS.lastUpdated, filter: "agSetColumnFilter", cellClassRules, editable: false, valueFormatter: (params) => formatDateMDY(params.value) },
+    { colId: "client", field: "client", headerName: DETAIL_FIELD_LABELS.client, filter: "agSetColumnFilter", cellClassRules,
+      valueGetter: (params) => params.data?.client,
+      valueSetter: (params) => { params.data.client = params.newValue; return true; },
+    },
+    { colId: "customer", field: "customer", headerName: DETAIL_FIELD_LABELS.customer, filter: "agSetColumnFilter", cellClassRules,
+      valueGetter: (params) => params.data?.customer,
+      valueSetter: (params) => { params.data.customer = params.newValue; return true; },
+    },
+    { colId: "jobLocation", field: "jobLocation", headerName: DETAIL_FIELD_LABELS.jobLocation, filter: "agSetColumnFilter", cellClassRules,
+      valueGetter: (params) => params.data?.jobLocation,
+      valueSetter: (params) => { params.data.jobLocation = params.newValue; return true; },
+    },
+    { colId: "jobLocation2", field: "jobLocation2", headerName: DETAIL_FIELD_LABELS.jobLocation2, filter: "agSetColumnFilter", cellClassRules, hide: true,
+      valueGetter: (params) => params.data?.jobLocation2,
+      valueSetter: (params) => { params.data.jobLocation2 = params.newValue; return true; },
+    },
+    {
+      colId: "startDate", field: "startDate", headerName: DETAIL_FIELD_LABELS.startDate, filter: "agSetColumnFilter", cellClassRules,
+      valueFormatter: (params) => formatDateMDY(params.value),
+      valueGetter: (params) => params.data?.startDate,
+      valueSetter: (params) => { params.data.startDate = params.newValue; return true; },
+      filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+    },
+    {
+      colId: "endDate", field: "endDate", headerName: DETAIL_FIELD_LABELS.endDate, filter: "agSetColumnFilter", cellClassRules,
+      valueFormatter: (params) => formatDateMDY(params.value),
+      valueGetter: (params) => params.data?.endDate,
+      valueSetter: (params) => { params.data.endDate = params.newValue; return true; },
+      filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+    },
+    {
+      colId: "approvedDate", field: "approvedDate", headerName: DETAIL_FIELD_LABELS.approvedDate, filter: "agSetColumnFilter", cellClassRules,
+      valueFormatter: (params) => formatDateMDY(params.value),
+      valueGetter: (params) => params.data?.approvedDate,
+      valueSetter: (params) => { params.data.approvedDate = params.newValue; return true; },
+      filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+    },
+    {
+      colId: "lastUpdated", field: "lastUpdated", headerName: DETAIL_FIELD_LABELS.lastUpdated, filter: "agSetColumnFilter", cellClassRules, editable: false,
+      valueFormatter: (params) => formatDateMDY(params.value),
+      valueGetter: (params) => params.data?.lastUpdated,
+      filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+    },
     {
       colId: "action",
       headerName: "Action",
@@ -388,9 +450,14 @@ const VisaMasterList = () => {
         );
       },
     },
-  ];
+    ],
+    [cellClassRules, openEditVisaModal, handleArchiveVisa, handleDeleteVisa],
+  );
 
-  const columnDefsSized = sizeColumnsForHeader(columnDefs);
+  // sizeColumnsForHeader returns a brand-new array/objects every call; memoize
+  // it so AG Grid doesn't see a new columnDefs reference (and reset each
+  // column's applied filter) on every re-render.
+  const columnDefsSized = useMemo(() => sizeColumnsForHeader(columnDefs), [columnDefs]);
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>

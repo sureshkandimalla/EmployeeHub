@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { AgGridReact } from "@ag-grid-community/react";
 import { Button, Card, Form, Modal, message } from "antd";
 import { PlusOutlined, FileExcelOutlined, ReloadOutlined, SaveOutlined, CloseOutlined } from "@ant-design/icons";
@@ -210,7 +210,8 @@ const LCADetails = () => {
     darkGreyBackground: (params) => params.node?.rowIndex !== undefined && params.node.rowIndex % 2 === 1,
   };
 
-  const columnDefs = [
+  const columnDefs = useMemo(
+    () => [
     {
       colId: "rowNum",
       headerName: "#",
@@ -229,6 +230,8 @@ const LCADetails = () => {
       pinned: "left",
       filter: "agSetColumnFilter",
       cellClassRules: { ...cellClassRules, blueUnderline: () => true },
+      valueGetter: (params) => params.data?.lcaNumber,
+      valueSetter: (params) => { params.data.lcaNumber = params.newValue; return true; },
       cellRenderer: (params) => {
         if (!params.value) return "";
         return (
@@ -238,32 +241,74 @@ const LCADetails = () => {
         );
       },
     },
-    { colId: "employeeName", field: "employeeName", headerName: "Employee Name", filter: "agSetColumnFilter", cellClassRules, editable: false },
-    { colId: "jobTitle", field: "jobTitle", headerName: LCA_FIELD_LABELS.jobTitle, filter: "agSetColumnFilter", cellClassRules },
-    { colId: "lcaCaseNumber", field: "lcaCaseNumber", headerName: LCA_FIELD_LABELS.lcaCaseNumber, filter: "agSetColumnFilter", cellClassRules },
-    { colId: "socCode", field: "socCode", headerName: LCA_FIELD_LABELS.socCode, filter: "agSetColumnFilter", cellClassRules },
+    { colId: "employeeName", field: "employeeName", headerName: "Employee Name", filter: "agSetColumnFilter", cellClassRules, editable: false, valueGetter: (params) => params.data?.employeeName },
+    { colId: "jobTitle", field: "jobTitle", headerName: LCA_FIELD_LABELS.jobTitle, filter: "agSetColumnFilter", cellClassRules, valueGetter: (params) => params.data?.jobTitle, valueSetter: (params) => { params.data.jobTitle = params.newValue; return true; } },
+    { colId: "lcaCaseNumber", field: "lcaCaseNumber", headerName: LCA_FIELD_LABELS.lcaCaseNumber, filter: "agSetColumnFilter", cellClassRules, valueGetter: (params) => params.data?.lcaCaseNumber, valueSetter: (params) => { params.data.lcaCaseNumber = params.newValue; return true; } },
+    { colId: "socCode", field: "socCode", headerName: LCA_FIELD_LABELS.socCode, filter: "agSetColumnFilter", cellClassRules, valueGetter: (params) => params.data?.socCode, valueSetter: (params) => { params.data.socCode = params.newValue; return true; } },
     {
       colId: "lcaWage", field: "lcaWage", headerName: LCA_FIELD_LABELS.lcaWage, filter: "agSetColumnFilter", cellClassRules,
       valueFormatter: (params) => params.value != null ? formatCurrency(params.value) : "",
+      valueGetter: (params) => params.data?.lcaWage,
+      valueSetter: (params) => { params.data.lcaWage = params.newValue; return true; },
+      filterParams: { valueFormatter: (params) => params.value != null ? formatCurrency(params.value) : "" },
     },
     { colId: "wageLevel", field: "wageLevel", headerName: LCA_FIELD_LABELS.wageLevel, filter: "agSetColumnFilter", cellClassRules,
       cellEditor: "agSelectCellEditor",
       cellEditorParams: { values: LCA_WAGE_LEVEL_VALUES },
+      valueGetter: (params) => params.data?.wageLevel,
+      valueSetter: (params) => { params.data.wageLevel = params.newValue; return true; },
     },
     { colId: "status", field: "status", headerName: LCA_FIELD_LABELS.status, filter: "agSetColumnFilter", cellClassRules,
       cellEditor: "agSelectCellEditor",
       cellEditorParams: { values: LCA_STATUS_OPTIONS.map((o) => o.value) },
+      valueGetter: (params) => params.data?.status,
+      valueSetter: (params) => { params.data.status = params.newValue; return true; },
     },
-    { colId: "client", field: "client", headerName: LCA_FIELD_LABELS.client, filter: "agSetColumnFilter", cellClassRules },
-    { colId: "customer", field: "customer", headerName: LCA_FIELD_LABELS.customer, filter: "agSetColumnFilter", cellClassRules },
-    { colId: "jobLocation", field: "jobLocation", headerName: LCA_FIELD_LABELS.jobLocation, filter: "agSetColumnFilter", cellClassRules },
-    { colId: "jobLocation2", field: "jobLocation2", headerName: LCA_FIELD_LABELS.jobLocation2, filter: "agSetColumnFilter", cellClassRules, hide: true },
-    { colId: "employmentStartDate", field: "employmentStartDate", headerName: LCA_FIELD_LABELS.employmentStartDate, filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
-    { colId: "employmentEndDate", field: "employmentEndDate", headerName: LCA_FIELD_LABELS.employmentEndDate, filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
-    { colId: "lcaPostedFromDate", field: "lcaPostedFromDate", headerName: LCA_FIELD_LABELS.lcaPostedFromDate, filter: "agSetColumnFilter", cellClassRules, hide: true, valueFormatter: (params) => formatDateMDY(params.value) },
-    { colId: "lcaPostedToDate", field: "lcaPostedToDate", headerName: LCA_FIELD_LABELS.lcaPostedToDate, filter: "agSetColumnFilter", cellClassRules, hide: true, valueFormatter: (params) => formatDateMDY(params.value) },
-    { colId: "certifiedDate", field: "certifiedDate", headerName: LCA_FIELD_LABELS.certifiedDate, filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
-    { colId: "lastUpdated", field: "lastUpdated", headerName: "Last Updated", filter: "agSetColumnFilter", cellClassRules, editable: false, valueFormatter: (params) => formatDateMDY(params.value) },
+    { colId: "client", field: "client", headerName: LCA_FIELD_LABELS.client, filter: "agSetColumnFilter", cellClassRules, valueGetter: (params) => params.data?.client, valueSetter: (params) => { params.data.client = params.newValue; return true; } },
+    { colId: "customer", field: "customer", headerName: LCA_FIELD_LABELS.customer, filter: "agSetColumnFilter", cellClassRules, valueGetter: (params) => params.data?.customer, valueSetter: (params) => { params.data.customer = params.newValue; return true; } },
+    { colId: "jobLocation", field: "jobLocation", headerName: LCA_FIELD_LABELS.jobLocation, filter: "agSetColumnFilter", cellClassRules, valueGetter: (params) => params.data?.jobLocation, valueSetter: (params) => { params.data.jobLocation = params.newValue; return true; } },
+    { colId: "jobLocation2", field: "jobLocation2", headerName: LCA_FIELD_LABELS.jobLocation2, filter: "agSetColumnFilter", cellClassRules, hide: true, valueGetter: (params) => params.data?.jobLocation2, valueSetter: (params) => { params.data.jobLocation2 = params.newValue; return true; } },
+    {
+      colId: "employmentStartDate", field: "employmentStartDate", headerName: LCA_FIELD_LABELS.employmentStartDate, filter: "agSetColumnFilter", cellClassRules,
+      valueFormatter: (params) => formatDateMDY(params.value),
+      valueGetter: (params) => params.data?.employmentStartDate,
+      valueSetter: (params) => { params.data.employmentStartDate = params.newValue; return true; },
+      filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+    },
+    {
+      colId: "employmentEndDate", field: "employmentEndDate", headerName: LCA_FIELD_LABELS.employmentEndDate, filter: "agSetColumnFilter", cellClassRules,
+      valueFormatter: (params) => formatDateMDY(params.value),
+      valueGetter: (params) => params.data?.employmentEndDate,
+      valueSetter: (params) => { params.data.employmentEndDate = params.newValue; return true; },
+      filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+    },
+    {
+      colId: "lcaPostedFromDate", field: "lcaPostedFromDate", headerName: LCA_FIELD_LABELS.lcaPostedFromDate, filter: "agSetColumnFilter", cellClassRules, hide: true,
+      valueFormatter: (params) => formatDateMDY(params.value),
+      valueGetter: (params) => params.data?.lcaPostedFromDate,
+      valueSetter: (params) => { params.data.lcaPostedFromDate = params.newValue; return true; },
+      filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+    },
+    {
+      colId: "lcaPostedToDate", field: "lcaPostedToDate", headerName: LCA_FIELD_LABELS.lcaPostedToDate, filter: "agSetColumnFilter", cellClassRules, hide: true,
+      valueFormatter: (params) => formatDateMDY(params.value),
+      valueGetter: (params) => params.data?.lcaPostedToDate,
+      valueSetter: (params) => { params.data.lcaPostedToDate = params.newValue; return true; },
+      filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+    },
+    {
+      colId: "certifiedDate", field: "certifiedDate", headerName: LCA_FIELD_LABELS.certifiedDate, filter: "agSetColumnFilter", cellClassRules,
+      valueFormatter: (params) => formatDateMDY(params.value),
+      valueGetter: (params) => params.data?.certifiedDate,
+      valueSetter: (params) => { params.data.certifiedDate = params.newValue; return true; },
+      filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+    },
+    {
+      colId: "lastUpdated", field: "lastUpdated", headerName: "Last Updated", filter: "agSetColumnFilter", cellClassRules, editable: false,
+      valueFormatter: (params) => formatDateMDY(params.value),
+      valueGetter: (params) => params.data?.lastUpdated,
+      filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+    },
     {
       colId: "action",
       headerName: "Action",
@@ -290,9 +335,14 @@ const LCADetails = () => {
         );
       },
     },
-  ];
+    ],
+    [cellClassRules, openEditLcaModal, handleArchiveRow, handleDeleteRow],
+  );
 
-  const columnDefsSized = sizeColumnsForHeader(columnDefs);
+  // sizeColumnsForHeader returns a brand-new array/objects every call; memoize
+  // it so AG Grid doesn't see a new columnDefs reference (and reset each
+  // column's applied filter) on every re-render.
+  const columnDefsSized = useMemo(() => sizeColumnsForHeader(columnDefs), [columnDefs]);
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>

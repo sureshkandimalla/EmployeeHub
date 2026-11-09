@@ -185,14 +185,26 @@ const ExpenseDetails = ({ employeeId, statusFilter, gridHeight } = {}) => {
       field: "expenseId",
       sortable: isSortable,
       valueFormatter: (params) => params.value,
+      valueGetter: (params) => params.data?.expenseId,
     },
-    { headerName: "Employee Name", field: "employeeName", sortable: isSortable, enableRowGroup: true },
+    {
+      headerName: "Employee Name",
+      field: "employeeName",
+      sortable: isSortable,
+      enableRowGroup: true,
+      valueGetter: (params) => params.data?.employeeName,
+    },
     {
       headerName: "Description",
       field: "description",
       sortable: isSortable,
       editable: editableUnlessReimbursed,
       minWidth: 220,
+      valueGetter: (params) => params.data?.description,
+      valueSetter: (params) => {
+        params.data.description = params.newValue;
+        return true;
+      },
     },
     {
       headerName: "Expense Type",
@@ -202,6 +214,11 @@ const ExpenseDetails = ({ employeeId, statusFilter, gridHeight } = {}) => {
       cellEditor: "agSelectCellEditor",
       cellEditorParams: { values: expenseTypeList.map((t) => t.value) },
       enableRowGroup: true,
+      valueGetter: (params) => params.data?.expenseType,
+      valueSetter: (params) => {
+        params.data.expenseType = params.newValue;
+        return true;
+      },
     },
     {
       headerName: "Amount",
@@ -210,6 +227,12 @@ const ExpenseDetails = ({ employeeId, statusFilter, gridHeight } = {}) => {
       editable: editableUnlessReimbursed,
       aggFunc: "sum",
       valueFormatter: (params) => formatCurrency(params.value),
+      valueGetter: (params) => params.data?.amount,
+      valueSetter: (params) => {
+        params.data.amount = params.newValue;
+        return true;
+      },
+      filterParams: { valueFormatter: (params) => formatCurrency(params.value) },
     },
     {
       headerName: "Reimbursable",
@@ -221,6 +244,14 @@ const ExpenseDetails = ({ employeeId, statusFilter, gridHeight } = {}) => {
       valueFormatter: (params) =>
         params.node.rowPinned ? "" : params.value ? "Yes" : "No",
       enableRowGroup: true,
+      valueGetter: (params) => params.data?.reimbursable,
+      valueSetter: (params) => {
+        params.data.reimbursable = params.newValue;
+        return true;
+      },
+      filterParams: {
+        valueFormatter: (params) => (params.value ? "Yes" : "No"),
+      },
     },
     {
       headerName: "Date",
@@ -229,6 +260,15 @@ const ExpenseDetails = ({ employeeId, statusFilter, gridHeight } = {}) => {
       editable: editableUnlessReimbursed,
       valueFormatter: (params) =>
         params.node.rowPinned ? "" : formatDate(params.value),
+      valueGetter: (params) => params.data?.expenseDate,
+      valueSetter: (params) => {
+        params.data.expenseDate = params.newValue;
+        return true;
+      },
+      filterParams: {
+        treeList: false,
+        valueFormatter: (params) => formatDate(params.value),
+      },
     },
     {
       headerName: "Status",
@@ -238,6 +278,11 @@ const ExpenseDetails = ({ employeeId, statusFilter, gridHeight } = {}) => {
       cellEditor: "agSelectCellEditor",
       cellEditorParams: { values: expenseStatusList.map((s) => s.value) },
       enableRowGroup: true,
+      valueGetter: (params) => params.data?.status,
+      valueSetter: (params) => {
+        params.data.status = params.newValue;
+        return true;
+      },
     },
     {
       colId: "action",
@@ -270,6 +315,11 @@ const ExpenseDetails = ({ employeeId, statusFilter, gridHeight } = {}) => {
     }
     return null;
   };
+
+  // sizeColumnsForHeader returns a brand-new array/objects every call; memoize
+  // it so AG Grid doesn't see a new columnDefs reference (and reset each
+  // column's applied filter) on every re-render.
+  const sizedColumnDefs = useMemo(() => sizeColumnsForHeader(getColumnsDefList(true)), []);
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -349,7 +399,7 @@ const ExpenseDetails = ({ employeeId, statusFilter, gridHeight } = {}) => {
               onCellValueChanged={onCellValueChanged}
               rowHeight={48}
               rowData={filterData()}
-              columnDefs={sizeColumnsForHeader(getColumnsDefList(true))}
+              columnDefs={sizedColumnDefs}
               defaultColDef={{
                 minWidth: 100,
                 maxWidth: 220,

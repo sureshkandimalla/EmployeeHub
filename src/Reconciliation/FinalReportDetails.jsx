@@ -341,12 +341,14 @@ export default function FinalReportDetails({ employeeId }) {
     [filteredRowData],
   );
 
-  const columnDefs = [
+  const columnDefs = useMemo(
+    () => [
     {
       field: "category",
       headerName: "Category",
       rowGroup: true,
       hide: true,
+      valueGetter: (params) => params.data?.category,
     },
     {
       field: "description",
@@ -354,87 +356,129 @@ export default function FinalReportDetails({ employeeId }) {
       cellRenderer: "agGroupCellRenderer",
       cellRendererParams: { suppressCount: true },
       minWidth: 260,
+      valueGetter: (params) => params.data?.description,
     },
     {
       field: "hours",
       headerName: "Total Hours",
       aggFunc: "sum",
       valueFormatter: (params) => (params.value ? params.value : ""),
+      valueGetter: (params) => params.data?.hours,
     },
-    { field: "paidHours", headerName: "Paid Hours", aggFunc: "sum" },
+    {
+      field: "paidHours",
+      headerName: "Paid Hours",
+      aggFunc: "sum",
+      valueGetter: (params) => params.data?.paidHours,
+    },
     {
       field: "billing",
       headerName: "Billing",
       valueFormatter: (params) => (params.value ? formatCurrency(params.value) : ""),
+      valueGetter: (params) => params.data?.billing,
+      filterParams: { valueFormatter: (params) => (params.value ? formatCurrency(params.value) : "") },
     },
     {
       field: "income",
       headerName: "Income",
       aggFunc: "sum",
       valueFormatter: (params) => (params.value ? formatCurrency(params.value) : ""),
+      valueGetter: (params) => params.data?.income,
+      filterParams: { valueFormatter: (params) => (params.value ? formatCurrency(params.value) : "") },
     },
     {
       field: "incomePaid",
       headerName: "Income Paid",
       aggFunc: "sum",
       valueFormatter: (params) => (params.value ? formatCurrency(params.value) : ""),
+      valueGetter: (params) => params.data?.incomePaid,
+      filterParams: { valueFormatter: (params) => (params.value ? formatCurrency(params.value) : "") },
     },
     {
       field: "totalPayment",
       headerName: "Total Payment",
       aggFunc: "sum",
       valueFormatter: (params) => (params.value ? formatCurrency(params.value) : ""),
+      valueGetter: (params) => params.data?.totalPayment,
+      filterParams: { valueFormatter: (params) => (params.value ? formatCurrency(params.value) : "") },
     },
     {
       field: "deductions",
       headerName: "Deductions (Medical)",
       aggFunc: "sum",
       valueFormatter: (params) => (params.value ? formatCurrency(params.value) : ""),
+      valueGetter: (params) => params.data?.deductions,
+      filterParams: { valueFormatter: (params) => (params.value ? formatCurrency(params.value) : "") },
     },
     {
       field: "balancePaid",
       headerName: "Balance-Paid",
       valueFormatter: (params) => (params.value !== undefined ? formatCurrency(params.value) : ""),
+      valueGetter: (params) => params.data?.balancePaid,
+      filterParams: { valueFormatter: (params) => (params.value !== undefined ? formatCurrency(params.value) : "") },
     },
     {
       field: "balance",
       headerName: "Balance",
       valueFormatter: (params) => (params.value !== undefined ? formatCurrency(params.value) : ""),
+      valueGetter: (params) => params.data?.balance,
+      filterParams: { valueFormatter: (params) => (params.value !== undefined ? formatCurrency(params.value) : "") },
     },
-  ];
+    ],
+    [],
+  );
+
+  // sizeColumnsForHeader returns a brand-new array/objects every call; memoize
+  // it so AG Grid doesn't see a new columnDefs reference (and reset each
+  // column's applied filter) on every re-render.
+  const sizedColumnDefs = useMemo(() => sizeColumnsForHeader(columnDefs), [columnDefs]);
 
   const billDetailConfig = {
     detailGridOptions: {
       domLayout: "autoHeight",
       columnDefs: [
-        { field: "billId", headerName: "Bill Id", filter: "agSetColumnFilter" },
-        { field: "invoiceNumber", headerName: "Invoice Number", filter: "agSetColumnFilter" },
+        { field: "billId", headerName: "Bill Id", filter: "agSetColumnFilter", valueGetter: (params) => params.data?.billId },
+        { field: "invoiceNumber", headerName: "Invoice Number", filter: "agSetColumnFilter", valueGetter: (params) => params.data?.invoiceNumber },
         {
           field: "invoiceMonth",
           headerName: "Invoice Month",
           filter: "agSetColumnFilter",
           valueFormatter: (params) => formatMonthYear(params.value),
+          valueGetter: (params) => params.data?.invoiceMonth,
+          filterParams: { valueFormatter: (params) => formatMonthYear(params.value) },
         },
         {
           field: "startDate",
           headerName: "Start Date",
           filter: "agSetColumnFilter",
           valueFormatter: (params) => (params.value ? formatDateMDY(params.value) : ""),
+          valueGetter: (params) => params.data?.startDate,
+          filterParams: {
+            treeList: false,
+            valueFormatter: (params) => (params.value ? formatDateMDY(params.value) : ""),
+          },
         },
         {
           field: "endDate",
           headerName: "End Date",
           filter: "agSetColumnFilter",
           valueFormatter: (params) => (params.value ? formatDateMDY(params.value) : ""),
+          valueGetter: (params) => params.data?.endDate,
+          filterParams: {
+            treeList: false,
+            valueFormatter: (params) => (params.value ? formatDateMDY(params.value) : ""),
+          },
         },
-        { field: "hours", headerName: "Hours", filter: "agSetColumnFilter" },
+        { field: "hours", headerName: "Hours", filter: "agSetColumnFilter", valueGetter: (params) => params.data?.hours },
         {
           field: "total",
           headerName: "Total",
           filter: "agSetColumnFilter",
           valueFormatter: (params) => (params.value ? formatCurrency(params.value) : ""),
+          valueGetter: (params) => params.data?.total,
+          filterParams: { valueFormatter: (params) => (params.value ? formatCurrency(params.value) : "") },
         },
-        { field: "status", headerName: "Status", filter: "agSetColumnFilter" },
+        { field: "status", headerName: "Status", filter: "agSetColumnFilter", valueGetter: (params) => params.data?.status },
       ],
       defaultColDef: { flex: 1, minWidth: 20, resizable: true },
     },
@@ -452,23 +496,43 @@ export default function FinalReportDetails({ employeeId }) {
           headerName: "Pay Check Date",
           filter: "agSetColumnFilter",
           valueFormatter: (params) => formatDate(params.value),
+          valueGetter: (params) => params.data?.checkDate,
+          filterParams: { treeList: false, valueFormatter: (params) => formatDate(params.value) },
         },
-        { field: "hours", headerName: "Hours", filter: "agSetColumnFilter" },
+        { field: "hours", headerName: "Hours", filter: "agSetColumnFilter", valueGetter: (params) => params.data?.hours },
         {
           field: "totalPaid",
           headerName: "Total Paid",
           filter: "agSetColumnFilter",
           valueFormatter: (params) => formatCurrency(params.value),
+          valueGetter: (params) => params.data?.totalPaid,
+          filterParams: { valueFormatter: (params) => formatCurrency(params.value) },
         },
         {
           field: "deductions",
           headerName: "Deductions (Medical)",
           filter: "agSetColumnFilter",
           valueFormatter: (params) => (params.value ? formatCurrency(params.value) : ""),
+          valueGetter: (params) => params.data?.deductions,
+          filterParams: { valueFormatter: (params) => (params.value ? formatCurrency(params.value) : "") },
         },
-        { field: "paymentDetails", headerName: "Payment Details", filter: "agSetColumnFilter" },
-        { field: "payPeriodStartDate", headerName: "Pay Cycle Start", filter: "agSetColumnFilter", valueFormatter: (params) => formatDateMDY(params.value) },
-        { field: "payPeriodEndDate", headerName: "Pay Cycle End", filter: "agSetColumnFilter", valueFormatter: (params) => formatDateMDY(params.value) },
+        { field: "paymentDetails", headerName: "Payment Details", filter: "agSetColumnFilter", valueGetter: (params) => params.data?.paymentDetails },
+        {
+          field: "payPeriodStartDate",
+          headerName: "Pay Cycle Start",
+          filter: "agSetColumnFilter",
+          valueFormatter: (params) => formatDateMDY(params.value),
+          valueGetter: (params) => params.data?.payPeriodStartDate,
+          filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+        },
+        {
+          field: "payPeriodEndDate",
+          headerName: "Pay Cycle End",
+          filter: "agSetColumnFilter",
+          valueFormatter: (params) => formatDateMDY(params.value),
+          valueGetter: (params) => params.data?.payPeriodEndDate,
+          filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+        },
       ],
       defaultColDef: { flex: 1, minWidth: 20, resizable: true },
     },
@@ -481,28 +545,41 @@ export default function FinalReportDetails({ employeeId }) {
     detailGridOptions: {
       domLayout: "autoHeight",
       columnDefs: [
-        { field: "description", headerName: "Type", filter: "agSetColumnFilter" },
-        { field: "from", headerName: "From", filter: "agSetColumnFilter" },
-        { field: "to", headerName: "To", filter: "agSetColumnFilter" },
-        { field: "date", headerName: "Date", filter: "agSetColumnFilter", valueFormatter: (params) => formatDateMDY(params.value) },
-        { field: "notes", headerName: "Notes", filter: "agSetColumnFilter" },
+        { field: "description", headerName: "Type", filter: "agSetColumnFilter", valueGetter: (params) => params.data?.description },
+        { field: "from", headerName: "From", filter: "agSetColumnFilter", valueGetter: (params) => params.data?.from },
+        { field: "to", headerName: "To", filter: "agSetColumnFilter", valueGetter: (params) => params.data?.to },
+        {
+          field: "date",
+          headerName: "Date",
+          filter: "agSetColumnFilter",
+          valueFormatter: (params) => formatDateMDY(params.value),
+          valueGetter: (params) => params.data?.date,
+          filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+        },
+        { field: "notes", headerName: "Notes", filter: "agSetColumnFilter", valueGetter: (params) => params.data?.notes },
         {
           field: "totalPayment",
           headerName: "Total Payment",
           filter: "agSetColumnFilter",
           valueFormatter: (params) => (params.value ? formatCurrency(params.value) : ""),
+          valueGetter: (params) => params.data?.totalPayment,
+          filterParams: { valueFormatter: (params) => (params.value ? formatCurrency(params.value) : "") },
         },
         {
           field: "income",
           headerName: "Income",
           filter: "agSetColumnFilter",
           valueFormatter: (params) => (params.value ? formatCurrency(params.value) : ""),
+          valueGetter: (params) => params.data?.income,
+          filterParams: { valueFormatter: (params) => (params.value ? formatCurrency(params.value) : "") },
         },
         {
           field: "incomePaid",
           headerName: "Income Paid",
           filter: "agSetColumnFilter",
           valueFormatter: (params) => (params.value ? formatCurrency(params.value) : ""),
+          valueGetter: (params) => params.data?.incomePaid,
+          filterParams: { valueFormatter: (params) => (params.value ? formatCurrency(params.value) : "") },
         },
       ],
       defaultColDef: { flex: 1, minWidth: 20, resizable: true },
@@ -516,21 +593,32 @@ export default function FinalReportDetails({ employeeId }) {
     detailGridOptions: {
       domLayout: "autoHeight",
       columnDefs: [
-        { field: "description", headerName: "Description", filter: "agSetColumnFilter" },
+        { field: "description", headerName: "Description", filter: "agSetColumnFilter", valueGetter: (params) => params.data?.description },
         {
           field: "amount",
           headerName: "Amount",
           filter: "agSetColumnFilter",
           valueFormatter: (params) => (params.value ? formatCurrency(params.value) : ""),
+          valueGetter: (params) => params.data?.amount,
+          filterParams: { valueFormatter: (params) => (params.value ? formatCurrency(params.value) : "") },
         },
         {
           field: "reimbursable",
           headerName: "Reimbursable",
           filter: "agSetColumnFilter",
           valueFormatter: (params) => (params.value ? "Yes" : "No"),
+          valueGetter: (params) => params.data?.reimbursable,
+          filterParams: { valueFormatter: (params) => (params.value ? "Yes" : "No") },
         },
-        { field: "date", headerName: "Date", filter: "agSetColumnFilter", valueFormatter: (params) => formatDateMDY(params.value) },
-        { field: "status", headerName: "Status", filter: "agSetColumnFilter" },
+        {
+          field: "date",
+          headerName: "Date",
+          filter: "agSetColumnFilter",
+          valueFormatter: (params) => formatDateMDY(params.value),
+          valueGetter: (params) => params.data?.date,
+          filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+        },
+        { field: "status", headerName: "Status", filter: "agSetColumnFilter", valueGetter: (params) => params.data?.status },
       ],
       defaultColDef: { flex: 1, minWidth: 20, resizable: true },
     },
@@ -543,39 +631,63 @@ export default function FinalReportDetails({ employeeId }) {
     detailGridOptions: {
       domLayout: "autoHeight",
       columnDefs: [
-        { field: "dateOfBill", headerName: "Date of Bill", filter: "agSetColumnFilter", valueFormatter: (params) => formatDateMDY(params.value) },
-        { field: "dueDate", headerName: "Due Date", filter: "agSetColumnFilter", valueFormatter: (params) => formatDateMDY(params.value) },
+        {
+          field: "dateOfBill",
+          headerName: "Date of Bill",
+          filter: "agSetColumnFilter",
+          valueFormatter: (params) => formatDateMDY(params.value),
+          valueGetter: (params) => params.data?.dateOfBill,
+          filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+        },
+        {
+          field: "dueDate",
+          headerName: "Due Date",
+          filter: "agSetColumnFilter",
+          valueFormatter: (params) => formatDateMDY(params.value),
+          valueGetter: (params) => params.data?.dueDate,
+          filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+        },
         {
           field: "claimPrefund",
           headerName: "Claim Prefund",
           filter: "agSetColumnFilter",
           valueFormatter: (params) => (params.value ? formatCurrency(params.value) : ""),
+          valueGetter: (params) => params.data?.claimPrefund,
+          filterParams: { valueFormatter: (params) => (params.value ? formatCurrency(params.value) : "") },
         },
         {
           field: "specificStopLoss",
           headerName: "Specific Stop Loss",
           filter: "agSetColumnFilter",
           valueFormatter: (params) => (params.value ? formatCurrency(params.value) : ""),
+          valueGetter: (params) => params.data?.specificStopLoss,
+          filterParams: { valueFormatter: (params) => (params.value ? formatCurrency(params.value) : "") },
         },
         {
           field: "aggregateStopLoss",
           headerName: "Aggregate Stop Loss",
           filter: "agSetColumnFilter",
           valueFormatter: (params) => (params.value ? formatCurrency(params.value) : ""),
+          valueGetter: (params) => params.data?.aggregateStopLoss,
+          filterParams: { valueFormatter: (params) => (params.value ? formatCurrency(params.value) : "") },
         },
         {
           field: "adminFee",
           headerName: "Admin Fee",
           filter: "agSetColumnFilter",
           valueFormatter: (params) => (params.value ? formatCurrency(params.value) : ""),
+          valueGetter: (params) => params.data?.adminFee,
+          filterParams: { valueFormatter: (params) => (params.value ? formatCurrency(params.value) : "") },
         },
         {
           field: "total",
           headerName: "Total",
           filter: "agSetColumnFilter",
           valueFormatter: (params) => (params.value ? formatCurrency(params.value) : ""),
+          valueGetter: (params) => params.data?.total,
+          filterParams: { valueFormatter: (params) => (params.value ? formatCurrency(params.value) : "") },
         },
-        { field: "comment", headerName: "Comment", filter: "agSetColumnFilter" },
+        { field: "comment", headerName: "Comment", filter: "agSetColumnFilter", valueGetter: (params) => params.data?.comment },
       ],
       defaultColDef: { flex: 1, minWidth: 20, resizable: true },
     },
@@ -651,7 +763,7 @@ export default function FinalReportDetails({ employeeId }) {
             autoSizeStrategy={{ type: "fitCellContents" }}
             rowHeight={48}
             rowData={filteredRowData}
-            columnDefs={sizeColumnsForHeader(columnDefs)}
+            columnDefs={sizedColumnDefs}
             masterDetail={true}
             isRowMaster={(dataItem) => Boolean(dataItem?.detailType)}
             detailCellRendererParams={detailCellRendererParams}

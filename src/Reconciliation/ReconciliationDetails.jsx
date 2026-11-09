@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AgGridReact } from "@ag-grid-community/react";
 import { Button } from "antd";
 import { ReloadOutlined } from "@ant-design/icons";
@@ -82,53 +82,89 @@ export default function ReconciliationDetails({ employeeId }) {
     const { pinnedTopRowData, onModelUpdated } = useFilteredTotalsRow((rows) =>
       sumReconciliationRows(rows, "Filtered Total"),
     );
-  const columnDefs = [
+  const columnDefs = useMemo(
+    () => [
     {
       field: "description",
       headerName: "Description",
       cellRenderer: "agGroupCellRenderer",
+      valueGetter: (params) => params.data?.description,
     },
-    { field: "hours", headerName: "Hours", filter: "agSetColumnFilter" },
+    { field: "hours", headerName: "Hours", filter: "agSetColumnFilter", valueGetter: (params) => params.data?.hours },
     {
       field: "income",
       headerName: "Income",
       valueFormatter: (params) => formatCurrency(params.value),
       filter: "agSetColumnFilter",
+      valueGetter: (params) => params.data?.income,
+      filterParams: { valueFormatter: (params) => formatCurrency(params.value) },
     },
     {
       field: "expense",
       headerName: "Expense",
       valueFormatter: (params) => formatCurrency(params.value),
       filter: "agSetColumnFilter",
+      valueGetter: (params) => params.data?.expense,
+      filterParams: { valueFormatter: (params) => formatCurrency(params.value) },
     },
     {
       field: "invoiceTotal",
       headerName: "Invoice Total",
       valueFormatter: (params) => formatCurrency(params.value),
       filter: "agSetColumnFilter",
+      valueGetter: (params) => params.data?.invoiceTotal,
+      filterParams: { valueFormatter: (params) => formatCurrency(params.value) },
     },
     {
       field: "invoicePaidAmount",
       headerName: "Invoice Paid Amount",
       valueFormatter: (params) => formatCurrency(params.value),
       filter: "agSetColumnFilter",
+      valueGetter: (params) => params.data?.invoicePaidAmount,
+      filterParams: { valueFormatter: (params) => formatCurrency(params.value) },
     },
     {
       field: "projectBilling",
       headerName: "Project Billing",
       filter: "agSetColumnFilter",
       valueFormatter: (params) => formatCurrency(params.value),
+      valueGetter: (params) => params.data?.projectBilling,
+      filterParams: { valueFormatter: (params) => formatCurrency(params.value) },
     },
     {
       field: "wage",
       headerName: "Wage",
       valueFormatter: (params) => formatCurrency(params.value),
       filter: "agSetColumnFilter",
+      valueGetter: (params) => params.data?.wage,
+      filterParams: { valueFormatter: (params) => formatCurrency(params.value) },
     },
     
-    { field: "startDate", headerName: "Start Date", filter: "agSetColumnFilter", valueFormatter: (params) => formatDateMDY(params.value) },
-    { field: "endDate", headerName: "End Date", filter: "agSetColumnFilter", valueFormatter: (params) => formatDateMDY(params.value) },
-  ];
+    {
+      field: "startDate",
+      headerName: "Start Date",
+      filter: "agSetColumnFilter",
+      valueFormatter: (params) => formatDateMDY(params.value),
+      valueGetter: (params) => params.data?.startDate,
+      filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+    },
+    {
+      field: "endDate",
+      headerName: "End Date",
+      filter: "agSetColumnFilter",
+      valueFormatter: (params) => formatDateMDY(params.value),
+      valueGetter: (params) => params.data?.endDate,
+      filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+    },
+    ],
+    [],
+  );
+
+  // sizeColumnsForHeader returns a brand-new array/objects every call; memoize
+  // it so AG Grid doesn't see a new columnDefs reference (and reset each
+  // column's applied filter) on every re-render — including the one
+  // setPinnedTopRowData triggers on every filter change via onModelUpdated.
+  const sizedColumnDefs = useMemo(() => sizeColumnsForHeader(columnDefs), [columnDefs]);
 
   const getRowStyle = (params) => {
     if (params.node.rowPinned) {
@@ -145,23 +181,42 @@ export default function ReconciliationDetails({ employeeId }) {
           field: "description",
           headerName: "Expense Description",
           filter: "agSetColumnFilter",
+          valueGetter: (params) => params.data?.description,
         },
-        { field: "hours", headerName: "Hours", filter: "agSetColumnFilter" },
+        { field: "hours", headerName: "Hours", filter: "agSetColumnFilter", valueGetter: (params) => params.data?.hours },
         {
           field: "wage",
           headerName: "Wage",
           valueFormatter: (params) => formatCurrency(params.value),
           filter: "agSetColumnFilter",
+          valueGetter: (params) => params.data?.wage,
+          filterParams: { valueFormatter: (params) => formatCurrency(params.value) },
         },
         {
           field: "total",
           headerName: "Total Expense",
           valueFormatter: (params) => formatCurrency(params.value),
           filter: "agSetColumnFilter",
+          valueGetter: (params) => params.data?.total,
+          filterParams: { valueFormatter: (params) => formatCurrency(params.value) },
         },
-        { field: "expenseType", headerName: "Expense Type", filter: "agSetColumnFilter" },
-        { field: "startDate", headerName: "Start Date", filter: "agSetColumnFilter", valueFormatter: (params) => formatDateMDY(params.value) },
-        { field: "endDate", headerName: "End Date", filter: "agSetColumnFilter", valueFormatter: (params) => formatDateMDY(params.value) },
+        { field: "expenseType", headerName: "Expense Type", filter: "agSetColumnFilter", valueGetter: (params) => params.data?.expenseType },
+        {
+          field: "startDate",
+          headerName: "Start Date",
+          filter: "agSetColumnFilter",
+          valueFormatter: (params) => formatDateMDY(params.value),
+          valueGetter: (params) => params.data?.startDate,
+          filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+        },
+        {
+          field: "endDate",
+          headerName: "End Date",
+          filter: "agSetColumnFilter",
+          valueFormatter: (params) => formatDateMDY(params.value),
+          valueGetter: (params) => params.data?.endDate,
+          filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+        },
       ],
       defaultColDef: {
         flex: 1,
@@ -212,7 +267,7 @@ export default function ReconciliationDetails({ employeeId }) {
         autoSizeStrategy={{ type: "fitCellContents" }}
         rowHeight={48}
         rowData={rowData}
-        columnDefs={sizeColumnsForHeader(columnDefs)}
+        columnDefs={sizedColumnDefs}
         masterDetail={true}
         detailCellRendererParams={detailCellRendererParams}
         pinnedTopRowData={pinnedTopRowData}

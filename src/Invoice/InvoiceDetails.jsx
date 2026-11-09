@@ -518,9 +518,14 @@ const InvoiceDetails = ({ employeeId, projectId, customerId, statusFilter, isCol
           // Check if this row is the pinned bottom row and show "Total"
           return params.node.rowPinned === "bottom" ? "Total" : params.value;
         },
+        valueGetter: (params) => params.data?.invoiceNumber,
+        valueSetter: (params) => {
+          params.data.invoiceNumber = params.newValue;
+          return true;
+        },
       },
-      { headerName: "Employee Name", field: "employeeName", sortable: isSortable, enableRowGroup: true },
-      { headerName: "Customer Name", field: "customerName", sortable: isSortable, enableRowGroup: true },
+      { headerName: "Employee Name", field: "employeeName", sortable: isSortable, enableRowGroup: true, valueGetter: (params) => params.data?.employeeName },
+      { headerName: "Customer Name", field: "customerName", sortable: isSortable, enableRowGroup: true, valueGetter: (params) => params.data?.customerName },
       {
         headerName: "Year",
         field: "invoiceMonth",
@@ -540,6 +545,12 @@ const InvoiceDetails = ({ employeeId, projectId, customerId, statusFilter, isCol
         editable: editableUnlessPaid,
         enableRowGroup: true,
         valueFormatter: (params) => formatMonthYear(params.value),
+        valueGetter: (params) => params.data?.invoiceMonth,
+        valueSetter: (params) => {
+          params.data.invoiceMonth = params.newValue;
+          return true;
+        },
+        filterParams: { valueFormatter: (params) => formatMonthYear(params.value) },
       },
       {
         headerName: "Billing",
@@ -547,6 +558,8 @@ const InvoiceDetails = ({ employeeId, projectId, customerId, statusFilter, isCol
         sortable: isSortable,
         aggFunc: "sum",
         valueFormatter: (params) => formatCurrency(params.value), // Format with dollar sign
+        valueGetter: (params) => params.data?.billing,
+        filterParams: { valueFormatter: (params) => formatCurrency(params.value) },
       },
       {
         headerName: "Hours",
@@ -554,6 +567,11 @@ const InvoiceDetails = ({ employeeId, projectId, customerId, statusFilter, isCol
         sortable: isSortable,
         editable: editableUnlessPaid,
         aggFunc: "sum",
+        valueGetter: (params) => params.data?.hours,
+        valueSetter: (params) => {
+          params.data.hours = params.newValue;
+          return true;
+        },
       },
       {
         headerName: "InvoiceAmount",
@@ -561,6 +579,8 @@ const InvoiceDetails = ({ employeeId, projectId, customerId, statusFilter, isCol
         sortable: isSortable,
         aggFunc: "sum",
         valueFormatter: (params) => formatCurrency(params.value), // Format with dollar sign
+        valueGetter: (params) => params.data?.total,
+        filterParams: { valueFormatter: (params) => formatCurrency(params.value) },
       },
       {
         headerName: "Discounts",
@@ -569,6 +589,12 @@ const InvoiceDetails = ({ employeeId, projectId, customerId, statusFilter, isCol
         editable: editableUnlessPaid,
         aggFunc: "sum",
         valueFormatter: (params) => formatCurrency(params.value || 0),
+        valueGetter: (params) => params.data?.discounts,
+        valueSetter: (params) => {
+          params.data.discounts = params.newValue;
+          return true;
+        },
+        filterParams: { valueFormatter: (params) => formatCurrency(params.value || 0) },
       },
       {
         headerName: "Invoice PaidAmount",
@@ -576,6 +602,8 @@ const InvoiceDetails = ({ employeeId, projectId, customerId, statusFilter, isCol
         sortable: isSortable,
         aggFunc: "sum",
         valueFormatter: (params) => formatCurrency(params.value), // Format with dollar sign
+        valueGetter: (params) => params.data?.invoicePaidAmount,
+        filterParams: { valueFormatter: (params) => formatCurrency(params.value) },
       },
       {
         headerName: "Invoice PaidDate",
@@ -589,9 +617,29 @@ const InvoiceDetails = ({ employeeId, projectId, customerId, statusFilter, isCol
         cellEditor: "agDateStringCellEditor",
         filter: "agSetColumnFilter",
         valueFormatter: (params) => formatDateMDY(params.value),
+        valueGetter: (params) => params.data?.invoicePaidDate,
+        valueSetter: (params) => {
+          params.data.invoicePaidDate = params.newValue;
+          return true;
+        },
+        filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
       },
-      { headerName: "Start Date", field: "startDate", sortable: isSortable, valueFormatter: (params) => formatDateMDY(params.value) },
-      { headerName: "End Date", field: "endDate", sortable: isSortable, valueFormatter: (params) => formatDateMDY(params.value) },
+      {
+        headerName: "Start Date",
+        field: "startDate",
+        sortable: isSortable,
+        valueFormatter: (params) => formatDateMDY(params.value),
+        valueGetter: (params) => params.data?.startDate,
+        filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+      },
+      {
+        headerName: "End Date",
+        field: "endDate",
+        sortable: isSortable,
+        valueFormatter: (params) => formatDateMDY(params.value),
+        valueGetter: (params) => params.data?.endDate,
+        filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+      },
       //{ headerName: 'Invoice Date', field: 'invoiceDate', sortable: isSortable},
       {
         headerName: "Status",
@@ -605,9 +653,14 @@ const InvoiceDetails = ({ employeeId, projectId, customerId, statusFilter, isCol
         cellEditorParams: {
           values: ["Created", "Paid", "Partially Paid", "Archived"],
         },
+        valueGetter: (params) => params.data?.status,
+        valueSetter: (params) => {
+          params.data.status = params.newValue;
+          return true;
+        },
       },
-      { headerName: "Project Id", field: "projectId", sortable: isSortable },
-      { headerName: "Project Name", field: "projectName", sortable: isSortable },
+      { headerName: "Project Id", field: "projectId", sortable: isSortable, valueGetter: (params) => params.data?.projectId },
+      { headerName: "Project Name", field: "projectName", sortable: isSortable, valueGetter: (params) => params.data?.projectName },
       {
         colId: "action",
         headerName: "Action",
@@ -710,6 +763,11 @@ const InvoiceDetails = ({ employeeId, projectId, customerId, statusFilter, isCol
   const { pinnedTopRowData, onModelUpdated } = useFilteredTotalsRow((rows) =>
     sumInvoiceRows(rows, "Filtered Total"),
   );
+
+  // sizeColumnsForHeader returns a brand-new array/objects every call; memoize
+  // it so AG Grid doesn't see a new columnDefs reference (and reset each
+  // column's applied filter) on every re-render.
+  const sizedColumnDefs = useMemo(() => sizeColumnsForHeader(getColumnsDefList(true)), []);
 
   const generateInvoice = () => {
     if (employeeId) {
@@ -989,7 +1047,7 @@ const InvoiceDetails = ({ employeeId, projectId, customerId, statusFilter, isCol
         onCellValueChanged={onCellValueChanged}
         rowHeight={48}
         rowData={filterData()}
-        columnDefs={sizeColumnsForHeader(getColumnsDefList(true))}
+        columnDefs={sizedColumnDefs}
         gridOptions={gridOptions}
         defaultColDef={{
           minWidth: 100,

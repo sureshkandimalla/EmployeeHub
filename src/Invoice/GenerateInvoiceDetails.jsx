@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { AgGridReact } from "@ag-grid-community/react";
 import { Button, Alert, Card } from "antd";
 import { ReloadOutlined, ArrowLeftOutlined, CloseOutlined } from "@ant-design/icons";
@@ -339,7 +339,7 @@ const GenerateInvoiceDetails = ({ url: propUrl, employeeIds: propEmployeeIds, mo
         cellStyle: { textAlign: "center", fontWeight: 500 },
         headerClass: "ag-center-cols",
       },
-      { headerName: "Employee Name", field: "employeeName", sortable: true },
+      { headerName: "Employee Name", field: "employeeName", sortable: true, valueGetter: (params) => params.data?.employeeName },
       {
         headerName: "Invoice Month",
         field: "invoiceMonth",
@@ -347,13 +347,16 @@ const GenerateInvoiceDetails = ({ url: propUrl, employeeIds: propEmployeeIds, mo
         editable: false,
         enableRowGroup: true,
         valueFormatter: (params) => formatMonthYear(params.value),
+        valueGetter: (params) => params.data?.invoiceMonth,
+        filterParams: { valueFormatter: (params) => formatMonthYear(params.value) },
       },
-      { headerName: "Client", field: "clientName", sortable: true },
+      { headerName: "Client", field: "clientName", sortable: true, valueGetter: (params) => params.data?.clientName },
       {
         headerName: "Customer",
         field: "customerName",
         sortable: true,
         editable: false,
+        valueGetter: (params) => params.data?.customerName,
       },
       {
         headerName: "Bill Rate",
@@ -361,6 +364,8 @@ const GenerateInvoiceDetails = ({ url: propUrl, employeeIds: propEmployeeIds, mo
         sortable: true,
         editable: false,
         valueFormatter: (params) => formatCurrency(params.value),
+        valueGetter: (params) => params.data?.billRate,
+        filterParams: { valueFormatter: (params) => formatCurrency(params.value) },
       },
 
       {
@@ -368,6 +373,13 @@ const GenerateInvoiceDetails = ({ url: propUrl, employeeIds: propEmployeeIds, mo
         field: "startDate",
         sortable: true,
         editable: true,
+        // A bare date-string field under the Set Filter defaults into AG
+        // Grid's tree-list mode (Year›Month›Day), whose checkboxes don't
+        // respond to clicks in this app's AG Grid version — see the same
+        // fix applied to Payroll/PayrollDetails.jsx. The valueSetter below
+        // already persists edits; this valueGetter is only what's needed
+        // to keep the Set Filter's checkboxes working.
+        valueGetter: (params) => params.data?.startDate,
         // Invoice Start Date cannot be before the project's own start date.
         // The picked date snaps to the correct period boundary for this
         // row's Invoice Term (e.g. a Wednesday snaps back to that week's
@@ -397,12 +409,14 @@ const GenerateInvoiceDetails = ({ url: propUrl, employeeIds: propEmployeeIds, mo
           return true;
         },
         valueFormatter: (params) => formatDateMDY(params.value),
+        filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
       },
       {
         headerName: "End Date",
         field: "endDate",
         sortable: true,
         editable: true,
+        valueGetter: (params) => params.data?.endDate,
         // Invoice End Date cannot be after the project's own end date.
         valueSetter: (params) => {
           const { newValue, data } = params;
@@ -422,8 +436,19 @@ const GenerateInvoiceDetails = ({ url: propUrl, employeeIds: propEmployeeIds, mo
           return true;
         },
         valueFormatter: (params) => formatDateMDY(params.value),
+        filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
       },
-      { headerName: "Hours", field: "hours", sortable: true, editable: true },
+      {
+        headerName: "Hours",
+        field: "hours",
+        sortable: true,
+        editable: true,
+        valueGetter: (params) => params.data?.hours,
+        valueSetter: (params) => {
+          params.data.hours = params.newValue;
+          return true;
+        },
+      },
       {
         // Cosmetic/business label the user types — no identity meaning.
         // Whether this period already has an invoice is tracked
@@ -432,6 +457,11 @@ const GenerateInvoiceDetails = ({ url: propUrl, employeeIds: propEmployeeIds, mo
         field: "invoiceNumber",
         sortable: true,
         editable: true,
+        valueGetter: (params) => params.data?.invoiceNumber,
+        valueSetter: (params) => {
+          params.data.invoiceNumber = params.newValue;
+          return true;
+        },
       },
       {
         headerName: "Total",
@@ -439,6 +469,8 @@ const GenerateInvoiceDetails = ({ url: propUrl, employeeIds: propEmployeeIds, mo
         sortable: true,
         editable: false,
         valueFormatter: (params) => formatCurrency(params.value),
+        valueGetter: (params) => params.data?.total,
+        filterParams: { valueFormatter: (params) => formatCurrency(params.value) },
       },
       {
         headerName: "Timesheet",
@@ -556,6 +588,11 @@ const GenerateInvoiceDetails = ({ url: propUrl, employeeIds: propEmployeeIds, mo
   // can't flash on screen during the initial load.
   const isUpToDate = hasFetched && rowData.length === 0;
 
+  // sizeColumnsForHeader returns a brand-new array/objects every call; memoize
+  // it so AG Grid doesn't see a new columnDefs reference (and reset each
+  // column's applied filter) on every re-render.
+  const sizedColumnDefs = useMemo(() => sizeColumnsForHeader(getColumnsDefList(true)), []);
+
   return (
     <>
       {month ? (
@@ -638,7 +675,7 @@ const GenerateInvoiceDetails = ({ url: propUrl, employeeIds: propEmployeeIds, mo
                 autoSizeStrategy={{ type: "fitCellContents" }}
                 rowHeight={48}
                 rowData={filterData()}
-                columnDefs={sizeColumnsForHeader(getColumnsDefList(true))}
+                columnDefs={sizedColumnDefs}
                 gridOptions={gridOptions}
                 defaultColDef={{
                   minWidth: 100,

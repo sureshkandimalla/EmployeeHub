@@ -232,8 +232,9 @@ export default function ImmigrationIntake() {
         filter: "agSetColumnFilter",
         editable: false,
         cellClassRules,
+        valueGetter: (params) => params.data?.employeeName,
       },
-      { field: "caseId", headerName: FIELD_LABELS.caseId, filter: "agSetColumnFilter", editable: true, cellClassRules },
+      { field: "caseId", headerName: FIELD_LABELS.caseId, filter: "agSetColumnFilter", editable: true, cellClassRules, valueGetter: (params) => params.data?.caseId, valueSetter: (params) => { params.data.caseId = params.newValue; return true; } },
       {
         field: "visaStatus",
         headerName: FIELD_LABELS.visaStatus,
@@ -242,6 +243,8 @@ export default function ImmigrationIntake() {
         cellClassRules,
         cellEditor: "agSelectCellEditor",
         cellEditorParams: { values: VISA_STATUS_VALUES },
+        valueGetter: (params) => params.data?.visaStatus,
+        valueSetter: (params) => { params.data.visaStatus = params.newValue; return true; },
       },
       {
         field: "visaSub",
@@ -251,6 +254,8 @@ export default function ImmigrationIntake() {
         cellClassRules,
         cellEditor: "agSelectCellEditor",
         cellEditorParams: { values: VISA_SUB_VALUES },
+        valueGetter: (params) => params.data?.visaSub,
+        valueSetter: (params) => { params.data.visaSub = params.newValue; return true; },
       },
       {
         field: "filingType",
@@ -260,6 +265,8 @@ export default function ImmigrationIntake() {
         cellClassRules,
         cellEditor: "agSelectCellEditor",
         cellEditorParams: { values: FILING_TYPE_VALUES },
+        valueGetter: (params) => params.data?.filingType,
+        valueSetter: (params) => { params.data.filingType = params.newValue; return true; },
       },
       {
         field: "filingYear",
@@ -269,6 +276,8 @@ export default function ImmigrationIntake() {
         cellClassRules,
         cellEditor: "agSelectCellEditor",
         cellEditorParams: { values: FILING_YEAR_VALUES },
+        valueGetter: (params) => params.data?.filingYear,
+        valueSetter: (params) => { params.data.filingYear = params.newValue; return true; },
       },
       {
         field: "applicationStatus",
@@ -278,6 +287,8 @@ export default function ImmigrationIntake() {
         cellClassRules,
         cellEditor: "agSelectCellEditor",
         cellEditorParams: { values: APPLICATION_STATUS_VALUES },
+        valueGetter: (params) => params.data?.applicationStatus,
+        valueSetter: (params) => { params.data.applicationStatus = params.newValue; return true; },
       },
       {
         field: "caseAssignedTo",
@@ -287,6 +298,8 @@ export default function ImmigrationIntake() {
         cellClassRules,
         cellEditor: "agSelectCellEditor",
         cellEditorParams: { values: CASE_ASSIGNED_TO_VALUES },
+        valueGetter: (params) => params.data?.caseAssignedTo,
+        valueSetter: (params) => { params.data.caseAssignedTo = params.newValue; return true; },
       },
       {
         field: "filedOn",
@@ -296,6 +309,8 @@ export default function ImmigrationIntake() {
         cellClassRules,
         cellEditor: "agSelectCellEditor",
         cellEditorParams: { values: FILED_ON_VALUES },
+        valueGetter: (params) => params.data?.filedOn,
+        valueSetter: (params) => { params.data.filedOn = params.newValue; return true; },
       },
       {
         field: "premiumStatus",
@@ -305,12 +320,40 @@ export default function ImmigrationIntake() {
         cellClassRules,
         cellEditor: "agSelectCellEditor",
         cellEditorParams: { values: PREMIUM_STATUS_VALUES },
+        valueGetter: (params) => params.data?.premiumStatus,
+        valueSetter: (params) => { params.data.premiumStatus = params.newValue; return true; },
       },
-      { field: "receiptNumber", headerName: FIELD_LABELS.receiptNumber, filter: "agSetColumnFilter", editable: true, cellClassRules },
-      { field: "startDate", headerName: FIELD_LABELS.startDate, filter: "agSetColumnFilter", editable: true, cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
-      { field: "endDate", headerName: FIELD_LABELS.endDate, filter: "agSetColumnFilter", editable: true, cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
-      { field: "lcaTitle", headerName: FIELD_LABELS.lcaTitle, filter: "agSetColumnFilter", editable: true, cellClassRules },
-      { field: "lcaCaseNumber", headerName: FIELD_LABELS.lcaCaseNumber, filter: "agSetColumnFilter", editable: true, cellClassRules },
+      { field: "receiptNumber", headerName: FIELD_LABELS.receiptNumber, filter: "agSetColumnFilter", editable: true, cellClassRules, valueGetter: (params) => params.data?.receiptNumber, valueSetter: (params) => { params.data.receiptNumber = params.newValue; return true; } },
+      {
+        field: "startDate",
+        headerName: FIELD_LABELS.startDate,
+        filter: "agSetColumnFilter",
+        editable: true,
+        cellClassRules,
+        valueFormatter: (params) => formatDateMDY(params.value),
+        valueGetter: (params) => params.data?.startDate,
+        valueSetter: (params) => {
+          params.data.startDate = params.newValue;
+          return true;
+        },
+        filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+      },
+      {
+        field: "endDate",
+        headerName: FIELD_LABELS.endDate,
+        filter: "agSetColumnFilter",
+        editable: true,
+        cellClassRules,
+        valueFormatter: (params) => formatDateMDY(params.value),
+        valueGetter: (params) => params.data?.endDate,
+        valueSetter: (params) => {
+          params.data.endDate = params.newValue;
+          return true;
+        },
+        filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+      },
+      { field: "lcaTitle", headerName: FIELD_LABELS.lcaTitle, filter: "agSetColumnFilter", editable: true, cellClassRules, valueGetter: (params) => params.data?.lcaTitle, valueSetter: (params) => { params.data.lcaTitle = params.newValue; return true; } },
+      { field: "lcaCaseNumber", headerName: FIELD_LABELS.lcaCaseNumber, filter: "agSetColumnFilter", editable: true, cellClassRules, valueGetter: (params) => params.data?.lcaCaseNumber, valueSetter: (params) => { params.data.lcaCaseNumber = params.newValue; return true; } },
       {
         field: "lcaWages",
         headerName: FIELD_LABELS.lcaWages,
@@ -319,11 +362,24 @@ export default function ImmigrationIntake() {
         cellClassRules,
         valueFormatter: (params) => (params.value != null ? formatCurrency(params.value) : ""),
       },
-      { field: "client", headerName: FIELD_LABELS.client, filter: "agSetColumnFilter", editable: true, cellClassRules },
-      { field: "vendor", headerName: FIELD_LABELS.vendor, filter: "agSetColumnFilter", editable: true, cellClassRules },
-      { field: "workLocation1", headerName: FIELD_LABELS.workLocation1, filter: "agSetColumnFilter", editable: true, cellClassRules },
-      { field: "workLocation2", headerName: FIELD_LABELS.workLocation2, filter: "agSetColumnFilter", editable: true, cellClassRules },
-      { field: "caseFiledDate", headerName: FIELD_LABELS.caseFiledDate, filter: "agSetColumnFilter", editable: true, cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
+      { field: "client", headerName: FIELD_LABELS.client, filter: "agSetColumnFilter", editable: true, cellClassRules, valueGetter: (params) => params.data?.client, valueSetter: (params) => { params.data.client = params.newValue; return true; } },
+      { field: "vendor", headerName: FIELD_LABELS.vendor, filter: "agSetColumnFilter", editable: true, cellClassRules, valueGetter: (params) => params.data?.vendor, valueSetter: (params) => { params.data.vendor = params.newValue; return true; } },
+      { field: "workLocation1", headerName: FIELD_LABELS.workLocation1, filter: "agSetColumnFilter", editable: true, cellClassRules, valueGetter: (params) => params.data?.workLocation1, valueSetter: (params) => { params.data.workLocation1 = params.newValue; return true; } },
+      { field: "workLocation2", headerName: FIELD_LABELS.workLocation2, filter: "agSetColumnFilter", editable: true, cellClassRules, valueGetter: (params) => params.data?.workLocation2, valueSetter: (params) => { params.data.workLocation2 = params.newValue; return true; } },
+      {
+        field: "caseFiledDate",
+        headerName: FIELD_LABELS.caseFiledDate,
+        filter: "agSetColumnFilter",
+        editable: true,
+        cellClassRules,
+        valueFormatter: (params) => formatDateMDY(params.value),
+        valueGetter: (params) => params.data?.caseFiledDate,
+        valueSetter: (params) => {
+          params.data.caseFiledDate = params.newValue;
+          return true;
+        },
+        filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+      },
       { field: "caseRank", headerName: FIELD_LABELS.caseRank, filter: "agNumberColumnFilter", editable: true, cellClassRules },
       {
         colId: "action",
@@ -353,6 +409,11 @@ export default function ImmigrationIntake() {
     ],
     [],
   );
+
+  // sizeColumnsForHeader returns a brand-new array/objects every call; memoize
+  // it so AG Grid doesn't see a new columnDefs reference (and reset each
+  // column's applied filter) on every re-render.
+  const sizedColumnDefs = useMemo(() => sizeColumnsForHeader(columnDefs), [columnDefs]);
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -407,7 +468,7 @@ export default function ImmigrationIntake() {
             rowData={filterData()}
             getRowId={(params) => String(params.data.intakeId)}
             onCellValueChanged={onCellValueChanged}
-            columnDefs={sizeColumnsForHeader(columnDefs)}
+            columnDefs={sizedColumnDefs}
             defaultColDef={{
               resizable: true,
               filter: "agSetColumnFilter",

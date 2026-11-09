@@ -56,20 +56,34 @@ const EmployeesTab = ({ vendorId }) => {
         field: "firstName",
         filter: "agSetColumnFilter",
         cellClassRules,
+        valueGetter: (params) => params.data?.firstName,
         cellRenderer: (params) => (
           <Link to="/employeeFullDetails" state={{ rowData: params.data }}>
             {`${params.data.firstName || ""} ${params.data.lastName || ""}`.trim()}
           </Link>
         ),
       },
-      { headerName: "Designation", field: "designation", filter: "agSetColumnFilter", cellClassRules },
-      { headerName: "Status", field: "status", filter: "agSetColumnFilter", cellClassRules },
-      { headerName: "Employee Type", field: "employeeType", filter: "agSetColumnFilter", cellClassRules },
-      { headerName: "Email", field: "emailId", filter: "agSetColumnFilter", cellClassRules },
-      { headerName: "Start Date", field: "startDate", filter: "agSetColumnFilter", cellClassRules, valueFormatter: (params) => formatDateMDY(params.value) },
+      { headerName: "Designation", field: "designation", filter: "agSetColumnFilter", cellClassRules, valueGetter: (params) => params.data?.designation },
+      { headerName: "Status", field: "status", filter: "agSetColumnFilter", cellClassRules, valueGetter: (params) => params.data?.status },
+      { headerName: "Employee Type", field: "employeeType", filter: "agSetColumnFilter", cellClassRules, valueGetter: (params) => params.data?.employeeType },
+      { headerName: "Email", field: "emailId", filter: "agSetColumnFilter", cellClassRules, valueGetter: (params) => params.data?.emailId },
+      {
+        headerName: "Start Date",
+        field: "startDate",
+        filter: "agSetColumnFilter",
+        cellClassRules,
+        valueFormatter: (params) => formatDateMDY(params.value),
+        valueGetter: (params) => params.data?.startDate,
+        filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+      },
     ],
     [],
   );
+
+  // sizeColumnsForHeader returns a brand-new array/objects every call; memoize
+  // it so AG Grid doesn't see a new columnDefs reference (and reset each
+  // column's applied filter) on every re-render.
+  const sizedColumnDefs = useMemo(() => sizeColumnsForHeader(columnDefs), [columnDefs]);
 
   return (
     <div className="ag-theme-alpine" style={{ height: 420 }}>
@@ -77,7 +91,7 @@ const EmployeesTab = ({ vendorId }) => {
         getContextMenuItems={getCellCopyContextMenuItems}
         popupParent={gridPopupParent}
         rowData={rowData}
-        columnDefs={sizeColumnsForHeader(columnDefs)}
+        columnDefs={sizedColumnDefs}
         loading={loading}
         defaultColDef={{ resizable: true, filter: "agSetColumnFilter", minWidth: 100 }}
         pagination={true}

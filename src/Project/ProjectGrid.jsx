@@ -20,7 +20,8 @@ const ProjectGrid = ({ employeeId, customerId, isCollapsed }) => {
   const [projectDrawerOpen, setProjectDrawerOpen] = useState(false);
   const [customerDrawerOpen, setCustomerDrawerOpen] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
-  const columnDefs = [
+  const columnDefs = useMemo(
+    () => [
     {
       headerName: "",
       colId: "actions",
@@ -53,6 +54,7 @@ const ProjectGrid = ({ employeeId, customerId, isCollapsed }) => {
       field: "client",
       cellRenderer: (params) => params.data?.customer?.customerCompanyName,
       filter: "agSetColumnFilter",
+      valueGetter: (params) => params.data?.client,
     },
     {
       headerName: "Bill Rate",
@@ -62,18 +64,52 @@ const ProjectGrid = ({ employeeId, customerId, isCollapsed }) => {
         return rate != null ? `$${rate.toFixed(2)}` : "N/A";
       },
       filter: "agSetColumnFilter",
+      valueGetter: (params) => params.data?.billRates,
     },
     {
       headerName: "Invoice Frequency",
       field: "invoiceTerm",
       valueFormatter: (params) => invoiceTermLabel(params.value),
       filter: "agSetColumnFilter",
+      valueGetter: (params) => params.data?.invoiceTerm,
+      filterParams: { valueFormatter: (params) => invoiceTermLabel(params.value) },
     },
-    { headerName: "Payment Term", field: "paymentTerm", filter: "agSetColumnFilter" },
-    { headerName: "Start Date", field: "startDate", filter: "agSetColumnFilter", valueFormatter: (params) => formatDateMDY(params.value) },
-    { headerName: "End Date", field: "endDate", filter: "agSetColumnFilter", valueFormatter: (params) => formatDateMDY(params.value) },
-    { headerName: "Status", field: "status", filter: "agSetColumnFilter" },
-  ];
+    {
+      headerName: "Payment Term",
+      field: "paymentTerm",
+      filter: "agSetColumnFilter",
+      valueGetter: (params) => params.data?.paymentTerm,
+    },
+    {
+      headerName: "Start Date",
+      field: "startDate",
+      filter: "agSetColumnFilter",
+      valueFormatter: (params) => formatDateMDY(params.value),
+      valueGetter: (params) => params.data?.startDate,
+      filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+    },
+    {
+      headerName: "End Date",
+      field: "endDate",
+      filter: "agSetColumnFilter",
+      valueFormatter: (params) => formatDateMDY(params.value),
+      valueGetter: (params) => params.data?.endDate,
+      filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+    },
+    {
+      headerName: "Status",
+      field: "status",
+      filter: "agSetColumnFilter",
+      valueGetter: (params) => params.data?.status,
+    },
+    ],
+    [],
+  );
+
+  // sizeColumnsForHeader returns a brand-new array/objects every call; memoize
+  // it so AG Grid doesn't see a new columnDefs reference (and reset each
+  // column's applied filter) on every re-render.
+  const sizedColumnDefs = useMemo(() => sizeColumnsForHeader(columnDefs), [columnDefs]);
 
   const fetchData = () => {
     const url = customerId
@@ -228,7 +264,7 @@ const ProjectGrid = ({ employeeId, customerId, isCollapsed }) => {
         autoSizeStrategy={{ type: "fitCellContents" }}
         rowData={filterData()}
         frameworkComponents={{ customTooltip: CustomTooltip }}
-        columnDefs={sizeColumnsForHeader(columnDefs)}
+        columnDefs={sizedColumnDefs}
         domLayout="normal"
         defaultColDef={{
           minWidth: 100,

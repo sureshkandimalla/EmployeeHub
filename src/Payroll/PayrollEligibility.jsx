@@ -154,16 +154,18 @@ const PayrollEligibility = () => {
         suppressSizeToFit: true,
         cellStyle: { textAlign: "center", fontWeight: 500 },
       },
-      { headerName: "Employee", field: "employeeName", sortable: true, minWidth: 180, enableRowGroup: true },
-      { headerName: "Employee Type", field: "employeeType", sortable: true, enableRowGroup: true },
-      { headerName: "Tax Term", field: "taxTerm", sortable: true, enableRowGroup: true },
-      { headerName: "Company", field: "companyName", sortable: true, enableRowGroup: true },
-      { headerName: "Customer", field: "customerName", sortable: true, minWidth: 160, enableRowGroup: true },
+      { headerName: "Employee", field: "employeeName", sortable: true, minWidth: 180, enableRowGroup: true, valueGetter: (params) => params.data?.employeeName },
+      { headerName: "Employee Type", field: "employeeType", sortable: true, enableRowGroup: true, valueGetter: (params) => params.data?.employeeType },
+      { headerName: "Tax Term", field: "taxTerm", sortable: true, enableRowGroup: true, valueGetter: (params) => params.data?.taxTerm },
+      { headerName: "Company", field: "companyName", sortable: true, enableRowGroup: true, valueGetter: (params) => params.data?.companyName },
+      { headerName: "Customer", field: "customerName", sortable: true, minWidth: 160, enableRowGroup: true, valueGetter: (params) => params.data?.customerName },
       {
         headerName: "Bill Rate",
         field: "wage",
         sortable: true,
         valueFormatter: (params) => formatCurrency(params.value),
+        valueGetter: (params) => params.data?.wage,
+        filterParams: { valueFormatter: (params) => formatCurrency(params.value) },
       },
       {
         headerName: "Actual Hrs",
@@ -171,6 +173,7 @@ const PayrollEligibility = () => {
         sortable: true,
         aggFunc: "sum",
         cellStyle: { fontWeight: "bold" },
+        valueGetter: (params) => params.data?.hours,
       },
       {
         headerName: "Amount",
@@ -186,6 +189,7 @@ const PayrollEligibility = () => {
         field: "actualHours",
         sortable: true,
         aggFunc: "sum",
+        valueGetter: (params) => params.data?.actualHours,
       },
       {
         headerName: "Payroll Amount",
@@ -194,6 +198,8 @@ const PayrollEligibility = () => {
         aggFunc: "sum",
         minWidth: 150,
         valueFormatter: (params) => (params.value != null ? formatCurrency(params.value) : ""),
+        valueGetter: (params) => params.data?.grossAmount,
+        filterParams: { valueFormatter: (params) => (params.value != null ? formatCurrency(params.value) : "") },
       },
       {
         headerName: "Employer Contribution",
@@ -202,28 +208,41 @@ const PayrollEligibility = () => {
         aggFunc: "sum",
         minWidth: 170,
         valueFormatter: (params) => (params.value != null ? formatCurrency(params.value) : ""),
+        valueGetter: (params) => params.data?.employerContribution,
+        filterParams: { valueFormatter: (params) => (params.value != null ? formatCurrency(params.value) : "") },
       },
       {
         headerName: "Payment Type",
         field: "paymentType",
         sortable: true,
         minWidth: 130,
+        valueGetter: (params) => params.data?.paymentType,
       },
       {
         headerName: "Assignment Start",
         field: "assignmentStartDate",
         sortable: true,
         valueFormatter: (params) => formatDate(params.value),
+        valueGetter: (params) => params.data?.assignmentStartDate,
+        filterParams: { treeList: false, valueFormatter: (params) => formatDate(params.value) },
       },
       {
         headerName: "Assignment End",
         field: "assignmentEndDate",
         sortable: true,
         valueFormatter: (params) => formatDate(params.value),
+        valueGetter: (params) => params.data?.assignmentEndDate,
+        filterParams: { treeList: false, valueFormatter: (params) => formatDate(params.value) },
       },
     ],
     [],
   );
+
+  // sizeColumnsForHeader returns a brand-new array/objects every call; memoize
+  // it so AG Grid doesn't see a new columnDefs reference (and reset each
+  // column's applied filter) on every re-render — including the one
+  // setPinnedTopRowData triggers on every filter change via onModelUpdated.
+  const sizedColumnDefs = useMemo(() => sizeColumnsForHeader(columnDefs), [columnDefs]);
 
   const filteredRowData = useMemo(() => {
     if (!searchText) return rowData;
@@ -326,7 +345,7 @@ const PayrollEligibility = () => {
           ensureDomOrder={true}
           ref={gridRef}
           rowData={filteredRowData}
-          columnDefs={sizeColumnsForHeader(columnDefs)}
+          columnDefs={sizedColumnDefs}
           onModelUpdated={onModelUpdated}
           pinnedTopRowData={pinnedTopRowData}
           pinnedBottomRowData={pinnedBottomRowData}

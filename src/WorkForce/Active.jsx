@@ -23,30 +23,35 @@ const Active = () => {
       field: "id",
       sortable: true,
       filter: "agSetColumnFilter",
+      valueGetter: (params) => params.data?.id,
     },
     {
       headerName: "Name",
       field: "name",
       sortable: true,
       filter: "agSetColumnFilter",
+      valueGetter: (params) => params.data?.name,
     },
     {
       headerName: "Position",
       field: "position",
       sortable: true,
       filter: "agSetColumnFilter",
+      valueGetter: (params) => params.data?.position,
     },
     {
       headerName: "Department",
       field: "department",
       sortable: true,
       filter: "agSetColumnFilter",
+      valueGetter: (params) => params.data?.department,
     },
     {
       headerName: "Employee Information",
       field: "employeeInfo",
       sortable: true,
       filter: "agSetColumnFilter",
+      valueGetter: (params) => params.data?.employeeInfo,
       headerComponentFramework: CustomHeader, // Custom header component
     },
   ];

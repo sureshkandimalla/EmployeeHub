@@ -199,6 +199,21 @@ const VendorDetails = () => {
         cellClass: isIdColumn ? "ag-center-cols" : undefined,
         cellStyle: isIdColumn ? { textAlign: "center" } : undefined,
         valueFormatter: type === "date" ? (params) => formatDateMDY(params.value) : undefined,
+        // Every Set-Filter column needs an explicit valueGetter or its
+        // checkboxes are completely inert in this app's AG Grid setup — not
+        // date-specific, confirmed across text/number/date columns alike
+        // (see the same fix applied to Payroll/PayrollDetails.jsx). Since
+        // every column here is editable, valueSetter is paired alongside it
+        // so edits still persist.
+        valueGetter: (params) => params.data?.[field],
+        valueSetter: (params) => {
+          params.data[field] = params.newValue;
+          return true;
+        },
+        filterParams:
+          type === "date"
+            ? { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) }
+            : undefined,
         cellRenderer:
           field === "vendorCompanyName"
             ? (params) => (
@@ -326,6 +341,7 @@ const VendorDetails = () => {
         field: k,
         sortable: true,
         filter: "agSetColumnFilter",
+        valueGetter: (params) => params.data?.[k],
         resizable: true,
         minWidth: 120,
         cellClassRules: {
@@ -338,6 +354,11 @@ const VendorDetails = () => {
       return vendorColumnDefs;
     }
   }, [vendorColumnDefs, rowData]);
+
+  // sizeColumnsForHeader returns a brand-new array/objects every call; memoize
+  // it so AG Grid doesn't see a new columnDefs reference (and reset each
+  // column's applied filter) on every re-render.
+  const sizedColumnDefs = useMemo(() => sizeColumnsForHeader(combinedColumnDefs), [combinedColumnDefs]);
 
   return (
     <div
@@ -446,7 +467,7 @@ const VendorDetails = () => {
             autoSizeStrategy={{ type: "fitCellContents" }}
             rowHeight={48}
             rowData={filterData()}
-            columnDefs={sizeColumnsForHeader(combinedColumnDefs)}
+            columnDefs={sizedColumnDefs}
             defaultColDef={{
               resizable: true,
               filter: "agSetColumnFilter",

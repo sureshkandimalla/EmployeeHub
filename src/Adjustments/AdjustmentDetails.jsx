@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import API_ENDPOINTS from "../config";
 import { sizeColumnsForHeader } from "../Utils/agGridColumnSizing";
 import { AgGridReact } from "@ag-grid-community/react";
@@ -94,6 +94,11 @@ const AdjustementDetails = ({ employeeId, isCollapsed }) => {
         sortable: isSortable,
         filter: "agSetColumnFilter",
         valueFormatter: (params) => formatDateMDY(params.value),
+        valueGetter: (params) => params.data?.adjustmentDate,
+        filterParams: {
+          treeList: false,
+          valueFormatter: (params) => formatDateMDY(params.value),
+        },
       },
     ];
     return columns;
@@ -158,6 +163,11 @@ const AdjustementDetails = ({ employeeId, isCollapsed }) => {
     return null;
   };
 
+  // sizeColumnsForHeader returns a brand-new array/objects every call; memoize
+  // it so AG Grid doesn't see a new columnDefs reference (and reset each
+  // column's applied filter) on every re-render.
+  const sizedColumnDefs = useMemo(() => sizeColumnsForHeader(getColumnsDefList(true)), []);
+
   return (
     <div
         style={{
@@ -219,7 +229,7 @@ const AdjustementDetails = ({ employeeId, isCollapsed }) => {
         autoSizeStrategy={{ type: "fitCellContents" }}
         rowHeight={48}
         rowData={filterData()}
-        columnDefs={sizeColumnsForHeader(getColumnsDefList(true))}
+        columnDefs={sizedColumnDefs}
         gridOptions={gridOptions}
         defaultColDef={{
           minWidth: 100,

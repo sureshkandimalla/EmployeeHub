@@ -122,25 +122,29 @@ export default function ProjectInvoiceSummary() {
     sumProjectRows(rows, "Filtered Total"),
   );
 
-  const cellClassRules = {
-    darkGreyBackground: (params) =>
-      params.node?.rowIndex !== undefined && params.node.rowIndex % 2 === 1,
-  };
+  const cellClassRules = useMemo(
+    () => ({
+      darkGreyBackground: (params) =>
+        params.node?.rowIndex !== undefined && params.node.rowIndex % 2 === 1,
+    }),
+    [],
+  );
 
   const onBtnExportDataAsExcel = () => {
     gridRef.current?.exportDataAsExcel();
   };
 
-  const currencyCol = (field, headerName) => ({
-    field,
-    headerName,
-    filter: "agNumberColumnFilter",
-    cellClassRules,
-    aggFunc: "sum",
-    valueFormatter: (params) => formatCurrency(params.value),
-  });
+  const columnDefs = useMemo(() => {
+    const currencyCol = (field, headerName) => ({
+      field,
+      headerName,
+      filter: "agNumberColumnFilter",
+      cellClassRules,
+      aggFunc: "sum",
+      valueFormatter: (params) => formatCurrency(params.value),
+    });
 
-  const columnDefs = [
+    return [
     {
       headerName: "#",
       valueGetter: (params) => (params.node.rowPinned ? "" : params.node.rowIndex + 1),
@@ -160,6 +164,7 @@ export default function ProjectInvoiceSummary() {
       pinned: "left",
       filter: "agSetColumnFilter",
       cellClassRules,
+      valueGetter: (params) => params.data?.projectId,
       cellRenderer: (params) => (params.node.rowPinned ? "" : params.value),
       cellRendererSelector: (params) =>
         params.node.rowPinned ? undefined : { component: "agGroupCellRenderer" },
@@ -169,9 +174,9 @@ export default function ProjectInvoiceSummary() {
       },
       cellStyle: (params) => (params.node.rowPinned ? null : { cursor: "pointer" }),
     },
-    { field: "projectName", headerName: "Project Name", filter: "agSetColumnFilter", cellClassRules },
-    { field: "employeeName", headerName: "Employee Name", filter: "agSetColumnFilter", cellClassRules },
-    { field: "customerName", headerName: "Customer Name", filter: "agSetColumnFilter", cellClassRules },
+    { field: "projectName", headerName: "Project Name", filter: "agSetColumnFilter", cellClassRules, valueGetter: (params) => params.data?.projectName },
+    { field: "employeeName", headerName: "Employee Name", filter: "agSetColumnFilter", cellClassRules, valueGetter: (params) => params.data?.employeeName },
+    { field: "customerName", headerName: "Customer Name", filter: "agSetColumnFilter", cellClassRules, valueGetter: (params) => params.data?.customerName },
     currencyCol("totalInvoice", "Total Invoice"),
     currencyCol("totalPaid", "Invoice Paid"),
     currencyCol("totalDiscounts", "Discounts"),
@@ -188,8 +193,20 @@ export default function ProjectInvoiceSummary() {
       filter: "agSetColumnFilter",
       cellClassRules,
       valueFormatter: (params) => (params.node.rowPinned ? "" : formatDateMDY(params.value)),
+      valueGetter: (params) => params.data?.lastPaidDate,
+      filterParams: {
+        treeList: false,
+        valueFormatter: (params) => formatDateMDY(params.value),
+      },
     },
-  ];
+    ];
+  }, [cellClassRules]);
+
+  // sizeColumnsForHeader returns a brand-new array/objects every call; memoize
+  // it so AG Grid doesn't see a new columnDefs reference (and reset each
+  // column's applied filter) on every re-render — including the one
+  // setPinnedTopRowData triggers on every filter change via onModelUpdated.
+  const sizedColumnDefs = useMemo(() => sizeColumnsForHeader(columnDefs), [columnDefs]);
 
   const detailCellRendererParams = {
     detailGridOptions: {
@@ -211,16 +228,67 @@ export default function ProjectInvoiceSummary() {
           headerName: "Invoice Month",
           filter: "agSetColumnFilter",
           valueFormatter: (params) => formatMonthYear(params.value),
+          valueGetter: (params) => params.data?.invoiceMonth,
+          filterParams: { valueFormatter: (params) => formatMonthYear(params.value) },
         },
-        { field: "billing", headerName: "Billing", filter: "agSetColumnFilter", valueFormatter: (p) => formatCurrency(p.value) },
-        { field: "hours", headerName: "Hours", filter: "agSetColumnFilter" },
-        { field: "total", headerName: "Invoice Amount", filter: "agSetColumnFilter", valueFormatter: (p) => formatCurrency(p.value) },
-        { field: "discounts", headerName: "Discounts", filter: "agSetColumnFilter", valueFormatter: (p) => formatCurrency(p.value) },
-        { field: "invoicePaidAmount", headerName: "Invoice Paid Amount", filter: "agSetColumnFilter", valueFormatter: (p) => formatCurrency(p.value) },
-        { field: "invoicePaidDate", headerName: "Invoice Paid Date", filter: "agSetColumnFilter", valueFormatter: (params) => formatDateMDY(params.value) },
-        { field: "startDate", headerName: "Start Date", filter: "agSetColumnFilter", valueFormatter: (params) => formatDateMDY(params.value) },
-        { field: "endDate", headerName: "End Date", filter: "agSetColumnFilter", valueFormatter: (params) => formatDateMDY(params.value) },
-        { field: "status", headerName: "Status", filter: "agSetColumnFilter" },
+        {
+          field: "billing",
+          headerName: "Billing",
+          filter: "agSetColumnFilter",
+          valueFormatter: (p) => formatCurrency(p.value),
+          valueGetter: (params) => params.data?.billing,
+          filterParams: { valueFormatter: (p) => formatCurrency(p.value) },
+        },
+        { field: "hours", headerName: "Hours", filter: "agSetColumnFilter", valueGetter: (params) => params.data?.hours },
+        {
+          field: "total",
+          headerName: "Invoice Amount",
+          filter: "agSetColumnFilter",
+          valueFormatter: (p) => formatCurrency(p.value),
+          valueGetter: (params) => params.data?.total,
+          filterParams: { valueFormatter: (p) => formatCurrency(p.value) },
+        },
+        {
+          field: "discounts",
+          headerName: "Discounts",
+          filter: "agSetColumnFilter",
+          valueFormatter: (p) => formatCurrency(p.value),
+          valueGetter: (params) => params.data?.discounts,
+          filterParams: { valueFormatter: (p) => formatCurrency(p.value) },
+        },
+        {
+          field: "invoicePaidAmount",
+          headerName: "Invoice Paid Amount",
+          filter: "agSetColumnFilter",
+          valueFormatter: (p) => formatCurrency(p.value),
+          valueGetter: (params) => params.data?.invoicePaidAmount,
+          filterParams: { valueFormatter: (p) => formatCurrency(p.value) },
+        },
+        {
+          field: "invoicePaidDate",
+          headerName: "Invoice Paid Date",
+          filter: "agSetColumnFilter",
+          valueFormatter: (params) => formatDateMDY(params.value),
+          valueGetter: (params) => params.data?.invoicePaidDate,
+          filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+        },
+        {
+          field: "startDate",
+          headerName: "Start Date",
+          filter: "agSetColumnFilter",
+          valueFormatter: (params) => formatDateMDY(params.value),
+          valueGetter: (params) => params.data?.startDate,
+          filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+        },
+        {
+          field: "endDate",
+          headerName: "End Date",
+          filter: "agSetColumnFilter",
+          valueFormatter: (params) => formatDateMDY(params.value),
+          valueGetter: (params) => params.data?.endDate,
+          filterParams: { treeList: false, valueFormatter: (params) => formatDateMDY(params.value) },
+        },
+        { field: "status", headerName: "Status", filter: "agSetColumnFilter", valueGetter: (params) => params.data?.status },
       ],
       defaultColDef: { minWidth: 100, resizable: true, sortable: true },
       pagination: false,
@@ -278,7 +346,7 @@ export default function ProjectInvoiceSummary() {
             autoSizeStrategy={{ type: "fitCellContents" }}
             rowHeight={48}
             rowData={filteredRowData}
-            columnDefs={sizeColumnsForHeader(columnDefs)}
+            columnDefs={sizedColumnDefs}
             masterDetail={true}
             detailCellRendererParams={detailCellRendererParams}
             detailRowAutoHeight={true}

@@ -246,7 +246,8 @@ export default function CompanyFinalReportDetails() {
     sumCompanyRows(rows, "Filtered Total"),
   );
 
-  const columnDefs = [
+  const columnDefs = useMemo(
+    () => [
     {
       colId: "rowNum",
       headerName: "#",
@@ -267,6 +268,7 @@ export default function CompanyFinalReportDetails() {
       headerName: "Employee Name",
       minWidth: 220,
       pinned: "left",
+      valueGetter: (params) => params.data?.employeeName,
       cellRenderer: (params) => {
         if (params.node.rowPinned || !params.data?.employeeRecord) return params.value;
         return (
@@ -284,91 +286,133 @@ export default function CompanyFinalReportDetails() {
       headerName: "Net",
       valueFormatter: (params) => formatSignedCurrency(params.value),
       cellStyle: negativeRedCellStyle,
+      valueGetter: (params) => params.data?.net,
+      filterParams: { valueFormatter: (params) => formatSignedCurrency(params.value) },
     },
     {
       field: "balance",
       headerName: "Balance to Employee",
       valueFormatter: (params) => formatSignedCurrency(params.value),
       cellStyle: negativeRedCellStyle,
+      valueGetter: (params) => params.data?.balance,
+      filterParams: { valueFormatter: (params) => formatSignedCurrency(params.value) },
     },
     {
       field: "balancePaid",
       headerName: "Balance (Invoices Received)",
       valueFormatter: (params) => formatSignedCurrency(params.value),
+      valueGetter: (params) => params.data?.balancePaid,
+      filterParams: { valueFormatter: (params) => formatSignedCurrency(params.value) },
     },
-    { field: "totalHours", headerName: "Invoice Hours" },
-    { field: "paidHours", headerName: "Invoice Cleared Hours" },
+    { field: "totalHours", headerName: "Invoice Hours", valueGetter: (params) => params.data?.totalHours },
+    { field: "paidHours", headerName: "Invoice Cleared Hours", valueGetter: (params) => params.data?.paidHours },
     {
       field: "totalInvoiceAmount",
       headerName: "Invoice Amount",
       valueFormatter: (params) => formatSignedCurrency(params.value),
+      valueGetter: (params) => params.data?.totalInvoiceAmount,
+      filterParams: { valueFormatter: (params) => formatSignedCurrency(params.value) },
     },
     {
       field: "invoicesPaid",
       headerName: "Invoice Cleared",
       valueFormatter: (params) => formatSignedCurrency(params.value),
+      valueGetter: (params) => params.data?.invoicesPaid,
+      filterParams: { valueFormatter: (params) => formatSignedCurrency(params.value) },
     },
     {
       field: "employeePay",
       headerName: "Employee Pay",
       valueFormatter: (params) => formatSignedCurrency(params.value),
+      valueGetter: (params) => params.data?.employeePay,
+      filterParams: { valueFormatter: (params) => formatSignedCurrency(params.value) },
     },
     {
       field: "incomePaid",
       headerName: "Employee Pay Paid",
       valueFormatter: (params) => formatSignedCurrency(params.value),
+      valueGetter: (params) => params.data?.incomePaid,
+      filterParams: { valueFormatter: (params) => formatSignedCurrency(params.value) },
     },
     {
       field: "totalPayment",
       headerName: "Total Payment",
       valueFormatter: (params) => formatSignedCurrency(params.value),
+      valueGetter: (params) => params.data?.totalPayment,
+      filterParams: { valueFormatter: (params) => formatSignedCurrency(params.value) },
     },
     {
       field: "payrollPaid",
       headerName: "Payroll Paid",
       valueFormatter: (params) => formatSignedCurrency(params.value),
+      valueGetter: (params) => params.data?.payrollPaid,
+      filterParams: { valueFormatter: (params) => formatSignedCurrency(params.value) },
     },
     {
       field: "payrollDeductions",
       headerName: "Payroll Deductions (Medical)",
       valueFormatter: (params) => formatSignedCurrency(params.value),
+      valueGetter: (params) => params.data?.payrollDeductions,
+      filterParams: { valueFormatter: (params) => formatSignedCurrency(params.value) },
     },
     {
       field: "adjustmentsPaid",
       headerName: "Adjustments Employee Got",
       valueFormatter: (params) => formatSignedCurrency(params.value),
+      valueGetter: (params) => params.data?.adjustmentsPaid,
+      filterParams: { valueFormatter: (params) => formatSignedCurrency(params.value) },
     },
     {
       field: "adjustmentsReceived",
       headerName: "Adjustments Employee Paid",
       valueFormatter: (params) => formatSignedCurrency(params.value),
+      valueGetter: (params) => params.data?.adjustmentsReceived,
+      filterParams: { valueFormatter: (params) => formatSignedCurrency(params.value) },
     },
     {
       field: "companyExpenses",
       headerName: "Total Expenses",
       valueFormatter: (params) => formatSignedCurrency(params.value),
+      valueGetter: (params) => params.data?.companyExpenses,
+      filterParams: { valueFormatter: (params) => formatSignedCurrency(params.value) },
     },
     {
       field: "expenses",
       headerName: "Reimbursable Expenses (Employee Cost)",
       valueFormatter: (params) => formatSignedCurrency(params.value),
+      valueGetter: (params) => params.data?.expenses,
+      filterParams: { valueFormatter: (params) => formatSignedCurrency(params.value) },
     },
     {
       field: "nonReimbursableExpenses",
       headerName: "Non-Reimbursable Expenses (Company Cost)",
       valueFormatter: (params) => formatSignedCurrency(params.value),
+      valueGetter: (params) => params.data?.nonReimbursableExpenses,
+      filterParams: { valueFormatter: (params) => formatSignedCurrency(params.value) },
     },
     {
       field: "healthInsurance",
       headerName: "Health Insurance",
       valueFormatter: (params) => formatSignedCurrency(params.value),
+      valueGetter: (params) => params.data?.healthInsurance,
+      filterParams: { valueFormatter: (params) => formatSignedCurrency(params.value) },
     },
     {
       field: "employerTax",
       headerName: "Employer Tax",
       valueFormatter: (params) => formatSignedCurrency(params.value),
+      valueGetter: (params) => params.data?.employerTax,
+      filterParams: { valueFormatter: (params) => formatSignedCurrency(params.value) },
     },
-  ];
+    ],
+    [],
+  );
+
+  // sizeColumnsForHeader returns a brand-new array/objects every call; memoize
+  // it so AG Grid doesn't see a new columnDefs reference (and reset each
+  // column's applied filter) on every re-render — including the one
+  // setPinnedTopRowData triggers on every filter change via onModelUpdated.
+  const sizedColumnDefs = useMemo(() => sizeColumnsForHeader(columnDefs), [columnDefs]);
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -425,7 +469,7 @@ export default function CompanyFinalReportDetails() {
             autoSizeStrategy={{ type: "fitCellContents" }}
             rowHeight={48}
             rowData={filterData()}
-            columnDefs={sizeColumnsForHeader(columnDefs)}
+            columnDefs={sizedColumnDefs}
             pinnedTopRowData={pinnedTopRowData}
             pinnedBottomRowData={pinnedBottomRowData}
             getRowStyle={(params) =>
