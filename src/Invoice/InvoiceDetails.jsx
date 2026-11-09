@@ -550,6 +550,16 @@ const InvoiceDetails = ({ employeeId, projectId, customerId, statusFilter, isCol
           params.data.invoiceMonth = params.newValue;
           return true;
         },
+        // The cell's own valueGetter above returns the full per-invoice date
+        // (needed so editing round-trips correctly), but many invoices
+        // share the same month and all format to the same "September 2026"
+        // label — without this, the Set Filter list showed one checkbox per
+        // distinct raw date, so the same label appeared several times.
+        // filterValueGetter (a top-level colDef property, NOT nested inside
+        // filterParams — that's a different, no-op property name) reduces
+        // to the month key so the Set Filter list has one entry per month.
+        filterValueGetter: (params) =>
+          params.data?.invoiceMonth ? params.data.invoiceMonth.substring(0, 7) : null,
         filterParams: { valueFormatter: (params) => formatMonthYear(params.value) },
       },
       {

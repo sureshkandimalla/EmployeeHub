@@ -186,6 +186,14 @@ export default function AllBills() {
         valueFormatter: (params) => formatMonthYear(params.value),
         cellClassRules,
         valueGetter: (params) => params.data?.invoiceMonth,
+        // Many rows share the same month but a different raw day, which all
+        // format to the same "September 2026" label — without this, the
+        // Set Filter list showed that label once per distinct raw date
+        // instead of once per month. filterValueGetter (a top-level colDef
+        // property, NOT nested inside filterParams — that's a different,
+        // no-op property name) reduces to the month key.
+        filterValueGetter: (params) =>
+          params.data?.invoiceMonth ? params.data.invoiceMonth.substring(0, 7) : null,
         filterParams: { valueFormatter: (params) => formatMonthYear(params.value) },
       },
       {
